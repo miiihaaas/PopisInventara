@@ -1,0 +1,16 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="h1">{{ title }}</div>
+<div class="form-group mb-4">
+    <a class="btn btn-primary" href="javascript:history.back()">Nazad</a>
+</div>
+<form action="" method="post">
+    <legend class="form-control-legend" for="description">Opis popisne liste</legend>
+    <textarea class="form-control mb-4" name="description" id="description" cols="100" rows="3"></textarea>
+    <button type="submit" class="btn btn-primary">Kreirajte</button>
+</form>
+{% endblock content%}
+
+{% block scripts %}
+
+{% endblock %}

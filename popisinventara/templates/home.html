@@ -1,0 +1,39 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="h1">{{ title }}</div>
+<div class="form-group mb-4">
+    <legend>Inventarske aktivnosti</legend>
+    {% if not active_inventory_list %}
+    <a class="btn btn-primary mb-4" href="{{url_for('schools.school', school_id=1)}}">Prostorije</a>
+    <a class="btn btn-primary mb-4" href="{{url_for('items.category')}}">Konta</a>
+    <a class="btn btn-primary mb-4" href="{{url_for('items.depreciation_rates')}}">Stope Amortizacije</a>
+    <a class="btn btn-primary mb-4" href="{{url_for('items.items')}}">Tip Predmeta</a>
+    <a class="btn btn-primary mb-4" href="{{url_for('single_items.single_item_list')}}">Predmeti</a>
+    <a class="btn btn-primary mb-4" href="{{url_for('single_items.move_select_item')}}">Premeštaj</a>
+    {% else %}
+    <a class="btn btn-primary mb-4" href="{{url_for('single_items.single_item_list')}}">Predmeti</a>
+    {% endif %}
+</div>
+<div class="form-group mb-4">
+    {% if not active_inventory_list %}
+    <legend>Popisne aktivnosti</legend>
+        {% if virtual_warehouse %}
+        <a class="btn btn-primary mb-4" href="{{url_for('single_items.room_single_items', room_id=1)}}">
+            Broj predmeta u virtuelnom magacinu: <span class="badge bg-danger">{{virtual_warehouse}}</span>
+        </a>
+        <a class="btn btn-primary disabled mb-4" href="{{url_for('inventory.create_inventory_list')}}">Kreiranje popisne liste</a>
+        {% else %}
+        <a class="btn btn-primary mb-4" href="{{url_for('inventory.create_inventory_list')}}">Kreiranje popisne liste</a>
+        {% endif %}
+    {% else %}
+    <legend>Popis u toku: {{active_inventory_list.date}}</legend>
+    <a class="btn btn-primary mb-4" href="{{url_for('inventory.edit_inventory_list', inventory_id=active_inventory_list.id)}}">Unos/izmena popisnih rezultata</a>
+    <a class="btn btn-primary mb-4" href="{{url_for('inventory.compare_inventory_list', inventory_id=active_inventory_list.id)}}">Poređenje popisnih rezultata sa stanjem u sistemu</a>
+    {% endif %}
+    <a class="btn btn-primary mb-4" href="{{url_for('inventory.read_inventory_list')}}">Pregled popisnih listi</a>
+</div>
+<div class="form-group mb-4">
+    <legend>Izveštaji</legend>
+    <a class="btn btn-secondary" href="">work in progres</a>
+</div>
+{% endblock content%}

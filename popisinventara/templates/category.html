@@ -1,0 +1,108 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="h1">{{ title }}</div>
+<div class="form-group">
+    <a class="btn btn-primary mb-4" href="javascript:history.back()">Nazad</a>
+    <button type="button" class="btn btn-primary mb-4" data-bs-toggle="modal" data-bs-target="#newCategory">Dodajte novi konto</button>
+</div>
+
+<div class="modal fade" id="myCategory" tabindex="-1" role="dialog" aria-labelledby="myCategoryLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="myCategoryLabel">Izmena podataka konta</h5>
+                <button type="button" clsass="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form method="POST" action="/edit_category">
+                <form action="">
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label class="form-control-label" for="edit_category_id">ID</label>
+                            <input class="form-control" type="text" id="edit_category_id" name="edit_category_id" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-control-label" for="edit_category_number">Broj konta</label>
+                            <input class="form-control" type="text" id="edit_category_number" name="edit_category_number">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-control-label" for="edit_category_name">Naziv</label>
+                            <input class="form-control" type="text" id="edit_category_name" name="edit_category_name">
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Otkažite</button>
+                            <button type="submit" class="btn btn-primary" >Sačuvajte</button>
+                        </div>
+                    </div>
+                </form>
+            </form>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="newCategory" tabindex="-1" role="dialog" aria-labelledby="newCategoryLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="newCategoryLabel">Izmena podataka konta</h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form method="POST" action="/add_category">
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label class="form-control-label" for="add_category_number">Broj konta</label>
+                            <input class="form-control" type="text" id="add_category_number" name="add_category_number">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-control-label" for="add_category_name">Naziv</label>
+                            <input class="form-control" type="text" id="add_category_name" name="add_category_name">
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Otkažite</button>
+                            <button type="submit" class="btn btn-primary" >Sačuvajte</button>
+                        </div>
+                    </div>
+            </form>
+        </div>
+    </div>
+</div>
+<table id="data" border="1" class="table table-striped userlist">
+    <thead>
+        <tr>
+            <td>ID</td>
+            <td>Broj konta</td>
+            <td>Naziv</td>
+        </tr>
+    </thead>
+    <tbody>
+        {% for category in categories %}
+        <tr>
+            <td>{{ category.id }}</td>
+            <td><button class="btn btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#myCategory" onclick="editCategory('{{category.id}}', '{{category.category_number}}', '{{category.name}}')">{{ category.category_number }}</button></td>
+            <td>{{ category.name }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock content%}
+
+{% block scripts %}
+<script>
+    function editCategory(categoryId, categoryNumber, categoryName) {
+        document.getElementById("edit_category_id").value = categoryId;
+        document.getElementById("edit_category_number").value = categoryNumber;
+        document.getElementById("edit_category_name").value = categoryName;
+    }
+    $(document).ready(function () {
+    $("#data").DataTable({
+        order: [[1, "asc"]],
+        language: {
+            url: "//cdn.datatables.net/plug-ins/1.12.1/i18n/sr-SP.json",
+            stateSave: true
+        },
+        });
+    });
+</script>
+{% endblock %}

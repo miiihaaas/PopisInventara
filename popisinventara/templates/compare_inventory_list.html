@@ -1,0 +1,43 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="h1">{{ title }}</div>
+<div class="form-group mb-4">
+    <a class="btn btn-primary" href="javascript:history.back()">Nazad</a>
+</div>
+<table id="data_1" border="1" class="table table-striped userlist">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Serija</th>
+            <th>Naziv</th>
+            <th>Naziv</th>
+            <th>Količina</th>
+            <th>Količina input</th>
+            <th>Razlika</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in compare_items_list %}
+        <tr>
+            <td>{{ item.item_id }}</td>
+            <td name="serial_{{ item.serial }}">{{ item.serial }}</td>
+            <td>{{ item.item_name }}</td>
+            <td>{{ item.name }}</td>
+            <td>{{ item.quantity }}</td>
+            <td>{{ item.quantity_input }}</td>
+            <td>{{ item.quantity_input - item.quantity }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% if not inventory.status == 'finished' %}
+<form action="" method="post">
+    <button class="btn btn-danger" type="submit">Zavrišite popis</button>
+</form>
+{% endif %}
+
+{% endblock content%}
+
+{% block scripts %}
+
+{% endblock %}

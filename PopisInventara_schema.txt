@@ -1,0 +1,152 @@
+
+ode se na ovaj link:
+https://dbdiagram.io/d
+i kopira tekst ispod
+
+_______________________________________________
+Table School as S{
+  id integer [pk]
+  schoolname varcharacter
+  users integer [ref: < U.id]
+  buildings integer [ref: < B.id]
+}
+
+Table User as U{
+  id integer [pk]
+  emal varchar(120)
+  password varchar(60)
+  name varchar(20)
+  surname varchar(20)
+  autorisation varchar(20)
+  school_id integer
+}
+
+Table Building as B{
+  id integer [pk]
+  building_name varchar(20)
+  rooms integer [ref: < R.id]
+}
+
+
+Table Room as R{
+  id integer [pk]
+  room_name varchar(20)
+  dynamic_room_name varchar(20)
+  items integer [ref: < I.id]
+}
+
+Table Item as I{
+  id integer [pk]
+  item_name varchar(20)
+  start_value decimal(8,2)
+  current_value decimal(8,2)
+  quantity integer
+  depreciation_type integer [ref: > D.id]
+}
+
+Table Depreciation as D{
+  id integer [pk]
+  name varchar(20)
+  
+}
+
+
+tablegroup Test_Group {
+  School
+  Building
+  Room
+}
+
+
+______________________________________________________
+______________________________________________________
+______________________________________________________
+
+ode se na ovaj link:
+https://app.quickdatabasediagrams.com/#/
+i kopira tekst ispod:
+
+______________________________________________________
+
+# Sedište škole
+School
+-
+id pk integer
+name varchar(20)
+address varchar(20)
+buildings integer
+employees integer
+
+
+# Ako ima više objekata na više adresa, mesta
+Building
+-
+id pk integer FK >- School.buildings
+name
+address varchar(20)
+rooms integer
+
+# Prostorije (učionica, hodnik, kancelarija, kotlarnica, svlačionica...)
+Room
+-
+id pk integer
+building_id integer FK >- Building.rooms
+employee_id integer FK >- Employee.rooms
+name varchar(20)
+dynamic_name varchar(20)
+items integer
+
+# Popisni predmet (klupa, stolica, tabla, čiviluk, vrata, prozor, slika, laptop ...)
+Item
+-
+id pk integer
+room_id integer FK >- Room.items
+name varchar(20)
+initial_price decimal
+current_price decimal
+quantity integer
+serial_number varchar(20)
+deperciation_type integer
+
+# Tipovi amortizacije
+Depreciation
+-
+id pk integer FK >- Item.deperciation_type
+type varchar(20)
+
+# Kupovine
+Import
+-
+id pk integer
+date date
+serial_number varchar(20)
+item_id integer FK >-< Item.id
+
+# Rashod
+Expenditure
+-
+id pk integer
+date date
+serial_number varchar(20)
+item_id integer FK >-< Item.id
+
+# Premeštanje
+Move
+-
+id pk integer
+date date
+serial_number varchar(20)
+item_id integer FK >-< Item.id
+from_room integer
+to_room integer
+
+# Zaposleni
+Employee
+-
+id pk integer FK >- School.employees
+fname varchar(20)
+lname varchar(20)
+mail varchar(50)
+job varchar(20)
+authorisation varchar(20)
+rooms integer

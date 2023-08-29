@@ -1,0 +1,50 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="h1">{{ title }}</div>
+<div class="form-group mb-4">
+    <a class="btn btn-primary" href="javascript:history.back()">Nazad</a>
+    <a class="btn btn-secondary" href="">Print bez količina</a>
+    <a class="btn btn-secondary" href="">Print sa količinama</a>
+</div>
+<form action="" method="POST">
+    <table id="data_1" border="1" class="table table-striped userlist">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Serija</th>
+                <th>Naziv</th>
+                <th>Naziv</th>
+                <th>Količina</th>
+                <th>Količina input</th>
+                <th>Komentar</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in inventory_item_list_data %}
+            <tr>
+                <td>{{ item.item_id }}</td>
+                <td name="serial_{{ item.serial }}">{{ item.serial }}</td>
+                <td>{{ item.item_name }}</td>
+                <td>{{ item.name }}</td>
+                <td>{{ item.quantity }}</td>
+                {%if inventory.status == 'finished' %}
+                <td><input class="form-control" type="number" min="0" name="quantity_input_{{ item.serial }}" value="{{item.quantity_input}}" disabled></td>
+                <td><input class="form-control" type="text" name="comment_{{ item.serial }}" value="{{item.comment}}" disabled></td>
+                {% else %}
+                <td><input class="form-control" type="number" min="0" name="quantity_input_{{ item.serial }}" value="{{item.quantity_input}}"></td>
+                <td><input class="form-control" type="text" name="comment_{{ item.serial }}" value="{{item.comment}}"></td>
+                {% endif %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {%if not inventory.status == 'finished' %}
+    <button class="btn btn-primary" type="submit">save</button>
+    {% endif %}
+</form>
+
+{% endblock content%}
+
+{% block scripts %}
+
+{% endblock %}

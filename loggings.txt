@@ -1,0 +1,4 @@
+2023-07-29 08:28:12,253 - onetouch - DEBUG - Ovo je testna DEBUG poruka.
+2023-07-29 08:28:12,254 - onetouch - INFO - Ovo je testna INFO poruka.
+2023-07-29 08:28:12,254 - onetouch - WARNING - Ovo je testna WARNING poruka.
+2023-07-29 08:28:12,255 - onetouch - ERROR - Ovo je testna ERROR poruka.

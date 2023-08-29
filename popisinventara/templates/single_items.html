@@ -1,0 +1,239 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="h1">Pregled svih predmeta</div>
+<div class="form-group mb-4">
+    <a class="btn btn-primary" href="javascript:history.back()">Nazad</a>
+    {% if active_inventory_list %}
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newSingleItem" disabled>Dodajte novi predmet</button>
+    {% else %}
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newSingleItem">Dodajte novi predmet</button>
+    {% endif %}
+    <a class="btn btn-secondary" href="/update_price">Preračunaj sadašnju vrednost za svaku materijal</a>
+</div>
+<div class="modal fade" id="newSingleItem" tabindex="-1" role="dialog" aria-labelledby="newSingleItemLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="newSingleItemLabel">Dodavanje novog pojedinačnog predmeta</h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form method="POST" action="/add_single_item">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-control-label" for="add_single_item_item_id">Tip predmeta</label>
+                        <select class="form-select" name="add_single_item_item_id" id="add_single_item_item_id">
+                            <option value=""></option>
+                            {% for item in item_list %}
+                            <option value="{{item.id}}">{{item.name}} ({{item.item_category.category_number}}-{{item.item_category.name}} / {{item.item_depreciation_rate.group}}-{{item.item_depreciation_rate.name}}-{{item.item_depreciation_rate.rate}}%)</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-control-label" for="add_single_item_name">Naziv</label>
+                        <input class="form-control" type="text" id="add_single_item_name" name="add_single_item_name">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-control-label" for="add_single_item_room">Prostorija</label>
+                        <select class="form-select" name="add_single_item_room" id="add_single_item_room">
+                            <option value=""></option>
+                            {% for room in room_list %}
+                            <option value="{{room.id}}">({{room.name}}) {{room.dynamic_name}}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-control-label" for="add_single_item_initial_price">Nabavna cena</label>
+                        <input class="form-control" type="number" id="add_single_item_initial_price" name="add_single_item_initial_price" step="0.01" inputmode="decimal" placeholder="0.00">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-control-label" for="add_single_item_quantity">Količina</label>
+                        <input class="form-control" type="number" id="add_single_item_quantity" name="add_single_item_quantity">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-control-label" for="add_single_item_date">Datum nabavke</label>
+                        <input class="form-control" type="date" id="add_single_item_date" name="add_single_item_date">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Otkažite</button>
+                        <button type="submit" class="btn btn-primary">Sačuvajte</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<ul class="nav nav-tabs justify-content-center mb-4" id="myTab" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="single_item-tab" data-bs-toggle="tab" data-bs-target="#single_item" type="button" role="tab" aria-controls="single_item" aria-selected="true">Pojedinačni predmeti</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="serial-tab" data-bs-toggle="tab" data-bs-target="#serial" type="button" role="tab" aria-controls="serial" aria-selected="false">Kumulativno po seriji</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="item-tab" data-bs-toggle="tab" data-bs-target="#item" type="button" role="tab" aria-controls="item" aria-selected="false">Kumulativno po tipu predmeta</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="room-tab" data-bs-toggle="tab" data-bs-target="#room" type="button" role="tab" aria-controls="room" aria-selected="false">Kumulativno po prostoriji</button>
+    </li>
+</ul>
+<div class="tab-content" id="myTabContent">
+    <div class="tab-pane fade show active" id="single_item" role="tabpanel" aria-labelledby="single_item-tab">
+        <table id="data_1" border="1" class="table table-striped userlist">
+            <thead>
+                <tr>
+                    <td>ID</td>
+                    <td>Inventarski broj</td>
+                    <td>Naziv</td>
+                    <td>Nabavna vrednost</td>
+                    <td>Sadašnja vrednost</td>
+                    <td>Prostorija</td>
+                    <td>datum nabavke</td>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in single_item_list %}
+                <tr>
+                    <td>{{ item.id }}</td>
+                    <td>{{ item.inventory_number }}</td>
+                    <td>{{ item.name }}</td>
+                    <td>{{ "%.2f"|format(item.initial_price) }}</td>
+                    <td>{{ "%.2f"|format(item.current_price) }}</td>
+                    <td><a class="btn btn-primary" href="{{url_for('single_items.room_single_items', room_id=item.single_item_room.id)}}">{{ item.single_item_room.room_building.name }} > {{ item.single_item_room.dynamic_name }}</a></td>
+                    <td>{{ item.purchase_date }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="tab-pane fade" id="serial" role="tabpanel" aria-labelledby="serial-tab">
+        <table id="data_2" border="1" class="table table-striped userlist">
+            <thead>
+                <tr>
+                    <td>ID predmeta</td>
+                    <td>Serija predmeta</td>
+                    <td>Naziv</td>
+                    <td>Količina</td>
+                    <td>Nabavna vrednost</td>
+                    <td>Sadašnja vrednost</td>
+                    <td>datum nabavke</td>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in cumulatively_per_series %}
+                <tr>
+                    <td><a class="btn btn-primary" href="{{url_for('single_items.single_item_rooms', item_id=item['item_id'])}}">{{ item['item_id'] }}</a></td>
+                    <td>{{ item['series'] }}</td>
+                    <td>{{ item['name'] }}</td>
+                    <td>{{ item['quantity'] }}</td>
+                    <td>{{ "%.2f"|format(item['initial_price']) }}</td>
+                    <td>{{ "%.2f"|format(item['current_price']) }}</td>
+                    <td>{{ item.purchase_date }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="tab-pane fade" id="item" role="tabpanel" aria-labelledby="item-tab">
+        <table id="data_3" border="1" class="table table-striped userlist">
+            <thead>
+                <tr>
+                    <td>ID predmeta</td>
+                    <td>Naziv</td>
+                    <td>Količina</td>
+                    <td>Nabavna vrednost</td>
+                    <td>Sadašnja vrednost</td>
+                    <td>datum nabavke</td>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in cumulatively_per_item %}
+                <tr>
+                    <td><a class="btn btn-primary" href="{{url_for('single_items.single_item_rooms', item_id=item['item_id'])}}">{{ item['item_id'] }}</a></td>
+                    <td>{{ item['name'] }}</td>
+                    <td>{{ item['quantity'] }}</td>
+                    <td>{{ "%.2f"|format(item['initial_price']) }}</td>
+                    <td>{{ "%.2f"|format(item['current_price']) }}</td>
+                    <td>{{ item.purchase_date }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="tab-pane fade" id="room" role="tabpanel" aria-labelledby="room-tab">
+        <table id="data_4" border="1" class="table table-striped userlist">
+            <thead>
+                <tr>
+                    <td>Prostorija</td>
+                    <td>ID predmeta</td>
+                    <td>Naziv predmeta</td>
+                    <td>Serija</td>
+                    <td>Količina</td>
+                    <td>Nabavna vrednost</td>
+                    <td>Trenutna vrednost</td>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in cumulatively_per_room %}
+                <tr>
+                    <td>{{ item['room_id'] }} {{ item['room_name'] }}</td>
+                    <td>{{ item['item_id'] }}</td>
+                    <td>{{ item['item_name'] }}</td>
+                    <td>{{ item['serial'] }}</td>
+                    <td>{{ item['quantity'] }}</td>
+                    <td>{{ item['initial_price'] }}</td>
+                    <td>{{ item['current_price'] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+
+{% endblock content%}
+{% block scripts %}
+<script>
+    $(document).ready(function () {
+        $("#data_1").DataTable({
+            order: [[1, "asc"]],
+            language: {
+                url: "//cdn.datatables.net/plug-ins/1.12.1/i18n/sr-SP.json",
+                stateSave: true
+            },
+        });
+        $("#data_2").DataTable({
+            order: [[1, "asc"]],
+            language: {
+                url: "//cdn.datatables.net/plug-ins/1.12.1/i18n/sr-SP.json",
+                stateSave: true
+            },
+        });
+        $("#data_3").DataTable({
+            order: [[1, "asc"]],
+            language: {
+                url: "//cdn.datatables.net/plug-ins/1.12.1/i18n/sr-SP.json",
+                stateSave: true
+            },
+        });
+        $('#add_single_item_item_id').select2({
+            dropdownParent: $('#newSingleItem'),
+            placeholder: 'Izaberite opciju',
+            allowClear: true,
+            width: '100%',
+            tags: true,
+            closeOnSelect: true,
+        })
+        $('#add_single_item_room').select2({
+            dropdownParent: $('#newSingleItem'),
+            placeholder: 'Izaberite opciju',
+            allowClear: true,
+            width: '100%',
+            tags: true,
+            closeOnSelect: true,
+        })
+    });
+</script>
+{% endblock %}

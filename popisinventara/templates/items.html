@@ -1,0 +1,152 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="h1">{{ title }}</div>
+<div class="form-group">
+    <a class="btn btn-primary mb-4" href="javascript:history.back()">Nazad</a>
+    <button class="btn btn-primary mb-4" type="button" data-bs-toggle="modal" data-bs-target="#newItem">Dodajte novi tip predmeta</button>
+</div>
+<div class="modal fade" id="newItem" tabindex="-1" role="dialog" aria-labelledby="newItemLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="newItemLabel">Dodavanje novog tipa predmta</h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form method="POST" action="/add_item">
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label class="form-control-label" for="add_item_name">Naziv</label>
+                            <input class="form-control" type="text" id="add_item_name" name="add_item_name">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-control-label" for="add_item_category">Konto</label>
+                            <select class="form-select" name="add_item_category" id="add_item_category">
+                                <option value=""></option>
+                                {% for category in categories %}
+                                <option value="{{category.id}}">{{category.category_number}} ({{ category.name }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-control-label" for="add_item_rate">Procenat amortizacije</label>
+                            <select class="form-select" name="add_item_rate" id="add_item_rate">
+                                <option value=""></option>
+                                {% for rate in rates %}
+                                <option value="{{rate.id}}">{{rate.group}} ({{rate.name}}: {{rate.rate}}%)</option>
+                                {% endfor %}
+                            </select>
+                            <a href="{{url_for('items.depreciation_rates')}}">dodajte novu stopu amortizacije</a>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Otkažite</button>
+                            <button type="submit" class="btn btn-primary" >Sačuvajte</button>
+                        </div>
+                    </div>
+            </form>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="editItem" tabindex="-1" role="dialog" aria-labelledby="editItemLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editItemLabel">Izmena podataka tipa predmta</h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form method="POST" action="/edit_item">
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label class="form-control-label" for="edit_item_id">ID</label>
+                            <input class="form-control" type="text" id="edit_item_id" name="edit_item_id" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-control-label" for="edit_item_name">Naziv</label>
+                            <input class="form-control" type="text" id="edit_item_name" name="edit_item_name">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-control-label" for="edit_item_category">Konto</label>
+                            <select class="form-select" name="edit_item_category" id="edit_item_category">
+                                {% for category in categories %}
+                                <option value="{{category.id}}">{{category.category_number}} ({{ category.name }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-control-label" for="edit_item_rate">Procenat amortizacije</label>
+                            <select class="form-select" name="edit_item_rate" id="edit_item_rate">
+                                {% for rate in rates %}
+                                <option value="{{rate.id}}">{{rate.group}} ({{rate.name}}: {{rate.rate}}%)</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Otkažite</button>
+                            <button type="submit" class="btn btn-primary" >Sačuvajte</button>
+                        </div>
+                    </div>
+            </form>
+        </div>
+    </div>
+</div>
+<table id="data" border="1" class="table table-striped userlist">
+    <thead>
+        <tr>
+            <td>ID</td>
+            <td>Naziv</td>
+            <td>Konto</td>
+            <td>Procenat amortizacije</td>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in items %}
+        <tr>
+            <td>{{ item.id }}</td>
+            <td><button class="btn btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#editItem" onclick="editItem('{{item.id}}', '{{item.name}}', '{{item.category_id}}', '{{item.depreciation_rate_id}}')">{{ item.name }}</button></td>
+            <td>{{ item.item_category.category_number }}</td>
+            <td>{{ item.item_depreciation_rate.rate }}%</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock content%}
+
+{% block scripts %}
+<script>
+    function editItem(itemID, itemName, itemCategory, itemRate) {
+        document.getElementById("edit_item_id").value = itemID;
+        document.getElementById("edit_item_name").value = itemName;
+        document.getElementById("edit_item_category").value = itemCategory;
+        document.getElementById("edit_item_rate").value = itemRate;
+        // inicijalizacija select2 polja
+        $('#edit_item_category, #edit_item_rate').select2({
+            dropdownParent: $('#editItem'),
+            placeholder: 'Izaberite opciju',
+            allowClear: true,
+            width: '100%',
+            tags: true,
+            closeOnSelect: true,
+        });
+    }
+    $(document).ready(function () {
+        $("#data").DataTable({
+            order: [[1, "asc"]],
+            language: {
+                url: "//cdn.datatables.net/plug-ins/1.12.1/i18n/sr-SP.json",
+                stateSave: true
+            },
+        });
+        $('#add_item_rate, #add_item_category').select2({
+            dropdownParent: $('#newItem'),
+            placeholder: 'Izaberite opciju',
+            allowClear: true,
+            width: '100%',
+            tags: true,
+            closeOnSelect: true,
+        });
+    });
+</script>
+{% endblock %}

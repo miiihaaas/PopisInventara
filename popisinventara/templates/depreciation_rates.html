@@ -1,0 +1,116 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="h1">{{ title }}</div>
+<div class="form-group">
+    <a class="btn btn-primary mb-4" href="javascript:history.back()">Nazad</a>
+    <button class="btn btn-primary mb-4" type="button" data-bs-toggle="modal" data-bs-target="#newDepreciationRate">Dodajte novu stopu amortizacije</button>
+</div>
+<div class="modal fade" id="newDepreciationRate" tabindex="-1" role="dialog" aria-labelledby="newDepreciationRateLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="newDepreciationRateLabel">Dodavanje nove stpe amortizacije</h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form method="POST" action="/add_depreciation_rate">
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label class="form-control-label" for="add_depreciation_rate_group">Grupa</label>
+                            <input class="form-control" type="text" id="add_depreciation_rate_group" name="add_depreciation_rate_group">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-control-label" for="add_depreciation_rate_name">Naziv</label>
+                            <input class="form-control" type="text" id="add_depreciation_rate_name" name="add_depreciation_rate_name">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-control-label" for="add_depreciation_rate_rate">Procenat amortizacije</label>
+                            <input class="form-control" type="text" id="add_depreciation_rate_rate" name="add_depreciation_rate_rate">
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Otkažite</button>
+                            <button type="submit" class="btn btn-primary" >Sačuvajte</button>
+                        </div>
+                    </div>
+            </form>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="editDepreciationRate" tabindex="-1" role="dialog" aria-labelledby="editDepreciationRateLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editDepreciationRateLabel">Editovanje stpe amortizacije</h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form method="POST" action="/edit_depreciation_rate">
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label class="form-control-label" for="edit_depreciation_rate_id">ID</label>
+                            <input class="form-control" type="text" id="edit_depreciation_rate_id" name="edit_depreciation_rate_id" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-control-label" for="edit_depreciation_rate_group">Grupa</label>
+                            <input class="form-control" type="text" id="edit_depreciation_rate_group" name="edit_depreciation_rate_group">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-control-label" for="edit_depreciation_rate_name">Naziv</label>
+                            <input class="form-control" type="text" id="edit_depreciation_rate_name" name="edit_depreciation_rate_name">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-control-label" for="edit_depreciation_rate_rate">Procenat amortizacije</label>
+                            <input class="form-control" type="text" id="edit_depreciation_rate_rate" name="edit_depreciation_rate_rate">
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Otkažite</button>
+                            <button type="submit" class="btn btn-primary" >Sačuvajte</button>
+                        </div>
+                    </div>
+            </form>
+        </div>
+    </div>
+</div>
+<table id="data" border="1" class="table table-striped userlist">
+    <thead>
+        <tr>
+            <td>ID</td>
+            <td>Grupa</td>
+            <td>Naziv</td>
+            <td>Procenat amortizacije</td>
+        </tr>
+    </thead>
+    <tbody>
+        {% for depreciation_rate in depreciation_rates %}
+        <tr>
+            <td>{{ depreciation_rate.id }}</td>
+            <td><button class="btn btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#editDepreciationRate" onclick="editRate('{{depreciation_rate.id}}', '{{ depreciation_rate.group }}', '{{ depreciation_rate.name }}', '{{ depreciation_rate.rate }}')">{{ depreciation_rate.group }}</button></td>
+            <td>{{ depreciation_rate.name }}</td>
+            <td>{{ depreciation_rate.rate }}%</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock content%}
+
+{% block scripts %}
+<script>
+    function editRate(rateId, rateGroup, rateName, rateRate) {
+        document.getElementById("edit_depreciation_rate_id").value = rateId;
+        document.getElementById("edit_depreciation_rate_group").value = rateGroup;
+        document.getElementById("edit_depreciation_rate_name").value = rateName;
+        document.getElementById("edit_depreciation_rate_rate").value = rateRate;
+    }
+    $(document).ready(function () {
+    $("#data").DataTable({
+        order: [[1, "asc"]],
+        language: {
+            url: "//cdn.datatables.net/plug-ins/1.12.1/i18n/sr-SP.json",
+            stateSave: true
+        },
+        });
+    });
+</script>
+{% endblock %}

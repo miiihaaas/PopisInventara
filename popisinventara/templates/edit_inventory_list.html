@@ -1,0 +1,32 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="h1">{{ title }}</div>
+<div class="form-group mb-4">
+    <a class="btn btn-primary" href="javascript:history.back()">Nazad</a>
+    <a class="btn btn-secondary" href="">Štampa svih sliti (bez količina)</a>
+    <a class="btn btn-secondary" href="">Štampa svih sliti (sa količinama)</a>
+</div>
+<hr>
+<div class="form-group mb-4">
+    {% for building_name in unique_building_names %}
+    <div class="form-group">
+        {% for button in room_buttons %}
+        {% if button.building_name == building_name %}
+        <div class="btn-group" role="group">
+            <a class="btn btn-outline-primary mb-4" href="{{inventory_id}}/{{button.room_id}}">{{button.building_name}}</a>
+            <a class="btn btn-primary mb-4" href="{{inventory_id}}/{{button.room_id}}">{{button.dynamic_name}}</a>
+        </div>
+        {% endif %}
+        {% endfor %}
+    </div>
+    <hr>
+    {% endfor %}
+</div>
+
+
+
+{% endblock content%}
+
+{% block scripts %}
+
+{% endblock %}
