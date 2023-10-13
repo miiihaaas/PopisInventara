@@ -19,7 +19,7 @@ class RequestResetForm(FlaskForm):
     submit = SubmitField('Zatražite reset lozinke')
 
     def validate_email(self, email):
-        user = User.query.filter_by(user_mail=email.data).first()
+        user = User.query.filter_by(email=email.data).first()
         if user is None:
             raise ValidationError('Ne postoji korisnik sa Vašim emailom. Zatražite od vašeg administratora da Vam otvori nalog.')
 
