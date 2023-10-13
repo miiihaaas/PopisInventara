@@ -51,7 +51,7 @@ def reset_request():
             return redirect(url_for('main.home'))
         form = RequestResetForm()
         if form.validate_on_submit():
-            user  = User.query.filter_by(user_mail=form.email.data).first()
+            user  = User.query.filter_by(email=form.email.data).first()
             send_reset_email(user)
             flash('Mejl je poslat na Vašu adresu sa instrukcijama za resetovanje lozinke. ', 'info')
             return redirect(url_for('users.login'))
