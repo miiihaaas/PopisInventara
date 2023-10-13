@@ -7,6 +7,8 @@ from flask_login import LoginManager
 # from flask_mail import Mail
 from flask_migrate import Migrate
 
+load_dotenv()
+
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')

@@ -6,6 +6,7 @@ from flask_login import current_user
 from flask import request
 from popisinventara import db
 from popisinventara.models import Inventory, Room, SingleItem, Item
+from popisinventara.inventory.functions import popisna_lista_gen, popisne_liste_gen
 
 
 inventory = Blueprint('inventory', __name__)
@@ -103,6 +104,9 @@ def edit_inventory_list(inventory_id):
     print(f'{room_buttons=}')
     unique_building_names = sorted({room['building_name'] for room in room_buttons})
     print(f'{unique_building_names}')
+    
+    #! generiši popisne liste
+    popisne_liste_gen()
     return render_template('edit_inventory_list.html', title="Izmena popisnih listi",
                             inventory_id=inventory_id,
                             room_buttons=room_buttons,
@@ -170,6 +174,7 @@ def edit_inventory_room_list(inventory_id, room_id):
         sorted_inventory = sorted(inventory_item_list_data, key=lambda x: (x['item_id'], x['serial']))
         inventory_item_list_data = sorted_inventory
         print(f'test: {inventory_item_list_data=}')
+        popisna_lista_gen(inventory_item_list_data)
     return render_template('edit_inventory_room_list.html', 
                             title=f"Izmena popisne liste {room_id}",
                             inventory_item_list_data=inventory_item_list_data,

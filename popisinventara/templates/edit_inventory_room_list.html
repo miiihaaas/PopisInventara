@@ -3,8 +3,8 @@
 <div class="h1">{{ title }}</div>
 <div class="form-group mb-4">
     <a class="btn btn-primary" href="javascript:history.back()">Nazad</a>
-    <a class="btn btn-secondary" href="">Print bez količina</a>
-    <a class="btn btn-secondary" href="">Print sa količinama</a>
+    <a class="btn btn-primary" href="{{ url_for('static', filename='inventory_lists/inventory_room_list_no_quantity.pdf') }}" target="_blank">Print bez količina</a>
+    <a class="btn btn-primary" href="{{ url_for('static', filename='inventory_lists/inventory_room_list.pdf') }}" target="_blank">Print sa količinama</a>
 </div>
 <form action="" method="POST">
     <table id="data_1" border="1" class="table table-striped userlist">
@@ -39,9 +39,61 @@
         </tbody>
     </table>
     {%if not inventory.status == 'finished' %}
-    <button class="btn btn-primary" type="submit">save</button>
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newSingleItem">Dodajte novu stavku</button>
+    <button class="btn btn-primary" type="submit">Sačuvajte izmene</button>
     {% endif %}
 </form>
+<div class="modal fade" id="newSingleItem" tabindex="-1" role="dialog" aria-labelledby="newSingleItemLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="newSingleItemLabel">Dodavanje novog spredmeta u popisnu listu</h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form method="POST" action="/add_single_item">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-control-label" for="add_single_item_item_id">ID</label>
+                        <select class="form-select" name="add_single_item_item_id" id="add_single_item_item_id">
+                            <option value=""></option>
+                            {% for item in item_list %}
+                            <option value="{{item.id}}">{{item.name}} ({{item.item_category.category_number}}-{{item.item_category.name}} / {{item.item_depreciation_rate.group}}-{{item.item_depreciation_rate.name}}-{{item.item_depreciation_rate.rate}}%)</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-control-label" for="add_single_item_name">Serija</label>
+                        <input class="form-control" type="text" id="add_single_item_name" name="add_single_item_name">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-control-label" for="add_single_item_room">Naziv</label>
+                        <select class="form-select" name="add_single_item_room" id="add_single_item_room">
+                            <option value=""></option>
+                            {% for room in room_list %}
+                            <option value="{{room.id}}">({{room.name}}) {{room.dynamic_name}}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-control-label" for="add_single_item_quantity">Količina</label>
+                        <input class="form-control" type="number" id="add_single_item_quantity" name="add_single_item_quantity">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-control-label" for="add_single_item_initial_price">Komentar</label>
+                        <input class="form-control" type="text" id="add_single_item_initial_price" name="add_single_item_initial_price">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Otkažite</button>
+                        <button type="submit" class="btn btn-primary">Sačuvajte</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{{ inventory_item_list_data }}
 
 {% endblock content%}
 
