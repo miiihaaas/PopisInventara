@@ -36,7 +36,7 @@ def logout():
 
 def send_reset_email(user):
     token = user.get_reset_token()
-    msg = Message('Zahtev za resetovanje lozinke', sender='noreply@uplatnice.online', recipients=[user.user_mail])
+    msg = Message('Zahtev za resetovanje lozinke', sender='noreply@uplatnice.online', recipients=[user.email])
     msg.body = f'''Da biste resetovali lozinku, kliknite na sledeći link:
 {url_for('users.reset_token', token=token, _external=True)}
 
