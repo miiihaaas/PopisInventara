@@ -8,7 +8,7 @@
     {% else %}
     <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newSingleItem">Dodajte novi predmet</button>
     {% endif %}
-    <a class="btn btn-secondary" href="/update_price">Preračunaj sadašnju vrednost za svaku materijal</a>
+    <a class="btn btn-secondary" href="{{ url_for('single_items.update_price') }}">Preračunaj sadašnju vrednost za svaku materijal</a>
 </div>
 <div class="modal fade" id="newSingleItem" tabindex="-1" role="dialog" aria-labelledby="newSingleItemLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
@@ -44,7 +44,7 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label class="form-control-label" for="add_single_item_initial_price">Nabavna cena</label>
+                        <label class="form-control-label" for="add_single_item_initial_price">Nabavna cena (svih predmeta)</label>
                         <input class="form-control" type="number" id="add_single_item_initial_price" name="add_single_item_initial_price" step="0.01" inputmode="decimal" placeholder="0.00">
                     </div>
                     <div class="form-group">

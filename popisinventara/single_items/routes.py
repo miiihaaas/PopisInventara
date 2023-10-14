@@ -112,11 +112,12 @@ def add_single_item():
     print(f'{rate=}')
     item_name = request.form.get('add_single_item_name')
     item_room = request.form.get('add_single_item_room')
-    initial_price = request.form.get('add_single_item_initial_price')
-    purchase_date = datetime.strptime(request.form.get('add_single_item_date'), '%Y-%m-%d').date()
     quantity = request.form.get('add_single_item_quantity')
+    initial_price = float(request.form.get('add_single_item_initial_price')) / float(quantity)
+    purchase_date = datetime.strptime(request.form.get('add_single_item_date'), '%Y-%m-%d').date()
     current_price = current_price_calculation(initial_price, rate, purchase_date)
     print(f'{item_id=} {item_name=} {item_room=} {initial_price=} {purchase_date=} {quantity=}')
+    new_single_items = []
     for i in range(1, int(quantity)+1):
         inventory_number = f'{item_id}-{max_serial_number}-{i}'
         new_single_item = SingleItem(item_id=item_id,
@@ -127,8 +128,9 @@ def add_single_item():
                                         current_price=current_price,
                                         purchase_date=purchase_date,
                                         inventory_number=inventory_number)
-        db.session.add(new_single_item)
-        db.session.commit()
+        new_single_items.append(new_single_item)
+    db.session.add_all(new_single_items)
+    db.session.commit()
     return redirect(url_for('single_items.single_item_list'))
 
 
