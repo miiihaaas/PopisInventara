@@ -15,7 +15,7 @@
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            <form method="POST" action="/edit_category">
+            <form method="POST" action="{{ url_for('item.edit_category') }}">
                 <form action="">
                     <div class="modal-body">
                         <div class="form-group">
@@ -49,7 +49,7 @@
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            <form method="POST" action="/add_category">
+            <form method="POST" action="{{ url_for('item.add_category') }}">
                     <div class="modal-body">
                         <div class="form-group">
                             <label class="form-control-label" for="add_category_number">Broj konta</label>
