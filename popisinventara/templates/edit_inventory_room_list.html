@@ -52,7 +52,7 @@
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            <form method="POST" action="/add_single_item">
+            <form method="POST" action="{{ url_for('single_items.add_single_item')}}">
                 <div class="modal-body">
                     <div class="form-group">
                         <label class="form-control-label" for="add_single_item_item_id">ID</label>

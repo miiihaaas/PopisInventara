@@ -14,7 +14,7 @@
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            <form method="POST" action="/add_item">
+            <form method="POST" action="{{ url_for('item.add_item') }}">
                     <div class="modal-body">
                         <div class="form-group">
                             <label class="form-control-label" for="add_item_name">Naziv</label>
@@ -57,7 +57,7 @@
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            <form method="POST" action="/edit_item">
+            <form method="POST" action="{{ url_for('item.edit_item') }}">
                     <div class="modal-body">
                         <div class="form-group">
                             <label class="form-control-label" for="edit_item_id">ID</label>
