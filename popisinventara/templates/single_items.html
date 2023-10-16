@@ -93,7 +93,7 @@
                 </tr>
             </thead>
             <tbody>
-                {% for item in single_item_list %}
+                <!-- {% for item in single_item_list %}
                 <tr>
                     <td>{{ item.id }}</td>
                     <td>{{ item.inventory_number }}</td>
@@ -103,7 +103,7 @@
                     <td><a class="btn btn-primary" href="{{url_for('single_items.room_single_items', room_id=item.single_item_room.id)}}">{{ item.single_item_room.room_building.name }} > {{ item.single_item_room.dynamic_name }}</a></td>
                     <td>{{ item.purchase_date }}</td>
                 </tr>
-                {% endfor %}
+                {% endfor %} -->
             </tbody>
         </table>
     </div>
@@ -198,6 +198,54 @@
 <script>
     $(document).ready(function () {
         $("#data_1").DataTable({
+            ajax: {
+                url: '/api/singleitems',
+                type: 'GET',
+
+            },
+            serverSide: true,
+            columns: [
+                {data: 'id'},
+                {data: 'inventory_number'},
+                {data: 'name'},
+                { 
+                    data: 'initial_price',
+                    render: function (data, type, row) {
+                        // Ako je tip prikaza podataka ili tip sortiranja, vraćamo zaokruženu vrednost
+                        if (type === 'display' || type === 'type') {
+                            return parseFloat(data).toFixed(2);
+                        }
+                        // Inače, vraćamo nenumeroisanu vrednost za druge tipove
+                        return data;
+                    }
+                },
+                { 
+                    data: 'current_price',
+                    render: function (data, type, row) {
+                        // Ako je tip prikaza podataka ili tip sortiranja, vraćamo zaokruženu vrednost
+                        if (type === 'display' || type === 'type') {
+                            return parseFloat(data).toFixed(2);
+                        }
+                        // Inače, vraćamo nenumeroisanu vrednost za druge tipove
+                        return data;
+                    }
+                },
+                {
+                    data: null,
+                    render: function (data, type, row) {
+                        // Generiše HTML za novu kolonu
+                        if (row.room_id) {
+                            // Koristi podatke iz reda da konstruiraš hyperlink
+                            var url = '{{ url_for("single_items.room_single_items", room_id=1) }}';
+                            url = url.replace(1, row.room_id);
+                            var html = '<td><a class="btn btn-primary" href="' + url + '">' + row.button_name + '</a></td>';
+
+                            return html;
+                        }
+                    }
+                },
+                {data: 'purchase_date'},
+            ],
             order: [[1, "asc"]],
             language: {
                 url: "//cdn.datatables.net/plug-ins/1.12.1/i18n/sr-SP.json",

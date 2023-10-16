@@ -100,6 +100,66 @@ def single_item_list():
                             cumulatively_per_room=cumulatively_per_room)
 
 
+@single_items.route('/api/singleitems')
+def api_single_items():
+    single_items_query = SingleItem.query
+    
+    # search filter
+    search = request.args.get('search[value]')
+    if search:
+        single_items_query = single_items_query.filter(db.or_(
+            SingleItem.name.like(f'%{search}%'),
+            SingleItem.inventory_number.like(f'%{search}%'),
+            SingleItem.room_id.like(f'%{search}%'),
+            SingleItem.item_id.like(f'%{search}%'),
+        ))
+    total_filtered = single_items_query.count()
+    
+    # sorting
+    order = []
+    i = 0
+    while True:
+        col_index = request.args.get(f'order[{i}][column]')
+        if col_index is None:
+            break
+        col_name = request.args.get(f'columns[{col_index}][data]')
+        if col_name not in ['id', 'inventory_number', 'name', 'initial_price', 'current_price', 'room_id', 'purchase_date']:
+            col_name = 'name'
+        descending = request.args.get(f'order[{i}][dir]') == 'desc'
+        col = getattr(SingleItem, col_name)
+        if descending:
+            col = col.desc()
+        order.append(col)
+        i += 1
+    if order:
+        single_items_query = single_items_query.order_by(*order)
+    
+    # pagination
+    start = request.args.get('start', type=int)
+    length = request.args.get('length', type=int)
+    single_items_query = single_items_query.offset(start).limit(length)
+    
+    single_items_list = []
+    for single_item in single_items_query:
+        new_dict = {
+            'id': single_item.id,
+            'inventory_number': single_item.inventory_number,
+            'name': single_item.name,
+            'initial_price': single_item.initial_price,
+            'current_price': single_item.current_price,
+            'room_id': single_item.room_id,
+            'purchase_date': single_item.purchase_date,
+            'button_name': single_item.single_item_room.room_building.name + " > " +  single_item.single_item_room.dynamic_name
+        }
+        single_items_list.append(new_dict)
+    return {
+        'data': single_items_list,
+        'recordsFiltered': total_filtered,
+        'recordsTotal': total_filtered,
+        'draw': request.args.get('draw', type=int),
+    }
+
+
 @single_items.route('/add_single_item', methods=['GET', 'POST'])
 def add_single_item():
     single_items_list = SingleItem.query.all()
@@ -246,14 +306,19 @@ def move(item_id, room_id):
     if request.method == 'POST':
         print(f'{request.form=}')
         get_move_list = json.loads(request.form['data_to_move'])
-        
         move_list = [data for data in get_move_list if data['quantity_to_move'] != '']
         print(f'{move_list=}')
-        for data in move_list:
-            for i in range(int(data['quantity_to_move'])):
-                single_item = SingleItem.query.filter_by(room_id=data['room_id']).filter_by(serial=data['serial']).first()
-                single_item.room_id = room_id #!iz atributa funkcije
-                db.session.commit()
+        try:
+            if not db.session.is_active:
+                db.session.begin()
+            for data in move_list:
+                for i in range(int(data['quantity_to_move'])):
+                    single_item = SingleItem.query.filter_by(room_id=data['room_id']).filter_by(serial=data['serial']).first()
+                    single_item.room_id = room_id #!iz atributa funkcije
+            db.session.commit()
+        except Exception as e:
+            print(f'Greška pri čuvanju promena u bazi: {e}')
+            db.session.rollback() # U slučaju greške, poništite transakciju
         return redirect(url_for('single_items.single_item_rooms', item_id=item_id))
     return render_template('move.html', title='Premeštanje predmeta',
                             item=item,
@@ -264,9 +329,9 @@ def move(item_id, room_id):
 @single_items.route('/update_price', methods=['GET', 'POST'])
 def update_price():
     single_items = SingleItem.query.all()
-    print(f'{single_items=}')
     for sigle_item in single_items:
         sigle_item.current_price = current_price_calculation(sigle_item.initial_price, sigle_item.single_item_item.item_depreciation_rate.rate, sigle_item.purchase_date)
         print(f'{sigle_item.id=}')
-        db.session.commit()
+        
+    db.session.commit()
     return redirect(url_for('single_items.single_item_list'))

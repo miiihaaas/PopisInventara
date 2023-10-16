@@ -9,11 +9,12 @@
         <tr>
             <th>ID</th>
             <th>Serija</th>
-            <th>Naziv</th>
-            <th>Naziv</th>
+            <th>Tip predmeta</th>
+            <th>Naziv predmeta</th>
             <th>Količina</th>
-            <th>Količina input</th>
-            <th>Razlika</th>
+            <th>Popisana količina</th>
+            <th>Razlika (kom)</th>
+            <th>Razlika (din)</th>
         </tr>
     </thead>
     <tbody>
@@ -26,6 +27,7 @@
             <td>{{ item.quantity }}</td>
             <td>{{ item.quantity_input }}</td>
             <td>{{ item.quantity_input - item.quantity }}</td>
+            <td>WiP</td>
         </tr>
         {% endfor %}
     </tbody>
