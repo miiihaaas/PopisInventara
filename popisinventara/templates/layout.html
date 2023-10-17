@@ -7,12 +7,18 @@
 
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css" integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x" crossorigin="anonymous">
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='main.css') }}">
+    <!-- <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='main.css') }}"> -->
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.25/css/dataTables.bootstrap5.css">
 
-    <!-- ovo je za select koji ima pretragu u sebi -->
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&amp;display=swap" rel="stylesheet">
+    <script src="https://kit.fontawesome.com/eaa4d75133.js" crossorigin="anonymous"></script>
+
+    <!-- ovo je za select2 koji ima pretragu u sebi -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='mikicustom.css') }}">
   
 
     {% if title %}
@@ -23,42 +29,65 @@
   </head>
   <body>
     <header class="site-header">
-      <nav class="navbar navbar-expand-md navbar-dark bg-steel fixed-top">
+      <nav class="navbar navbar-expand-md navbar-dark bg-steel">
         <div class="container">
-          <a class="navbar-brand mr-4" href="/">{{ current_user.name }}</a>
-          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggle" aria-controls="navbarToggle" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-          </button>
+          {% if current_user.is_authenticated %}
+          <a class="navbar-brand mr-4" href="{{ url_for('main.home') }}">{{ current_user.user_school.schoolname }} | {{ current_user.name }}</a>
+          {% endif %}
           <div class="collapse navbar-collapse" id="navbarToggle">
-            <div class="navbar-nav mr-auto">
-              {% if current_user.is_authenticated %}
-                <a class="nav-item nav-link" href="{{ url_for('main.home') }}">Početna</a>
-                <a class="nav-item nav-link" href="{{ url_for('main.about') }}">O softveru</a>
-              {% else %}
-                <a class="nav-item nav-link" href="{{ url_for('main.home') }}">Početna</a>
-                <a class="nav-item nav-link" href="{{ url_for('main.about') }}">O softveru</a>
-              {% endif %}
-            </div>
-            <!-- Navbar Right Side -->
-            <div class="navbar-nav">
-              {% if current_user.is_authenticated %}
-                {% if current_user.authorization == 's_admin' %}
-                  <a class="nav-item nav-link" href="{{ url_for('companys.company_list') }}">Kompanija</a>
-                  <a class="nav-item nav-link" href="{{ url_for('vehicles.vehicle_list') }}">Vozila</a>
-                  <a class="nav-item nav-link" href="{{ url_for('users.user_list') }}">Korisnici</a>
-                  <a class="nav-item nav-link" href="{{ url_for('users.logout') }}">Odjavite se</a>
-                {% elif current_user.authorization == 'c_admin'%}
-                  <a class="nav-item nav-link" href="{{ url_for('companys.company_list') }}">Kompanija</a>
-                  <a class="nav-item nav-link" href="{{ url_for('vehicles.vehicle_list') }}">Vozila</a>
-                  <a class="nav-item nav-link" href="{{ url_for('users.user_list') }}">Korisnici</a>
-                  <a class="nav-item nav-link" href="{{ url_for('users.logout') }}">Odjavite se</a>
+
+              <!-- Navbar Right Side -->
+              <div class="navbar-nav">
+                {% if current_user.is_authenticated %}
+                  <a class="nav-item nav-link" href="{{ url_for('main.home') }}">Početna</a>
+                  <li class="nav-item dropdown dropdown--align-right">
+                    <a class="nav-link dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" href="#">Inventarske aktivnosti</a>
+                    <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdownMenuLink">
+                      <a class="dropdown-item" href="{{ url_for('items.items') }}">Tip predmeta</a>
+                      <a class="dropdown-item" href="{{ url_for('single_items.single_item_list') }}">Predmeti</a>
+                      <a class="dropdown-item" href="{{ url_for('single_items.move_select_item') }}">Premeštaj</a>
+                    </div>
+                  </li>
+                  <li class="nav-item dropdown dropdown--align-right">
+                    <a class="nav-link dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" href="#">Popisne aktivnosti</a>
+                    <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdownMenuLink">
+                      <a class="dropdown-item" href="{{ url_for('inventory.create_inventory_list') }}">Kreiranje popisne liste</a>
+                      <a class="dropdown-item" href="{{ url_for('inventory.read_inventory_list') }}">Pregled popisnih listi</a>
+                    </div>
+                  </li>
+                  <li class="nav-item dropdown dropdown--align-right">
+                    <a class="nav-link dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" href="#">Izveštaji</a>
+                    <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdownMenuLink">
+                      <a class="dropdown-item" href="#">Izveštaj 1</a>
+                      <a class="dropdown-item" href="#">izveštaj 2</a>
+                    </div>
+                  </li>
+                  <li class="nav-item dropdown dropdown--align-right">
+                    <a class="nav-link dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" href="#">Podešavanja</a>
+                    <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdownMenuLink">
+                      <a class="dropdown-item" href="{{ url_for('schools.school', school_id=1) }}">Škola / Prostorije</a>
+                      <a class="dropdown-item" href="#">Korisnički nalozi</a>
+                      <a class="dropdown-item" href="{{ url_for('items.category') }}">Konta</a>
+                      <a class="dropdown-item" href="{{ url_for('items.depreciation_rates') }}">Stopa amortizacije</a>
+                    </div>
+                  </li>
                 {% else %}
-                  <a class="nav-item nav-link" href="{{ url_for('users.logout') }}">Odjavite se</a>
+                  <a class="nav-item nav-link" href="{{ url_for('main.about') }}">O softveru</a>
+                  <a class="nav-item nav-link" href="{{ url_for('main.about') }}">O softveru</a>
                 {% endif %}
-              {% else %}
-                <a class="nav-item nav-link" href="{{ url_for('users.login') }}">Prijavljivanje</a>
-              {% endif %}
-            </div>
+                {% if current_user.is_authenticated %}
+                  {% if current_user.authorization == 's_admin' %}
+                    <a class="nav-item nav-link" href="{{ url_for('users.logout') }}">Odjavite se</a>
+                  {% elif current_user.authorization == 'c_admin'%}
+                    <a class="nav-item nav-link" href="{{ url_for('users.logout') }}">Odjavite se</a>
+                  {% else %}
+                    <a class="nav-item nav-link" href="{{ url_for('users.logout') }}">Odjavite se</a>
+                  {% endif %}
+                {% else %}
+                  <a class="nav-item nav-link" href="{{ url_for('users.login') }}">Prijavite se</a>
+                {% endif %}
+              </div>
+
           </div>
         </div>
       </nav>

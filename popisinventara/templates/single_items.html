@@ -66,10 +66,10 @@
 </div>
 <ul class="nav nav-tabs justify-content-center mb-4" id="myTab" role="tablist">
     <li class="nav-item" role="presentation">
-        <button class="nav-link active" id="single_item-tab" data-bs-toggle="tab" data-bs-target="#single_item" type="button" role="tab" aria-controls="single_item" aria-selected="true">Pojedinačni predmeti</button>
+        <button class="nav-link" id="single_item-tab" data-bs-toggle="tab" data-bs-target="#single_item" type="button" role="tab" aria-controls="single_item" aria-selected="false">Pojedinačni predmeti</button>
     </li>
     <li class="nav-item" role="presentation">
-        <button class="nav-link" id="serial-tab" data-bs-toggle="tab" data-bs-target="#serial" type="button" role="tab" aria-controls="serial" aria-selected="false">Kumulativno po seriji</button>
+        <button class="nav-link active" id="serial-tab" data-bs-toggle="tab" data-bs-target="#serial" type="button" role="tab" aria-controls="serial" aria-selected="true">Kumulativno po seriji</button>
     </li>
     <li class="nav-item" role="presentation">
         <button class="nav-link" id="item-tab" data-bs-toggle="tab" data-bs-target="#item" type="button" role="tab" aria-controls="item" aria-selected="false">Kumulativno po tipu predmeta</button>
@@ -93,17 +93,6 @@
                 </tr>
             </thead>
             <tbody>
-                <!-- {% for item in single_item_list %}
-                <tr>
-                    <td>{{ item.id }}</td>
-                    <td>{{ item.inventory_number }}</td>
-                    <td>{{ item.name }}</td>
-                    <td>{{ "%.2f"|format(item.initial_price) }}</td>
-                    <td>{{ "%.2f"|format(item.current_price) }}</td>
-                    <td><a class="btn btn-primary" href="{{url_for('single_items.room_single_items', room_id=item.single_item_room.id)}}">{{ item.single_item_room.room_building.name }} > {{ item.single_item_room.dynamic_name }}</a></td>
-                    <td>{{ item.purchase_date }}</td>
-                </tr>
-                {% endfor %} -->
             </tbody>
         </table>
     </div>
@@ -199,7 +188,7 @@
     $(document).ready(function () {
         $("#data_1").DataTable({
             ajax: {
-                url: '/api/singleitems',
+                url: '{{url_for("single_items.api_single_items")}}',
                 type: 'GET',
 
             },
