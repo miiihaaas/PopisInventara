@@ -34,7 +34,7 @@
                             <select class="form-select" name="add_item_rate" id="add_item_rate">
                                 <option value=""></option>
                                 {% for rate in rates %}
-                                <option value="{{rate.id}}">{{rate.group}} ({{rate.name}}: {{rate.rate}}%)</option>
+                                <option value="{{rate.id}}">{{rate.name}}: {{rate.rate}}%</option>
                                 {% endfor %}
                             </select>
                             <a href="{{url_for('items.depreciation_rates')}}">dodajte novu stopu amortizacije</a>
@@ -79,7 +79,7 @@
                             <label class="form-control-label" for="edit_item_rate">Procenat amortizacije</label>
                             <select class="form-select" name="edit_item_rate" id="edit_item_rate">
                                 {% for rate in rates %}
-                                <option value="{{rate.id}}">{{rate.group}} ({{rate.name}}: {{rate.rate}}%)</option>
+                                <option value="{{rate.id}}">{{rate.name}}: {{rate.rate}}%</option>
                                 {% endfor %}
                             </select>
                         </div>

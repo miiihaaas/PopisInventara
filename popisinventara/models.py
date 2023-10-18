@@ -72,7 +72,6 @@ class User(db.Model, UserMixin):
 
 class DepreciationRate(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    group = db.Column(db.String(20), nullable=False)
     name = db.Column(db.String(50), nullable=False)
     rate = db.Column(db.Float(), nullable=False)
     items = db.relationship('Item', backref='item_depreciation_rate', lazy='dynamic')

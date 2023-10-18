@@ -90,16 +90,14 @@ def edit_category():
 @item.route('/depreciation_rates')
 def depreciation_rates():
     depreciation_rates = DepreciationRate.query.all()
-    print(f'{depreciation_rates[0].group=}')
     return render_template('depreciation_rates.html', title="Stope amortizacije", depreciation_rates=depreciation_rates)
 
 @item.route('/add_depreciation_rate', methods=['GET', 'POST'])
 def add_depreciation_rate():
-    group = request.form.get('add_depreciation_rate_group')
     name = request.form.get('add_depreciation_rate_name')
     rate = request.form.get('add_depreciation_rate_rate')
-    print(f'{group=} {rate=} {name=}')
-    new_depreciation_rate = DepreciationRate(group=group, name=name, rate=rate)
+    print(f'{rate=} {name=}')
+    new_depreciation_rate = DepreciationRate(name=name, rate=rate)
     db.session.add(new_depreciation_rate)
     db.session.commit()
     flash(f'Dodata je stopa amortizacije "{name}".', 'success')
@@ -109,13 +107,11 @@ def add_depreciation_rate():
 @item.route('/edit_depreciation_rate', methods=['GET', 'POST'])
 def edit_depreciation_rate():
     depreciation_rate_id = request.form.get('edit_depreciation_rate_id')
-    group = request.form.get('edit_depreciation_rate_group')
     name = request.form.get('edit_depreciation_rate_name')
     rate = request.form.get('edit_depreciation_rate_rate')
-    print(f'{depreciation_rate_id=} {group=} {rate=} {name=}')
+    print(f'{depreciation_rate_id=} {rate=} {name=}')
     
     depreciation_rate = DepreciationRate.query.get(depreciation_rate_id)
-    depreciation_rate.group = group
     depreciation_rate.name = name
     depreciation_rate.rate = rate
     db.session.commit()

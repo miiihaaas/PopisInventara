@@ -26,7 +26,7 @@
                         <select class="form-select" name="add_single_item_item_id" id="add_single_item_item_id">
                             <option value=""></option>
                             {% for item in item_list %}
-                            <option value="{{item.id}}">{{item.name}} ({{item.item_category.category_number}}-{{item.item_category.name}} / {{item.item_depreciation_rate.group}}-{{item.item_depreciation_rate.name}}-{{item.item_depreciation_rate.rate}}%)</option>
+                            <option value="{{item.id}}">{{item.name}} ({{item.item_category.category_number}}-{{item.item_category.name}} / {{item.item_depreciation_rate.name}}: {{item.item_depreciation_rate.rate}}%)</option>
                             {% endfor %}
                         </select>
                     </div>
