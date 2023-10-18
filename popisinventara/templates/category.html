@@ -74,14 +74,16 @@
             <td>ID</td>
             <td>Broj konta</td>
             <td>Naziv</td>
+            <td></td>
         </tr>
     </thead>
     <tbody>
         {% for category in categories %}
         <tr>
             <td>{{ category.id }}</td>
-            <td><button class="btn btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#myCategory" onclick="editCategory('{{category.id}}', '{{category.category_number}}', '{{category.name}}')">{{ category.category_number }}</button></td>
+            <td>{{ category.category_number }}</td>
             <td>{{ category.name }}</td>
+            <td><a href="#" class="btn-x btn-primary-x" data-bs-toggle="modal" data-bs-target="#myCategory" onclick="editCategory('{{category.id}}', '{{category.category_number}}', '{{category.name}}')" title="Editovanje konta: {{ category.category_number }}"><i class="fa fa-edit awesomeedit" aria-hidden="true"></i></a></td>
         </tr>
         {% endfor %}
     </tbody>

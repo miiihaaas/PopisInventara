@@ -79,7 +79,7 @@
     </li>
 </ul>
 <div class="tab-content" id="myTabContent">
-    <div class="tab-pane fade show active" id="single_item" role="tabpanel" aria-labelledby="single_item-tab">
+    <div class="tab-pane fade" id="single_item" role="tabpanel" aria-labelledby="single_item-tab">
         <table id="data_1" border="1" class="table table-striped userlist">
             <thead>
                 <tr>
@@ -90,13 +90,14 @@
                     <td>Sadašnja vrednost</td>
                     <td>Prostorija</td>
                     <td>datum nabavke</td>
+                    <td></td>
                 </tr>
             </thead>
             <tbody>
             </tbody>
         </table>
     </div>
-    <div class="tab-pane fade" id="serial" role="tabpanel" aria-labelledby="serial-tab">
+    <div class="tab-pane fade show active" id="serial" role="tabpanel" aria-labelledby="serial-tab">
         <table id="data_2" border="1" class="table table-striped userlist">
             <thead>
                 <tr>
@@ -107,18 +108,23 @@
                     <td>Nabavna vrednost</td>
                     <td>Sadašnja vrednost</td>
                     <td>datum nabavke</td>
+                    <td></td>
                 </tr>
             </thead>
             <tbody>
                 {% for item in cumulatively_per_series %}
                 <tr>
-                    <td><a class="btn btn-primary" href="{{url_for('single_items.single_item_rooms', item_id=item['item_id'])}}">{{ item['item_id'] }}</a></td>
+                    <td>{{ item['item_id'] }}</td>
                     <td>{{ item['series'] }}</td>
                     <td>{{ item['name'] }}</td>
                     <td>{{ item['quantity'] }}</td>
                     <td>{{ "%.2f"|format(item['initial_price']) }}</td>
                     <td>{{ "%.2f"|format(item['current_price']) }}</td>
                     <td>{{ item.purchase_date }}</td>
+                    <td>
+                        <a class="btn-x btn-primary-x" href="{{url_for('single_items.single_item_rooms', item_id=item['item_id'])}}" title="Pregled predmeta: [{{ item['name'] }}] po prostorijama"><i class="fa fa-door-closed awesomeedit" aria-hidden="true"></i></a></a>
+                        <a class="btn-x btn-primary-x" href="" title="Izmenite seriju predmeta: [{{ item['name'] }}]"><i class="fa fa-edit awesomedelete" aria-hidden="true"></i></a></a>
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -134,17 +140,21 @@
                     <td>Nabavna vrednost</td>
                     <td>Sadašnja vrednost</td>
                     <td>datum nabavke</td>
+                    <td></td>
                 </tr>
             </thead>
             <tbody>
                 {% for item in cumulatively_per_item %}
                 <tr>
-                    <td><a class="btn btn-primary" href="{{url_for('single_items.single_item_rooms', item_id=item['item_id'])}}">{{ item['item_id'] }}</a></td>
+                    <td>{{ item['item_id'] }}</td>
                     <td>{{ item['name'] }}</td>
                     <td>{{ item['quantity'] }}</td>
                     <td>{{ "%.2f"|format(item['initial_price']) }}</td>
                     <td>{{ "%.2f"|format(item['current_price']) }}</td>
                     <td>{{ item.purchase_date }}</td>
+                    <td>
+                        <a class="btn-x btn-primary-x" href="{{url_for('single_items.single_item_rooms', item_id=item['item_id'])}}" title="Pregled predmeta: [{{ item['name'] }}] po prostorijama"><i class="fa fa-door-closed awesomeedit" aria-hidden="true"></i></a>
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -219,6 +229,8 @@
                         return data;
                     }
                 },
+                {data: 'button_name'},
+                {data: 'purchase_date'},
                 {
                     data: null,
                     render: function (data, type, row) {
@@ -227,13 +239,12 @@
                             // Koristi podatke iz reda da konstruiraš hyperlink
                             var url = '{{ url_for("single_items.room_single_items", room_id=1) }}';
                             url = url.replace(1, row.room_id);
-                            var html = '<td><a class="btn btn-primary" href="' + url + '">' + row.button_name + '</a></td>';
+                            var html = '<td><a class="btn-x btn-primary-x" href="' + url + '" title="Pregled predmeta po prostorijama"><i class="fa fa-door-closed awesomeedit" aria-hidden="true"></i></a></td>';
 
                             return html;
                         }
                     }
-                },
-                {data: 'purchase_date'},
+                }
             ],
             order: [[1, "asc"]],
             language: {

@@ -99,15 +99,17 @@
             <td>Naziv</td>
             <td>Konto</td>
             <td>Procenat amortizacije</td>
+            <td></td>
         </tr>
     </thead>
     <tbody>
         {% for item in items %}
         <tr>
             <td>{{ item.id }}</td>
-            <td><button class="btn btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#editItem" onclick="editItem('{{item.id}}', '{{item.name}}', '{{item.category_id}}', '{{item.depreciation_rate_id}}')">{{ item.name }}</button></td>
+            <td>{{ item.name }}</td>
             <td>{{ item.item_category.category_number }}</td>
             <td>{{ item.item_depreciation_rate.rate }}%</td>
+            <td><a href="#" class="btn-x btn-primary-x" data-bs-toggle="modal" data-bs-target="#editItem" onclick="editItem('{{item.id}}', '{{item.name}}', '{{item.category_id}}', '{{item.depreciation_rate_id}}')" title="Izmena tipa predmeta: {{ item.name }}"><i class="fa fa-edit awesomeedit" aria-hidden="true"></i></a></td>
         </tr>
         {% endfor %}
     </tbody>
