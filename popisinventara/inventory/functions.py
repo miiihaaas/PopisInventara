@@ -1,3 +1,4 @@
+from datetime import datetime
 import os
 from fpdf import FPDF
 
@@ -7,7 +8,7 @@ font_path = os.path.join(project_folder, 'static', 'fonts', 'DejaVuSansCondensed
 font_path_B = os.path.join(project_folder, 'static', 'fonts', 'DejaVuSansCondensed-Bold.ttf')
 
 
-def popisna_lista_gen(inventory_item_list_data):
+def popisna_lista_gen(inventory_item_list_data, room_name, inventory_id):
     print(f'pokrenuta je funkcija popisna_lista_gen: {inventory_item_list_data=}')
     i = 0
     while i < 2:
@@ -17,10 +18,11 @@ def popisna_lista_gen(inventory_item_list_data):
                 self.add_font('DejaVuSansCondensed', '', font_path, uni=True)
                 self.add_font('DejaVuSansCondensed', 'B', font_path_B, uni=True)
             def header(self):
+                self.set_font('DejaVuSansCondensed', 'B', 12)
+                self.cell(190, 7, f'Datum: {datetime.now().strftime("%d.%m.%Y.")}', new_x='LMARGIN', new_y='NEXT', align='L', border=0)
+                self.cell(190, 7, f'Popisna lista: {inventory_id}', new_x='LMARGIN', new_y='NEXT', align='L', border=0)
+                self.cell(190, 7, f'Prostorija: {room_name}', new_x='LMARGIN', new_y='NEXT', align='L', border=0)
                 self.set_font('DejaVuSansCondensed', 'B', 16)
-                self.cell(190, 10, f'Datum: ', new_x='LMARGIN', new_y='NEXT', align='L', border=0)
-                self.cell(190, 10, f'Popisna lista: (NPR: Broj 1)', new_x='LMARGIN', new_y='NEXT', align='L', border=0)
-                self.cell(190, 10, f'Prostorija: (NPR: Glavna zgrada > Učionica 101)', new_x='LMARGIN', new_y='NEXT', align='L', border=0)
                 self.cell(190, 10, f'Popis stavki', new_x='LMARGIN', new_y='NEXT', align='C', border=0)
                 self.cell(190, 10, f'', new_x='LMARGIN', new_y='NEXT', align='C', border=0)
                 self.set_font('DejaVuSansCondensed', 'B', 10)
@@ -36,9 +38,9 @@ def popisna_lista_gen(inventory_item_list_data):
             def footer(self):
                 self.set_y(-45)
                 self.set_font('DejaVuSansCondensed', '', 8)
-                self.cell(0, 10, f'Član popisne komisije: ________________________________________', new_y='NEXT', new_x='LMARGIN', align='R')
-                self.cell(0, 10, f'Član popisne komisije: ________________________________________', new_y='NEXT', new_x='LMARGIN', align='R')
-                self.cell(0, 10, f'Član popisne komisije: ________________________________________', new_y='NEXT', new_x='LMARGIN', align='R')
+                self.cell(0, 7, f'Član popisne komisije: ________________________________________', new_y='NEXT', new_x='LMARGIN', align='R')
+                self.cell(0, 7, f'Član popisne komisije: ________________________________________', new_y='NEXT', new_x='LMARGIN', align='R')
+                self.cell(0, 7, f'Član popisne komisije: ________________________________________', new_y='NEXT', new_x='LMARGIN', align='R')
                 
         pdf = PDF()
         pdf.add_page()
@@ -48,12 +50,12 @@ def popisna_lista_gen(inventory_item_list_data):
         for item in inventory_item_list_data:
             pdf.cell(10, 5, f"{item['item_id']}", new_y='LAST', align='C', border=1, fill=True)
             pdf.cell(10, 5, f"{item['serial']}", new_y='LAST', align='C', border=1, fill=True)
-            pdf.cell(40, 5, f"{item['item_name']}", new_y='LAST', align='C', border=1, fill=True)
-            pdf.cell(40, 5, f"{item['name']}", new_y='LAST', align='C', border=1, fill=True)
+            pdf.cell(40, 5, f"{item['item_name']}", new_y='LAST', align='L', border=1, fill=True)
+            pdf.cell(40, 5, f"{item['name']}", new_y='LAST', align='L', border=1, fill=True)
             if i == 0:
                 pdf.cell(15, 5, f"{item['quantity']}", new_y='LAST', align='C', border=1, fill=True)
             pdf.cell(15, 5, f"", new_y='LAST', align='C', border=1, fill=True)
-            pdf.cell(60, 5, f"", new_y='NEXT', new_x='LMARGIN', align='C', border=1, fill=True)
+            pdf.cell(60, 5, f"", new_y='NEXT', new_x='LMARGIN', align='L', border=1, fill=True)
         
         path = f"{project_folder}/static/inventory_lists/"
         if i == 0:

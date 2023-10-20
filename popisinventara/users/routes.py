@@ -28,6 +28,57 @@ def login():
     return render_template('login.html', title='Prijavljivanje', form=form, legend='Prijavljivanje')
 
 
+@users.route("/user_list", methods=['GET', 'POST'])
+def user_list():
+    users = User.query.all()
+    return render_template('user_list.html', users=users)
+
+
+@users.route("/register_user", methods=['GET', 'POST'])
+def register_user():
+    if current_user.authorization != 'admin':
+        flash('Nemate dozvolu za registraciju korisnika.', 'danger')
+        return redirect(url_for('main.home'))
+    name = request.form.get('name').capitalize()
+    surname = request.form.get('surname').capitalize()
+    authorization = request.form.get('authorization')
+    email = request.form.get('email')
+    new_user = User(name=name, surname=surname, authorization=authorization, email=email, school_id=1, password='test')
+    db.session.add(new_user)
+    db.session.commit()
+    flash(f'Korisnik {name} {surname} je uspešno registrovan!', 'success')
+    return redirect(url_for('users.user_list'))
+
+
+@users.route("/edit_user", methods=['GET', 'POST'])
+def edit_user():
+    if current_user.authorization != 'admin':
+        flash('Nemate dozvolu za izmene korisnika.', 'danger')
+        return redirect(url_for('main.home'))
+    user_id = request.form.get('user_id')
+    user = User.query.filter_by(id=user_id).first()
+    user.name = request.form.get('edit_name').capitalize()
+    user.surname = request.form.get('edit_surname').capitalize()
+    user.email = request.form.get('edit_email')
+    db.session.commit()
+    
+    flash(f'Profil korisnika {user.name} {user.surname} je uspešno izmenjen', 'success')
+    return redirect(url_for('users.user_list'))
+
+
+@users.route("/delete_user", methods=['GET', 'POST'])
+def delete_user():
+    if current_user.authorization != 'admin':
+        flash('Nemate dozvolu za brisanje korisnika.', 'danger')
+        return redirect(url_for('main.home'))
+    user_id = request.form.get('user_id')
+    user = User.query.filter_by(id=user_id).first()
+    db.session.delete(user)
+    db.session.commit()
+    flash(f'Korisnik {user.name} {user.surname} je uspešno izbrisan!', 'success')
+    return redirect(url_for('users.user_list'))
+
+
 @users.route("/logout")
 def logout():
     logout_user()

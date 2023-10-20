@@ -55,6 +55,7 @@ class User(db.Model, UserMixin):
     password = db.Column(db.String(60), nullable = False)
     name = db.Column(db.String(20), unique=False, nullable=False)
     surname = db.Column(db.String(20), unique=False, nullable=False)
+    authorization = db.Column(db.String(20), unique=False, nullable=False)
     school_id = db.Column(db.Integer, db.ForeignKey('school.id', ondelete='CASCADE'), nullable = True)
     
     def get_reset_token(self, expires_sec=1800):

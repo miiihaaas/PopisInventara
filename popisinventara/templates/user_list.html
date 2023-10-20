@@ -1,0 +1,134 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="h1">Users</div>
+<div class="form-group">
+    <a class="btn btn-primary mb-4" href="javascript:history.back()">Nazad</a>
+    <button type="button" class="btn btn-primary mb-4" data-bs-toggle="modal" data-bs-target="#newUser">Registrujte novog korisnika</button>
+</div>
+<div class="modal fade" id="newUser" tabindex="-1" role="dialog" aria-labelledby="newUserLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="newUserLabel">Kreiranje novog korisnika</h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form method="POST" action="{{ url_for('users.register_user') }}">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-control-label" for="name">Ime</label>
+                        <input class="form-control" type="text" id="name" name="name">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-control-label" for="surname">Prezime</label>
+                        <input class="form-control" type="text" id="surname" name="surname">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-control-label" for="email">Mejl</label>
+                        <input class="form-control" type="text" id="email" name="email">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-control-label" for="authorization">Autorizacija</label>
+                        <select name="authorization" id="authorization" class="form-select">
+                            <option value="admin">Administrator</option>
+                            <option value="user">Korisnik</option>
+                        </select>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Otkažite</button>
+                        <button type="submit" class="btn btn-primary" >Sačuvajte</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="editUser" tabindex="-1" role="dialog" aria-labelledby="editUserLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editUserLabel">Izmena podataka konta</h5>
+                <button type="button" clsass="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form method="POST" action="{{ url_for('users.edit_user') }}">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-control-label" for="user_id">ID</label>
+                        <input class="form-control" type="text" id="user_id" name="user_id" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-control-label" for="edit_name">Ime</label>
+                        <input class="form-control" type="text" id="edit_name" name="edit_name">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-control-label" for="edit_surname">Prezime</label>
+                        <input class="form-control" type="text" id="edit_surname" name="edit_surname">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-control-label" for="edit_email">Mejl</label>
+                        <input class="form-control" type="text" id="edit_email" name="edit_email">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-control-label" for="edit_authorization">Autorizacija</label>
+                        <select name="edit_email" id="edit_email" class="form-select">
+                            <option value="admin">Administrator</option>
+                            <option value="user">Korisnik</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Otkažite</button>
+                    <button type="submit" class="btn btn-primary" >Sačuvajte</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<table id="data" border="1" class="table table-striped userlist">
+    <thead>
+        <tr>
+            <td>ID</td>
+            <td>Ime</td>
+            <td>Prezime</td>
+            <td>Mejl</td>
+            <td>Autorizacija</td>
+            <td></td>
+        </tr>
+    </thead>
+    <tbody>
+        {% for user in users %}
+        <tr>
+            <td>{{ user.id }}</td>
+            <td>{{ user.name }}</td>
+            <td>{{ user.surname }}</td>
+            <td>{{ user.email }}</td>
+            <td>{{ user.authorization }}</td>
+            <td><a href="#" class="btn-x btn-primary-x" data-bs-toggle="modal" data-bs-target="#editUser" onclick="editUser('{{user.id}}', '{{user.name}}', '{{user.surname}}', '{{user.email}}')" title="Izmena profila: {{ user.name }} {{ user.surname }}"><i class="fa fa-edit awesomeedit" aria-hidden="true"></i></a></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock content%}
+
+{% block scripts %}
+<script>
+    function editUser(userId, userName, userSurname, userEmail) {
+        document.getElementById("user_id").value = userId;
+        document.getElementById("edit_name").value = userName;
+        document.getElementById("edit_surname").value = userSurname;
+        document.getElementById("edit_email").value = userEmail;
+    }
+    $(document).ready(function () {
+    $("#data").DataTable({
+        order: [[1, "asc"]],
+        language: {
+            url: "//cdn.datatables.net/plug-ins/1.12.1/i18n/sr-SP.json",
+            stateSave: true
+        },
+        });
+    });
+</script>
+{% endblock %}

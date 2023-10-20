@@ -174,11 +174,13 @@ def edit_inventory_room_list(inventory_id, room_id):
         sorted_inventory = sorted(inventory_item_list_data, key=lambda x: (x['item_id'], x['serial']))
         inventory_item_list_data = sorted_inventory
         print(f'test: {inventory_item_list_data=}')
-        popisna_lista_gen(inventory_item_list_data)
+        room_name = f'{Room.query.get_or_404(room_id).room_building.name} - ({Room.query.get_or_404(room_id).name}) {Room.query.get_or_404(room_id).dynamic_name}'
+        popisna_lista_gen(inventory_item_list_data, room_name, inventory_id)
     return render_template('edit_inventory_room_list.html', 
-                            title=f"Izmena popisne liste {room_id}",
+                            title=f"Izmena popisne liste: {room_id}",
                             inventory_item_list_data=inventory_item_list_data,
-                            inventory=inventory)
+                            inventory=inventory,
+                            room_name=room_name)
 
 
 @inventory.route('/compare_inventory_list/<int:inventory_id>', methods=['GET', 'POST'])
