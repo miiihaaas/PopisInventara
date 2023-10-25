@@ -15,8 +15,11 @@ inventory = Blueprint('inventory', __name__)
 @inventory.route('/create_inventory_list', methods=['GET', 'POST'])
 def create_inventory_list():
     if not current_user.is_authenticated:
-        flash('Morate biti prijavljeni da bi ste kreirali popisnu listu', 'success')
+        flash('Da biste pristupili ovoj stranici treba da budete ulogovani.', 'success')
         return redirect(url_for('users.login'))
+    if current_user.authorization != 'admin':
+        flash('Nemate dozvolu za da pristupite ovoj stranici.', 'danger')
+        return redirect(url_for('main.home'))
     virtual_warehouse = SingleItem.query.filter_by(room_id=1).count()
     if virtual_warehouse:
         flash('Pre kreiranja popisnih sliti treba rasporediti sve predmete i virtuelnog magacina!', 'danger')
@@ -83,7 +86,7 @@ def create_inventory_list():
 @inventory.route('/edit_inventory_list/<int:inventory_id>', methods=['GET', 'POST'])
 def edit_inventory_list(inventory_id):
     if not current_user.is_authenticated:
-        flash('Morate biti prijavljeni da bi ste kreirali popisnu listu', 'success')
+        flash('Da biste pristupili ovoj stranici treba da budete ulogovani.', 'success')
         return redirect(url_for('users.login'))
     inventory = Inventory.query.get_or_404(inventory_id)
     inventory_list_data = json.loads(inventory.initial_data)
@@ -116,7 +119,7 @@ def edit_inventory_list(inventory_id):
 @inventory.route('/edit_inventory_list/<int:inventory_id>/<int:room_id>', methods=['GET', 'POST'])
 def edit_inventory_room_list(inventory_id, room_id):
     if not current_user.is_authenticated:
-        flash('Morate biti prijavljeni da bi ste kreirali popisnu listu', 'success')
+        flash('Da biste pristupili ovoj stranici treba da budete ulogovani.', 'success')
         return redirect(url_for('users.login'))
     inventory = Inventory.query.get_or_404(inventory_id)
     if request.method == 'POST':
@@ -186,7 +189,7 @@ def edit_inventory_room_list(inventory_id, room_id):
 @inventory.route('/compare_inventory_list/<int:inventory_id>', methods=['GET', 'POST'])
 def compare_inventory_list(inventory_id):
     if not current_user.is_authenticated:
-        flash('Morate biti prijavljeni da bi ste kreirali popisnu listu', 'success')
+        flash('Da biste pristupili ovoj stranici treba da budete ulogovani.', 'success')
         return redirect(url_for('users.login'))
     inventory = Inventory.query.get_or_404(inventory_id)
     if request.method == 'POST':
@@ -255,7 +258,7 @@ def compare_inventory_list(inventory_id):
 @inventory.route('/read_inventory_list', methods=['GET', 'POST'])
 def read_inventory_list():
     if not current_user.is_authenticated:
-        flash('Morate biti prijavljeni da bi ste kreirali popisnu listu', 'success')
+        flash('Da biste pristupili ovoj stranici treba da budete ulogovani.', 'success')
         return redirect(url_for('users.login'))
     inventory_lists = Inventory.query.all()
     return render_template('read_inventory_list.html', title="Pregled popisnih listi",

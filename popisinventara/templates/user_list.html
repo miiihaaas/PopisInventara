@@ -29,6 +29,10 @@
                         <input class="form-control" type="text" id="email" name="email">
                     </div>
                     <div class="form-group">
+                        <label class="form-control-label" for="password">Lozinka</label>
+                        <input class="form-control" type="password" id="password" name="password">
+                    </div>
+                    <div class="form-group">
                         <label class="form-control-label" for="authorization">Autorizacija</label>
                         <select name="authorization" id="authorization" class="form-select">
                             <option value="admin">Administrator</option>
@@ -48,9 +52,9 @@
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="editUserLabel">Izmena podataka konta</h5>
+                <h5 class="modal-title" id="editUserLabel">Izmena korisničkog profila</h5>
                 <button type="button" clsass="close" data-bs-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
+                    <span aria-hidden="true"><i class="fa-solid fa-xmark"></i></span>
                 </button>
             </div>
             <form method="POST" action="{{ url_for('users.edit_user') }}">
@@ -73,7 +77,7 @@
                     </div>
                     <div class="form-group">
                         <label class="form-control-label" for="edit_authorization">Autorizacija</label>
-                        <select name="edit_email" id="edit_email" class="form-select">
+                        <select name="edit_authorization" id="edit_authorization" class="form-select">
                             <option value="admin">Administrator</option>
                             <option value="user">Korisnik</option>
                         </select>
@@ -82,6 +86,43 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Otkažite</button>
                     <button type="submit" class="btn btn-primary" >Sačuvajte</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="deleteUser" tabindex="-1" role="dialog" aria-labelledby="deleteUserLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteUserLabel">Brisanje korisničkog profila</h5>
+                <button type="button" clsass="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true"><i class="fa-solid fa-xmark"></i></span>
+                </button>
+            </div>
+            <form method="POST" action="{{ url_for('users.delete_user') }}">
+                <div class="modal-body">
+                    <p>Da li ste sigurni da želite da obrišete profil korisnika? </p>
+                    <div class="form-group">
+                        <label class="form-control-label" for="delete_user_id">ID</label>
+                        <input class="form-control" type="text" id="delete_user_id" name="delete_user_id" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-control-label" for="delete_name">Ime</label>
+                        <input class="form-control" type="text" id="delete_name" name="delete_name">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-control-label" for="delete_surname">Prezime</label>
+                        <input class="form-control" type="text" id="delete_surname" name="delete_surname">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-control-label" for="delete_email">Mejl</label>
+                        <input class="form-control" type="text" id="delete_email" name="delete_email">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Otkažite</button>
+                    <button type="submit" class="btn btn-danger" >Obrišite</button>
                 </div>
             </form>
         </div>
@@ -106,7 +147,14 @@
             <td>{{ user.surname }}</td>
             <td>{{ user.email }}</td>
             <td>{{ user.authorization }}</td>
-            <td><a href="#" class="btn-x btn-primary-x" data-bs-toggle="modal" data-bs-target="#editUser" onclick="editUser('{{user.id}}', '{{user.name}}', '{{user.surname}}', '{{user.email}}')" title="Izmena profila: {{ user.name }} {{ user.surname }}"><i class="fa fa-edit awesomeedit" aria-hidden="true"></i></a></td>
+            <td>
+                <a href="#" class="btn-x btn-primary-x" data-bs-toggle="modal" data-bs-target="#editUser" onclick="editUser('{{user.id}}', '{{user.name}}', '{{user.surname}}', '{{user.email}}', '{{user.authorization}}')" title="Izmenite korisnički profila: {{ user.name }} {{ user.surname }}"><i class="fa fa-edit awesomeedit" aria-hidden="true"></i></a>
+                {% if user.authorization == 'admin' and number_of_admins > 1 %}
+                <a href="" class="btn-x btn-primary-x" data-bs-toggle="modal" data-bs-target="#deleteUser" onclick="deleteUser('{{user.id}}', '{{user.name}}', '{{user.surname}}', '{{user.email}}')" title="Izbrišite korisnički profil: {{ user.name }} {{ user.surname }}"><i class="fa fa-user-slash awesomedelete" aria-hidden="true"></i></a>
+                {% elif user.authorization != 'admin' %}
+                <a href="" class="btn-x btn-primary-x" data-bs-toggle="modal" data-bs-target="#deleteUser" onclick="deleteUser('{{user.id}}', '{{user.name}}', '{{user.surname}}', '{{user.email}}')" title="Izbrišite korisnički profil: {{ user.name }} {{ user.surname }}"><i class="fa fa-user-slash awesomedelete" aria-hidden="true"></i></a>
+                {% endif %}
+            </td>
         </tr>
         {% endfor %}
     </tbody>
@@ -115,11 +163,18 @@
 
 {% block scripts %}
 <script>
-    function editUser(userId, userName, userSurname, userEmail) {
+    function editUser(userId, userName, userSurname, userEmail, userAuthorization) {
         document.getElementById("user_id").value = userId;
         document.getElementById("edit_name").value = userName;
         document.getElementById("edit_surname").value = userSurname;
         document.getElementById("edit_email").value = userEmail;
+        document.getElementById("edit_authorization").value = userAuthorization
+    }
+    function deleteUser(userId, userName, userSurname, userEmail) {
+        document.getElementById("delete_user_id").value = userId;
+        document.getElementById("delete_name").value = userName;
+        document.getElementById("delete_surname").value = userSurname;
+        document.getElementById("delete_email").value = userEmail;
     }
     $(document).ready(function () {
     $("#data").DataTable({

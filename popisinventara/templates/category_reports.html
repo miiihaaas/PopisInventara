@@ -1,0 +1,36 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="h1">{{ title }}</div>
+<div class="form-group">
+    <a class="btn btn-primary mb-4" href="javascript:history.back()">Nazad</a>
+</div>
+<hr>
+<table id="data" border="1" class="table table-striped userlist">
+    <thead>
+        <tr>
+            <th>Konto</th>
+            <th>Nabavna vrednost</th>
+            <th>Otpis do tekuće godine</th>
+            <th>Otpis u tekućoj godini</th>
+            <th>Vrednost na kraju tekuće godine</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for record in data %}
+        <tr>
+            <td>{{ record['category'] }}</td>
+            <td>{{ '{:,.2f}'.format(record['initial_price']) }}</td>
+            <td>{{ '{:,.2f}'.format(record['write_off_until_current_year']) }}</td>
+            <td>{{ '{:,.2f}'.format(record['depreciation_per_year']) }}</td>
+            <td>{{ '{:,.2f}'.format(record['price_at_end_of_year']) }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock content%}
+
+{% block scripts %}
+<script>
+</script>
+{% endblock %}

@@ -1,4 +1,5 @@
 from flask import Blueprint
+from flask_login import current_user
 from popisinventara.models import School, Room, Building
 from popisinventara.schools.forms import EditSchoolForm, AddNewBuildingForm, AddNewRoomForm
 from flask import url_for, redirect
@@ -13,6 +14,11 @@ schools = Blueprint('schools', __name__)
 
 @schools.route('/school/<int:school_id>' , methods=['GET', 'POST'])
 def school(school_id):
+    if not current_user.is_authenticated:
+        flash('Da biste pristupili ovoj stranici treba da budete ulogovani.', 'danger')
+        return redirect(url_for('users.login'))
+    if current_user.authorization != 'admin':
+        flash('Nemate dozvolu za pristum ovoj stranici.', 'danger')
     school = School.query.get_or_404(school_id)
     buildings = Building.query.filter_by(school_id=school_id).all()
     rooms = Room.query.all()
@@ -53,6 +59,11 @@ def school(school_id):
 
 @schools.route('/add_building', methods=['POST'])
 def add_building():
+    if not current_user.is_authenticated:
+        flash('Da biste pristupili ovoj stranici treba da budete ulogovani.', 'danger')
+        return redirect(url_for('users.login'))
+    if current_user.authorization != 'admin':
+        flash('Nemate dozvolu za pristum ovoj stranici.', 'danger')
     print('dodavanje nove zgrade. nastavi kod')
     building = Building(school_id=1, 
                         name=request.form.get('name'),
@@ -65,6 +76,11 @@ def add_building():
 
 @schools.route('/edit_building', methods=['GET', 'POST'])
 def edit_building():
+    if not current_user.is_authenticated:
+        flash('Da biste pristupili ovoj stranici treba da budete ulogovani.', 'danger')
+        return redirect(url_for('users.login'))
+    if current_user.authorization != 'admin':
+        flash('Nemate dozvolu za pristum ovoj stranici.', 'danger')
     building_id = request.form.get('edit_building_id')
     building_name = request.form.get('edit_building_name')
     building_address = request.form.get('edit_building_address')
@@ -78,6 +94,11 @@ def edit_building():
 
 @schools.route('/add_room', methods=['POST'])
 def add_room():
+    if not current_user.is_authenticated:
+        flash('Da biste pristupili ovoj stranici treba da budete ulogovani.', 'danger')
+        return redirect(url_for('users.login'))
+    if current_user.authorization != 'admin':
+        flash('Nemate dozvolu za pristum ovoj stranici.', 'danger')
     print('dodavanje nove Prostorije. nastavi kod')
     room = Room(name=request.form.get('name'),
                 dynamic_name=request.form.get('dynamic_name'),
@@ -89,6 +110,11 @@ def add_room():
 
 @schools.route('/edit_room', methods=['GET', 'POST'])
 def edit_room():
+    if not current_user.is_authenticated:
+        flash('Da biste pristupili ovoj stranici treba da budete ulogovani.', 'danger')
+        return redirect(url_for('users.login'))
+    if current_user.authorization != 'admin':
+        flash('Nemate dozvolu za pristum ovoj stranici.', 'danger')
     room_id = request.form.get('edit_room_id')
     room_name = request.form.get('edit_room_name')
     room_dynamic_name = request.form.get('edit_room_dynamic_name')

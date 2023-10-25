@@ -1,5 +1,6 @@
 from flask import Blueprint
 from flask import render_template, redirect, url_for
+from flask_login import current_user
 from popisinventara import db
 from popisinventara.models import Item, Category, DepreciationRate
 from flask import url_for
@@ -14,6 +15,12 @@ item = Blueprint('items', __name__)
 
 @item.route('/items', methods=['GET'])
 def items():
+    if not current_user.is_authenticated:
+        flash('Da biste pristupili ovoj stranici treba da budete ulogovani.', 'danger')
+        return redirect(url_for('users.login'))
+    if current_user.authorization != 'admin':
+        flash('Nemate dozvolu za pristup ovoj stranici.', 'danger')
+        return redirect(url_for('main.home'))
     items = Item.query.all()
     rates = DepreciationRate.query.all()
     categories = Category.query.all()
@@ -25,6 +32,12 @@ def items():
 
 @item.route('/add_item', methods=['GET', 'POST'])
 def add_item():
+    if not current_user.is_authenticated:
+        flash('Da biste pristupili ovoj stranici treba da budete ulogovani.', 'danger')
+        return redirect(url_for('users.login'))
+    if current_user.authorization != 'admin':
+        flash('Nemate dozvolu za pristup ovoj stranici.', 'danger')
+        return redirect(url_for('main.home'))
     name = request.form.get('add_item_name')
     category = request.form.get('add_item_category')
     depreciation_rate = request.form.get('add_item_rate')
@@ -38,6 +51,12 @@ def add_item():
 
 @item.route('/edit_item', methods=['GET', 'POST'])
 def edit_item():
+    if not current_user.is_authenticated:
+        flash('Da biste pristupili ovoj stranici treba da budete ulogovani.', 'danger')
+        return redirect(url_for('users.login'))
+    if current_user.authorization != 'admin':
+        flash('Nemate dozvolu za pristup ovoj stranici.', 'danger')
+        return redirect(url_for('main.home'))
     item_id = request.form.get('edit_item_id')
     name = request.form.get('edit_item_name')
     category = request.form.get('edit_item_category')
@@ -55,12 +74,24 @@ def edit_item():
 
 @item.route('/category')
 def category():
+    if not current_user.is_authenticated:
+        flash('Da biste pristupili ovoj stranici treba da budete ulogovani.', 'danger')
+        return redirect(url_for('users.login'))
+    if current_user.authorization != 'admin':
+        flash('Nemate dozvolu za pristup ovoj stranici.', 'danger')
+        return redirect(url_for('main.home'))
     categories = Category.query.all()
     return render_template('category.html', title="Konta", categories=categories)
 
 
 @item.route('/add_category' , methods=['GET', 'POST'])
 def add_category():
+    if not current_user.is_authenticated:
+        flash('Da biste pristupili ovoj stranici treba da budete ulogovani.', 'danger')
+        return redirect(url_for('users.login'))
+    if current_user.authorization != 'admin':
+        flash('Nemate dozvolu za pristup ovoj stranici.', 'danger')
+        return redirect(url_for('main.home'))
     category_number = request.form.get('add_category_number')
     category_name = request.form.get('add_category_name')
     print(f'{category_number=} {category_name=}')
@@ -73,6 +104,12 @@ def add_category():
 
 @item.route('/edit_category', methods=['GET', 'POST'])
 def edit_category():
+    if not current_user.is_authenticated:
+        flash('Da biste pristupili ovoj stranici treba da budete ulogovani.', 'danger')
+        return redirect(url_for('users.login'))
+    if current_user.authorization != 'admin':
+        flash('Nemate dozvolu za pristup ovoj stranici.', 'danger')
+        return redirect(url_for('main.home'))
     print('dodaj kod za editovanje kategorije')
     category_id = request.form.get('edit_category_id')
     category_number = request.form.get('edit_category_number')
@@ -89,11 +126,23 @@ def edit_category():
 
 @item.route('/depreciation_rates')
 def depreciation_rates():
+    if not current_user.is_authenticated:
+        flash('Da biste pristupili ovoj stranici treba da budete ulogovani.', 'danger')
+        return redirect(url_for('users.login'))
+    if current_user.authorization != 'admin':
+        flash('Nemate dozvolu za pristup ovoj stranici.', 'danger')
+        return redirect(url_for('main.home'))
     depreciation_rates = DepreciationRate.query.all()
     return render_template('depreciation_rates.html', title="Stope amortizacije", depreciation_rates=depreciation_rates)
 
 @item.route('/add_depreciation_rate', methods=['GET', 'POST'])
 def add_depreciation_rate():
+    if not current_user.is_authenticated:
+        flash('Da biste pristupili ovoj stranici treba da budete ulogovani.', 'danger')
+        return redirect(url_for('users.login'))
+    if current_user.authorization != 'admin':
+        flash('Nemate dozvolu za pristup ovoj stranici.', 'danger')
+        return redirect(url_for('main.home'))
     name = request.form.get('add_depreciation_rate_name')
     rate = request.form.get('add_depreciation_rate_rate')
     print(f'{rate=} {name=}')
@@ -106,6 +155,12 @@ def add_depreciation_rate():
 
 @item.route('/edit_depreciation_rate', methods=['GET', 'POST'])
 def edit_depreciation_rate():
+    if not current_user.is_authenticated:
+        flash('Da biste pristupili ovoj stranici treba da budete ulogovani.', 'danger')
+        return redirect(url_for('users.login'))
+    if current_user.authorization != 'admin':
+        flash('Nemate dozvolu za pristup ovoj stranici.', 'danger')
+        return redirect(url_for('main.home'))
     depreciation_rate_id = request.form.get('edit_depreciation_rate_id')
     name = request.form.get('edit_depreciation_rate_name')
     rate = request.form.get('edit_depreciation_rate_rate')

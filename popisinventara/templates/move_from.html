@@ -11,27 +11,31 @@
         <input class="form-control" name="item_id_to_move" id="item_id_to_move" value="{{item.name}}" readonly>
     </div>
     <div class="form-group mb-4 col">
+        <legend class="form-control-label" for="item_id_to_move">Količina</legend>
+        <input class="form-control" name="item_id_to_move" id="item_id_to_move" value="{{quantity_of_single_items_in_room}}" readonly>
+    </div>
+    <div class="form-group mb-4 col">
         <legend class="form-control-label" for="room_id_to_move">Prostorija</legend>
-        <input class="form-control" name="room_id_to_move" id="room_id_to_move" value="({{room.name}}) {{room.dynamic_name}}" readonly>
+        <input class="form-control" name="room_id_to_move" id="room_id_to_move" value="({{room_from.name}}) {{room_from.dynamic_name}}" readonly>
     </div>
 </div>
 <form action="" method="post" id="moveForm">
-    <input type="hidden" name="data_to_move" id="data_to_move">
+    <input type="hidden" name="data_to_move_from" id="data_to_move_from">
     <table id="data" border="1" class="table table-striped userlist">
         <thead>
             <tr>
-                <td>Zgrada</td>
-                <td>room_id</td>
-                <td>Prostorija</td>
-                <td>Serija</td>
-                <td>Količina</td>
-                <td>Seriski naziv</td>
-                <td>Količina za prenos</td>
+                <th>Zgrada</th>
+                <th>room_id</th>
+                <th>Prostorija</th>
+                <th>Serija</th>
+                <th>Količina</th>
+                <th>Seriski naziv</th>
+                <th>Količina za prenos</th>
             </tr>
         </thead>
         <tbody>
             {% for data in data_list %}
-            {% if room.id != data['room_id'] %}
+            {% if room_from.id != data['room_id'] %}
             <tr>
                 <td>{{ data.building }}</td>
                 <td>{{ data.room_id }}</td>
@@ -39,13 +43,17 @@
                 <td>{{ data.serial }}</td>
                 <td>{{ data.quantity }}</td>
                 <td>{{ data.single_item_name }}</td>
-                <td><input class="form-control" type="number" min="0" max="{{ data.quantity }}" name="quantity_to_move[{{data.serial}}]"></td>
+                <td><input class="form-control" type="number" min="0" max="{{ quantity_of_single_items_in_room }}" name="quantity_to_move[{{data.serial}}]"></td>
             </tr>
             {% endif %}
             {% endfor %}
         </tbody>
     </table>
+    {% if quantity_of_single_items_in_room > 0 %}
     <button type="submit" class="btn btn-primary" onclick="submitForm()">Premestite</button>
+    {% else %}
+    <p>U prostoriji <strong>{{room.dynamic_name}}</strong> nema predmeta <strong>{{item.name}}</strong>.</p>
+    {% endif %}
 </form>
 
 {% endblock content%}
@@ -67,17 +75,17 @@
                 
                 var room_id = row.cells[1].innerText; // Assuming the room_id is in the second cell
                 var serial = row.cells[3].innerText; // Assuming the serial is in the third cell
-                var quantity_to_move = inputs[0].value;
+                var quantity_to_move_from = inputs[0].value;
                 
                 formData.push({
                     'room_id': room_id,
                     'serial': serial,
-                    'quantity_to_move': quantity_to_move
+                    'quantity_to_move_from': quantity_to_move_from
                 });
             }
             
             // Set the JSON data in the hidden input field
-            document.getElementById('data_to_move').value = JSON.stringify(formData);
+            document.getElementById('data_to_move_from').value = JSON.stringify(formData);
             
             // Submit the form
             form.submit();

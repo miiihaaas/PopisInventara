@@ -1,12 +1,10 @@
 {% extends "layout.html" %}
 {% block content %}
 <div class="h1">{{ title }}</div>
+{% if current_user.authorization == 'admin' %}
 <div class="form-group mb-4">
     <legend>Inventarske aktivnosti</legend>
     {% if not active_inventory_list %}
-    <!-- <a class="btn btn-primary mb-4" href="{{url_for('schools.school', school_id=1)}}">Prostorije</a>
-    <a class="btn btn-primary mb-4" href="{{url_for('items.category')}}">Konta</a>
-    <a class="btn btn-primary mb-4" href="{{url_for('items.depreciation_rates')}}">Stope Amortizacije</a> -->
     <a class="btn btn-primary mb-4" href="{{url_for('items.items')}}">Tip Predmeta</a>
     <a class="btn btn-primary mb-4" href="{{url_for('single_items.single_item_list')}}">Predmeti</a>
     <a class="btn btn-primary mb-4" href="{{url_for('single_items.move_select_item')}}">Premeštaj</a>
@@ -34,6 +32,18 @@
 </div>
 <div class="form-group mb-4">
     <legend>Izveštaji</legend>
-    <a class="btn btn-secondary" href="">work in progres</a>
+    <a class="btn btn-primary" href="{{url_for('reports.category_reports')}}">Izveštaj po kontima</a>
+    <a class="btn btn-danger" href="">work in progres</a>
 </div>
+{% else %}
+    <div class="form-group mb-4">
+        <legend>Inventarske aktivnosti</legend>
+        <a class="btn btn-primary mb-4" href="{{url_for('single_items.single_item_list')}}">Predmeti</a>
+    </div>
+    {% if active_inventory_list %}
+        <legend>Popis u toku: {{active_inventory_list.date}}</legend>
+        <a class="btn btn-primary mb-4" href="{{url_for('inventory.edit_inventory_list', inventory_id=active_inventory_list.id)}}">Unos/izmena popisnih rezultata</a>
+        <a class="btn btn-primary mb-4" href="{{url_for('inventory.compare_inventory_list', inventory_id=active_inventory_list.id)}}">Poređenje popisnih rezultata sa stanjem u sistemu</a>
+    {% endif %}
+{% endif %}
 {% endblock content%}

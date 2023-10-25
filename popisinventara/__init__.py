@@ -43,6 +43,7 @@ from popisinventara.main.routes import main
 from popisinventara.items.routes import item
 from popisinventara.single_items.routes import single_items
 from popisinventara.inventory.routes import inventory
+from popisinventara.reports.routes import reports
 
 
 
@@ -53,3 +54,4 @@ app.register_blueprint(main)
 app.register_blueprint(item)
 app.register_blueprint(single_items)
 app.register_blueprint(inventory)
+app.register_blueprint(reports)

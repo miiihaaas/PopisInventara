@@ -1,38 +1,72 @@
 {% extends "layout.html" %}
 {% block content %}
-<div class="h1">{{ title }}</div>
-<form action="" method="post">
+<div class="container">
+    <div class="h1">{{ title }}</div>
     <div class="row">
-        <div class="form-group mb-4 col">
-            <legend class="form-control-label" for="item_id_to_move">Predmet</legend>
-            <select class="form-select" name="item_id_to_move" id="item_id_to_move" required>
-                <option value=""></option>
-                {% for item in item_list %}
-                <option value="{{item.id}}">({{ item.id }}) {{ item.name }}</option>
-                {% endfor %}
-            </select>
+        <div class="col border">
+            <form action="" method="post">
+                <div class="row">
+                    <p class="mb-4">Premeštanje <strong>izabranog tipa predmeta</strong> <span style="color: red;">u</span> <strong>izabranu prostoriju</strong> <span style="color: red;">iz</span> <strong>različitih prostorija</strong></p>
+                    <div class="form-group mb-4 col">
+                        <label class="form-control-label" for="item_id_to_move_to">Tip predmeta</label>
+                        <select class="form-select" name="item_id_to_move_to" id="item_id_to_move_to" required>
+                            <option value=""></option>
+                            {% for item in item_list %}
+                            <option value="{{item.id}}">({{ item.id }}) {{ item.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group mb-4 col">
+                        <label class="form-control-label" for="room_id_to_move_to">U prostoriju</label>
+                        <select class="form-select" name="room_id_to_move_to" id="room_id_to_move_to" required>
+                            <option value=""></option>
+                            {% for room in room_list_to %}
+                            <option value="{{room.id}}">{{ room.room_building.name }} > ({{ room.id }}) {{ room.name }}/{{ room.dynamic_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <button class="btn btn-primary" type="submit" id="submit_to" name="submit_to">Dalje</button>
+                    </div>
+                </div>
+            </form>
         </div>
-        <div class="form-group mb-4 col">
-            <legend class="form-control-label" for="room_id_to_move">Prostorija</legend>
-            <select class="form-select" name="room_id_to_move" id="room_id_to_move" required>
-                <option value=""></option>
-                {% for room in room_list %}
-                <option value="{{room.id}}">{{ room.room_building.name }} > ({{ room.id }}) {{ room.name }}/{{ room.dynamic_name }}</option>
-                {% endfor %}
-            </select>
+        <div class="col border">
+            <form action="" method="post">
+                <div class="row">
+                    <p class="mb-4">Premeštanje <strong>izabranog tipa predmeta</strong> <span style="color: red;">iz</span> <strong>izabrane prostorije</strong> <span style="color: red;">u</span> više <strong>različitih prostorija</strong></p>
+                    <div class="form-group mb-4 col">
+                        <label class="form-control-label" for="item_id_to_move_from">Tip predmeta</label>
+                        <select class="form-select" name="item_id_to_move_from" id="item_id_to_move_from" required>
+                            <option value=""></option>
+                            {% for item in item_list %}
+                            <option value="{{item.id}}">({{ item.id }}) {{ item.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group mb-4 col">
+                        <label class="form-control-label" for="room_id_to_move_from">Iz prostorije</label>
+                        <select class="form-select" name="room_id_to_move_from" id="room_id_to_move_from" required>
+                            <option value=""></option>
+                            {% for room in room_list_from %}
+                            <option value="{{room.id}}">{{ room.room_building.name }} > ({{ room.id }}) {{ room.name }}/{{ room.dynamic_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <button class="btn btn-primary" type="submit" id="submit_from" name="submit_from">Dalje</button>
+                    </div>
+                </div>
+            </form>
         </div>
     </div>
-    <div class="form-group">
-        <button class="btn btn-primary" type="submit">Dalje</button>
-    </div>
-</form>
-
+</div>
 {% endblock content%}
 
 {% block scripts %}
 <script>
     $(document).ready(function () {
-        $('#item_id_to_move').select2({
+        $('#item_id_to_move_to').select2({
             // dropdownParent: $('#newSingleItem'),
             placeholder: 'Izaberite opciju',
             allowClear: true,
@@ -40,7 +74,23 @@
             tags: true,
             closeOnSelect: true,
         })
-        $('#room_id_to_move').select2({
+        $('#room_id_to_move_to').select2({
+            // dropdownParent: $('#newSingleItem'),
+            placeholder: 'Izaberite opciju',
+            allowClear: true,
+            width: '100%',
+            tags: true,
+            closeOnSelect: true,
+        })
+        $('#item_id_to_move_from').select2({
+            // dropdownParent: $('#newSingleItem'),
+            placeholder: 'Izaberite opciju',
+            allowClear: true,
+            width: '100%',
+            tags: true,
+            closeOnSelect: true,
+        })
+        $('#room_id_to_move_from').select2({
             // dropdownParent: $('#newSingleItem'),
             placeholder: 'Izaberite opciju',
             allowClear: true,

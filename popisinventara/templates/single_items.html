@@ -3,12 +3,27 @@
 <div class="h1">Pregled svih predmeta</div>
 <div class="form-group mb-4">
     <a class="btn btn-primary" href="javascript:history.back()">Nazad</a>
-    {% if active_inventory_list %}
-    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newSingleItem" disabled>Dodajte novi predmet</button>
-    {% else %}
-    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newSingleItem">Dodajte novi predmet</button>
+    {% if current_user.authorization == 'admin' %}
+        {% if active_inventory_list %}
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newSingleItem" disabled>Dodajte novi predmet</button>
+        {% else %}
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newSingleItem">Dodajte novi predmet</button>
+        {% endif %}
+        <a class="btn btn-danger" href="{{ url_for('single_items.update_price') }}">Preračunaj sadašnju vrednost za svaku materijal</a>
     {% endif %}
-    <a class="btn btn-secondary" href="{{ url_for('single_items.update_price') }}">Preračunaj sadašnju vrednost za svaku materijal</a>
+    <div class="form-group">
+        <label class="form-control-label" for="room_select">Filter po prostoriji</label>
+        <select class="form-select" name="room_select" id="room_select">
+            <option value="">Sve prostorije</option>
+            {% for room in room_list %}
+            <option value="{{room.id}}">({{room.name}}) {{room.dynamic_name}}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="form-check form-switch">
+        <input type="checkbox" class="form-check-input" id="current_year_procurement" name="current_year_procurement">
+        <label class="form-check-label" for="current_year_procurement">Nabavke u tekućoj godini</label>
+    </div>
 </div>
 <div class="modal fade" id="newSingleItem" tabindex="-1" role="dialog" aria-labelledby="newSingleItemLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
@@ -64,6 +79,47 @@
         </div>
     </div>
 </div>
+<div class="modal fade" id="changeRoom" tabindex="-1" role="dialog" aria-labelledby="changeRoomLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="changeRoomLabel">Promena prostorije</h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form method="POST" action="{{ url_for('single_items.move_single_item__to_room') }}">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-control-label" for="single_item_name">Naziv predmeta</label>
+                        <input class="form-control" type="text" id="single_item_name" name="single_item_name" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-control-label" for="single_item_id">ID pojedinačnog predmeta</label>
+                        <input class="form-control" type="text" id="single_item_id" name="single_item_id" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-control-label" for="single_item_inventory_number">Inventarski broj</label>
+                        <input class="form-control" type="text" id="single_item_inventory_number" name="single_item_inventory_number" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-control-label" for="edit_single_item_room">Premestiti u prostoriju</label>
+                        <select class="form-select" name="edit_single_item_room" id="edit_single_item_room">
+                            <option value=""></option>
+                            {% for room in room_list %}
+                            <option value="{{room.id}}">({{room.name}}) {{room.dynamic_name}}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Otkažite</button>
+                        <button type="submit" class="btn btn-primary">Sačuvajte</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 <ul class="nav nav-tabs justify-content-center mb-4" id="myTab" role="tablist">
     <li class="nav-item" role="presentation">
         <button class="nav-link" id="single_item-tab" data-bs-toggle="tab" data-bs-target="#single_item" type="button" role="tab" aria-controls="single_item" aria-selected="false">Pojedinačni predmeti</button>
@@ -74,23 +130,23 @@
     <li class="nav-item" role="presentation">
         <button class="nav-link" id="item-tab" data-bs-toggle="tab" data-bs-target="#item" type="button" role="tab" aria-controls="item" aria-selected="false">Kumulativno po tipu predmeta</button>
     </li>
-    <li class="nav-item" role="presentation">
-        <button class="nav-link" id="room-tab" data-bs-toggle="tab" data-bs-target="#room" type="button" role="tab" aria-controls="room" aria-selected="false">Kumulativno po prostoriji</button>
-    </li>
 </ul>
 <div class="tab-content" id="myTabContent">
-    <div class="tab-pane fade" id="single_item" role="tabpanel" aria-labelledby="single_item-tab">
+    <div class="tab-pane fade show" id="single_item" role="tabpanel" aria-labelledby="single_item-tab">
         <table id="data_1" border="1" class="table table-striped userlist">
+            <div class="form-group">
+                <a href="">rashod</a>
+            </div>
             <thead>
                 <tr>
-                    <td>ID</td>
-                    <td>Inventarski broj</td>
-                    <td>Naziv</td>
-                    <td>Nabavna vrednost</td>
-                    <td>Sadašnja vrednost</td>
-                    <td>Prostorija</td>
-                    <td>datum nabavke</td>
-                    <td></td>
+                    <th>ID pojedinačnog predmeta</th>
+                    <th>Inventarski broj</th>
+                    <th>Naziv</th>
+                    <th>Nabavna vrednost</th>
+                    <th>Vrednost na kraju godine</th>
+                    <th>Prostorija</th>
+                    <th>datum nabavke</th>
+                    <th></th>
                 </tr>
             </thead>
             <tbody>
@@ -101,14 +157,14 @@
         <table id="data_2" border="1" class="table table-striped userlist">
             <thead>
                 <tr>
-                    <td>ID predmeta</td>
-                    <td>Serija predmeta</td>
-                    <td>Naziv</td>
-                    <td>Količina</td>
-                    <td>Nabavna vrednost</td>
-                    <td>Sadašnja vrednost</td>
-                    <td>datum nabavke</td>
-                    <td></td>
+                    <th>ID tipa predmeta</th>
+                    <th>Serija predmeta</th>
+                    <th>Naziv</th>
+                    <th>Količina</th>
+                    <th>Nabavna vrednost</th>
+                    <th>Vrednost na kraju godine</th>
+                    <th>datum nabavke</th>
+                    <th></th>
                 </tr>
             </thead>
             <tbody>
@@ -134,13 +190,12 @@
         <table id="data_3" border="1" class="table table-striped userlist">
             <thead>
                 <tr>
-                    <td>ID predmeta</td>
-                    <td>Naziv</td>
-                    <td>Količina</td>
-                    <td>Nabavna vrednost</td>
-                    <td>Sadašnja vrednost</td>
-                    <td>datum nabavke</td>
-                    <td></td>
+                    <th>ID predmeta</th>
+                    <th>Naziv</th>
+                    <th>Količina</th>
+                    <th>Nabavna vrednost</th>
+                    <th>Vrednost na kraju godine</th>
+                    <th></th>
                 </tr>
             </thead>
             <tbody>
@@ -151,38 +206,9 @@
                     <td>{{ item['quantity'] }}</td>
                     <td>{{ "%.2f"|format(item['initial_price']) }}</td>
                     <td>{{ "%.2f"|format(item['current_price']) }}</td>
-                    <td>{{ item.purchase_date }}</td>
                     <td>
                         <a class="btn-x btn-primary-x" href="{{url_for('single_items.single_item_rooms', item_id=item['item_id'])}}" title="Pregled predmeta: [{{ item['name'] }}] po prostorijama"><i class="fa fa-door-closed awesomeedit" aria-hidden="true"></i></a>
                     </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-    <div class="tab-pane fade" id="room" role="tabpanel" aria-labelledby="room-tab">
-        <table id="data_4" border="1" class="table table-striped userlist">
-            <thead>
-                <tr>
-                    <td>Prostorija</td>
-                    <td>ID predmeta</td>
-                    <td>Naziv predmeta</td>
-                    <td>Serija</td>
-                    <td>Količina</td>
-                    <td>Nabavna vrednost</td>
-                    <td>Trenutna vrednost</td>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in cumulatively_per_room %}
-                <tr>
-                    <td>{{ item['room_id'] }} {{ item['room_name'] }}</td>
-                    <td>{{ item['item_id'] }}</td>
-                    <td>{{ item['item_name'] }}</td>
-                    <td>{{ item['serial'] }}</td>
-                    <td>{{ item['quantity'] }}</td>
-                    <td>{{ item['initial_price'] }}</td>
-                    <td>{{ item['current_price'] }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -195,12 +221,28 @@
 {% endblock content%}
 {% block scripts %}
 <script>
+    function editSingleItemRoom (singleItemId, inventoryNumber, itemName) {
+        document.getElementById("single_item_name").value = itemName
+        document.getElementById("single_item_id").value = singleItemId
+        document.getElementById("single_item_inventory_number").value = inventoryNumber
+    }
     $(document).ready(function () {
-        $("#data_1").DataTable({
+        $('#room_select').select2({
+            // dropdownParent: $('#'),
+            placeholder: 'Izabrane su sve prostorije',
+            allowClear: true,
+            wdth: '100%',
+            tags: true,
+            closeOnSelect: true,
+        })
+        var data_1 =$("#data_1").DataTable({
             ajax: {
                 url: '{{url_for("single_items.api_single_items")}}',
                 type: 'GET',
-
+                data: function (d) {
+                    d.room_select = $('#room_select').val();
+                    d.current_year_procurement = $('#current_year_procurement').val();
+                }
             },
             serverSide: true,
             columns: [
@@ -239,7 +281,14 @@
                             // Koristi podatke iz reda da konstruiraš hyperlink
                             var url = '{{ url_for("single_items.room_single_items", room_id=1) }}';
                             url = url.replace(1, row.room_id);
-                            var html = '<td><a class="btn-x btn-primary-x" href="' + url + '" title="Pregled predmeta po prostorijama"><i class="fa fa-door-closed awesomeedit" aria-hidden="true"></i></a></td>';
+                            // Kreiraj funkciju za dinamičko generisanje HTML-a unutar onclick
+                            var editSingleItemRoomFunction = 'editSingleItemRoom(\'' + row.id + '\', \'' + row.inventory_number + '\', \'' + row.name + '\')';
+
+                            var html = '<td>' + 
+                                            '<a class="btn-x btn-primary-x" href="' + url + '" title="Pregled predmeta po prostorijama"><i class="fa fa-door-closed awesomeedit" aria-hidden="true"></i></a>' + 
+                                            '<a class="btn-x btn-primary-x" href="" data-bs-toggle="modal" onclick="'+ editSingleItemRoomFunction +'" data-bs-target="#changeRoom" title="Premeštanje predmeta u drugu prostoriju"><i class="fa fa-people-carry-box awesomedelete" aria-hidden="true"></i></a>' +
+                                            '<a class="btn-x btn-primary-x" href="' + url + '" title="Rashodovati"><i class="fa fa-trash-can awesomedelete" aria-hidden="true"></i></a>' +
+                                        '</td>';
 
                             return html;
                         }
@@ -252,6 +301,17 @@
                 stateSave: true
             },
         });
+        $('#room_select').on('change', function () {
+            // Osveži DataTables sa novim podacima
+            data_1.ajax.reload();
+        });
+        $('#current_year_procurement').on('change', function () {
+            var isChecked = $(this).prop('checked');
+            $('#current_year_procurement').val(isChecked ? true : false);
+            // Osveži DataTables sa novim podacima
+            data_1.ajax.reload();
+        });
+        // ////////////////////////////
         $("#data_2").DataTable({
             order: [[1, "asc"]],
             language: {
