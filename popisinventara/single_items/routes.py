@@ -26,7 +26,7 @@ def single_item_list():
         new_dict = {
             'item_id': item.item_id,
             'series': series,
-            'name': item.name,
+            'name': item.single_item_item.name,
             'quantity': 1,
             'initial_price': item.initial_price,
             'current_price': item.current_price,
@@ -49,7 +49,7 @@ def single_item_list():
     for item in single_item_list:
         new_dict = {
             'item_id': item.item_id,
-            'name': item.name,
+            'name': item.single_item_item.name,
             'quantity': 1,
             'initial_price': item.initial_price,
             'current_price': item.current_price,
@@ -102,6 +102,305 @@ def single_item_list():
                             cumulatively_per_room=cumulatively_per_room)
 
 
+@single_items.route('/api/item')
+def api_item(): #! kupulativno po tipu predmeta
+    single_item_list = SingleItem.query.all()
+    # search filter
+    search = request.args.get('search[value]')
+    room_select = request.args.get('room_select')
+    current_year_procurement = request.args.get('current_year_procurement')
+    # Proverite da li je vrednost "on" prisutna za current_year_procurement
+    if current_year_procurement == 'true':
+        current_year_procurement = True
+        # Prvo, dohvatite trenutnu godinu
+        current_year = datetime.now().year
+        # Zatim postavite početni i krajnji datum za trenutnu godinu
+        start_date = date(current_year, 1, 1)
+        end_date = date(current_year, 12, 31)
+    else: 
+        current_year_procurement = False
+    
+    cumulatively_per_item = []
+    if room_select and not current_year_procurement:
+        print('dodaj kod za filter: soba')
+        for item in single_item_list:
+            if item.room_id == int(room_select):
+                new_dict = {
+                    'item_id': item.item_id,
+                    'name': item.single_item_item.name,
+                    'quantity': 1,
+                    'initial_price': item.initial_price,
+                    'current_price': item.current_price,
+                    'purchase_date': item.purchase_date,
+                }
+                item_found = False
+                for existing_dict in cumulatively_per_item:
+                    if existing_dict['item_id'] == item.item_id:
+                        existing_dict['quantity'] += 1
+                        existing_dict['initial_price'] += item.initial_price
+                        existing_dict['current_price'] += item.current_price
+                        item_found = True
+                        break
+                
+                if not item_found:
+                    cumulatively_per_item.append(new_dict)
+    elif room_select and current_year_procurement:
+        print('dodaj kod za filter: soba i ova godina')
+        for item in single_item_list:
+            if item.room_id == int(room_select) and item.purchase_date >= start_date and item.purchase_date <= end_date:
+                new_dict = {
+                    'item_id': item.item_id,
+                    'name': item.single_item_item.name,
+                    'quantity': 1,
+                    'initial_price': item.initial_price,
+                    'current_price': item.current_price,
+                    'purchase_date': item.purchase_date,
+                }
+                item_found = False
+                for existing_dict in cumulatively_per_item :
+                    if existing_dict['item_id'] == item.item_id:
+                        existing_dict['quantity'] += 1
+                        existing_dict['initial_price'] += item.initial_price
+                        existing_dict['current_price'] += item.current_price
+                        item_found = True
+                        break
+                
+                if not item_found:
+                    cumulatively_per_item.append(new_dict)
+    elif not room_select and current_year_procurement:
+        print('dodaj kod za filter: ova godina')
+        for item in single_item_list:
+            if item.purchase_date >= start_date and item.purchase_date <= end_date:
+                new_dict = {
+                    'item_id': item.item_id,
+                    'name': item.single_item_item.name,
+                    'quantity': 1,
+                    'initial_price': item.initial_price,
+                    'current_price': item.current_price,
+                    'purchase_date': item.purchase_date,
+                }
+                item_found = False
+                for existing_dict in cumulatively_per_item:
+                    if existing_dict['item_id'] == item.item_id:
+                        existing_dict['quantity'] += 1
+                        existing_dict['initial_price'] += item.initial_price
+                        existing_dict['current_price'] += item.current_price
+                        item_found = True
+                        break
+                
+                if not item_found:
+                    cumulatively_per_item.append(new_dict)
+    else:
+        for item in single_item_list:
+            new_dict = {
+                'item_id': item.item_id,
+                'name': item.single_item_item.name,
+                'quantity': 1,
+                'initial_price': item.initial_price,
+                'current_price': item.current_price,
+                'purchase_date': item.purchase_date,
+            }
+            
+            item_found = False
+            for existing_dict in cumulatively_per_item:
+                if existing_dict['item_id'] == item.item_id:
+                    existing_dict['quantity'] += 1
+                    existing_dict['initial_price'] += item.initial_price
+                    existing_dict['current_price'] += item.current_price
+                    item_found = True
+                    break
+                
+            if not item_found:
+                cumulatively_per_item.append(new_dict)
+    if search:
+        cumulatively_per_item = [record for record in cumulatively_per_item if
+                                str(search).lower() in str(record['name']).lower() or
+                                str(search).lower() in str(record['item_id']).lower()]
+    
+    print(f'iz api_item: {current_year_procurement=} {search=} {room_select=}')
+    total_filtered = len(cumulatively_per_item)
+    
+    # sorting
+    order = []
+    i = 0
+    while True:
+        col_index = request.args.get(f'order[{i}][column]')
+        if col_index is None:
+            break
+        col_name = request.args.get(f'columns[{col_index}][data]')
+        if col_name not in ['item_id', 'name', 'quantity', 'initial_price', 'current_price', 'purchase_date']:
+            col_name = 'name'
+        descending = request.args.get(f'order[{i}][dir]') == 'desc'
+        # Korišćenje lambda funkcija za pristupanje odgovarajućim vrednostima u zapisima
+        if col_name == 'item_id':
+            col = lambda x: x['item_id']
+        elif col_name == 'name':
+            col = lambda x: x['name']
+        elif col_name == 'quantity':
+            col = lambda x: x['quantity']
+        elif col_name == 'initial_price':
+            col = lambda x: x['initial_price']
+        elif col_name == 'current_price':
+            col = lambda x: x['current_price']
+        elif col_name == 'purchase_date':
+            col = lambda x: x['purchase_date']
+        order.append(col)
+        i += 1
+    if order:
+        # Ovde primenjujete sortiranje na listu cumulatively_per_series
+        cumulatively_per_item.sort(key=lambda x: [col(x) for col in order], reverse=descending)
+    # pagination
+    start = request.args.get('start', type=int)
+    length = request.args.get('length', type=int)
+    cumulatively_per_item = cumulatively_per_item[start:start + length]
+    return {
+        'data': cumulatively_per_item,
+        'recordsFiltered': total_filtered,
+        'recordsTotal': total_filtered,
+        'draw': request.args.get('draw', type=int),
+    }
+
+
+@single_items.route('/api/serial')
+def api_serial(): #! kumulativno po seriji
+    single_item_list = SingleItem.query.all()
+    # room_select = request.args.get('room_select')
+    cumulatively_per_series = []
+    for item in single_item_list:
+        series = item.inventory_number.split('-')[1]
+        new_dict = {
+            'item_id': item.item_id,
+            'series': series,
+            'name': item.name,
+            'quantity': 1,
+            'initial_price': item.initial_price,
+            'current_price': item.current_price,
+            'purchase_date': item.purchase_date,
+            'supplier': item.supplier,
+            'invoice_number': item.invoice_number,
+            'room_id': item.room_id,
+        }
+        series_found = False
+        for existing_dict in cumulatively_per_series:
+            if existing_dict['series'] == series:
+                existing_dict['quantity'] += 1
+                existing_dict['initial_price'] += item.initial_price
+                existing_dict['current_price'] += item.current_price
+                series_found = True
+                break
+        
+        if not series_found:
+            cumulatively_per_series.append(new_dict)
+    print(f'{cumulatively_per_series=}')
+    # search filter
+    search = request.args.get('search[value]')
+    room_select = request.args.get('room_select')
+    current_year_procurement = request.args.get('current_year_procurement')
+    print(f'iz api_serial: {current_year_procurement=} {search=} {room_select=}')
+    
+    if room_select:
+        # cumulatively_per_series = [record for record in cumulatively_per_series if
+        #                         str(room_select).lower() in str(record['room_id']).lower()]
+        room_select = request.args.get('room_select')
+
+        cumulatively_per_series = []
+
+        for item in single_item_list:
+            if item.room_id == int(room_select):
+                series = item.inventory_number.split('-')[1]
+                new_dict = {
+                    'item_id': item.item_id,
+                    'series': series,
+                    'name': item.name,
+                    'quantity': 1,
+                    'initial_price': item.initial_price,
+                    'current_price': item.current_price,
+                    'purchase_date': item.purchase_date,
+                    'supplier': item.supplier,
+                    'invoice_number': item.invoice_number,
+                    'room_id': item.room_id,
+                }
+                series_found = False
+                for existing_dict in cumulatively_per_series:
+                    if existing_dict['series'] == series:
+                        existing_dict['quantity'] += 1
+                        existing_dict['initial_price'] += item.initial_price
+                        existing_dict['current_price'] += item.current_price
+                        series_found = True
+                        break
+                
+                if not series_found:
+                    cumulatively_per_series.append(new_dict)
+
+
+    # Proverite da li je vrednost "on" prisutna za current_year_procurement
+    if current_year_procurement == 'true':
+        current_year_procurement = True
+        # Prvo, dohvatite trenutnu godinu
+        current_year = datetime.now().year
+
+        # Zatim postavite početni i krajnji datum za trenutnu godinu
+        start_date = date(current_year, 1, 1)
+        end_date = date(current_year, 12, 31)
+        cumulatively_per_series = [record for record in cumulatively_per_series if record['purchase_date'] >= start_date and record['purchase_date'] <= end_date]
+    else:
+        current_year_procurement = False
+    if search:
+        cumulatively_per_series = [record for record in cumulatively_per_series if
+                                str(search).lower() in str(record['name']).lower() or
+                                str(search).lower() in str(record['item_id']).lower() or
+                                str(search).lower() in str(record['series']).lower() or 
+                                str(search).lower() in str(record['supplier']).lower() or 
+                                str(search).lower() in str(record['invoice_number']).lower()]
+    total_filtered = len(cumulatively_per_series)
+    
+    # sorting
+    order = []
+    i = 0
+    while True:
+        col_index = request.args.get(f'order[{i}][column]')
+        if col_index is None:
+            break
+        col_name = request.args.get(f'columns[{col_index}][data]')
+        if col_name not in ['item_id', 'series', 'name', 'quantity', 'initial_price', 'current_price', 'purchase_date']:
+            col_name = 'name'
+        descending = request.args.get(f'order[{i}][dir]') == 'desc'
+
+        # Korišćenje lambda funkcija za pristupanje odgovarajućim vrednostima u zapisima
+        if col_name == 'item_id':
+            col = lambda x: x['item_id']
+        elif col_name == 'series':
+            col = lambda x: x['series']
+        elif col_name == 'name':
+            col = lambda x: x['name']
+        elif col_name == 'quantity':
+            col = lambda x: x['quantity']
+        elif col_name == 'initial_price':
+            col = lambda x: x['initial_price']
+        elif col_name == 'current_price':
+            col = lambda x: x['current_price']
+        elif col_name == 'purchase_date':
+            col = lambda x: x['purchase_date']
+
+        order.append(col)
+        i += 1
+
+    if order:
+        # Ovde primenjujete sortiranje na listu cumulatively_per_series
+        cumulatively_per_series.sort(key=lambda x: [col(x) for col in order], reverse=descending)
+    # pagination
+    start = request.args.get('start', type=int)
+    length = request.args.get('length', type=int)
+    cumulatively_per_series = cumulatively_per_series[start:start + length]
+    
+    return {
+        'data': cumulatively_per_series,
+        'recordsFiltered': total_filtered,
+        'recordsTotal': total_filtered,
+        'draw': request.args.get('draw', type=int),
+    }
+
+
 @single_items.route('/api/singleitems')
 def api_single_items():
     single_items_query = SingleItem.query
@@ -118,6 +417,8 @@ def api_single_items():
             SingleItem.name.like(f'%{search}%'),
             SingleItem.inventory_number.like(f'%{search}%'),
             SingleItem.item_id.like(f'%{search}%'),
+            SingleItem.supplier.like(f'%{search}%'),
+            SingleItem.invoice_number.like(f'%{search}%'),
         ))
     elif search and room_select:
         print('selektovana je prostorija i imamo pretragu')
@@ -128,6 +429,8 @@ def api_single_items():
             SingleItem.inventory_number.like(f'%{search}%'),
             SingleItem.room_id.like(f'{int(room_select)}'),
             SingleItem.item_id.like(f'%{search}%'),
+            SingleItem.supplier.like(f'%{search}%'),
+            SingleItem.invoice_number.like(f'%{search}%'),
         ))
     elif room_select:
         print('samo je selektovana prostorija')
@@ -181,9 +484,12 @@ def api_single_items():
             'name': single_item.name,
             'initial_price': single_item.initial_price,
             'current_price': single_item.current_price,
+            'item_id': single_item.item_id,
             'room_id': single_item.room_id,
             'purchase_date': single_item.purchase_date,
-            'button_name': single_item.single_item_room.room_building.name + " > " +  single_item.single_item_room.dynamic_name
+            'supplier': single_item.supplier,
+            'invoice_number': single_item.invoice_number,
+            'button_name': single_item.single_item_room.room_building.name + " > " +  single_item.single_item_room.dynamic_name,
         }
         single_items_list.append(new_dict)
     return {
@@ -203,6 +509,24 @@ def move_single_item__to_room():
     single_item.room_id = room_id
     db.session.commit()
     flash(f'Uspesno ste premestili predmet {single_item.name} u prostoriju {single_item.single_item_room.name}.', 'success')
+    return redirect(url_for('single_items.single_item_list'))
+
+
+@single_items.route('/expediture_single_item', methods=['GET', 'POST'])
+def expediture_single_item():
+    single_item_id = request.form.get('single_item_id_expediture')
+    expediture_date = datetime.strptime(request.form.get('single_item_expediture_date_expediture'), '%Y-%m-%d').date()
+    print(f'{single_item_id=} {expediture_date=}')
+    single_item = SingleItem.query.filter_by(id=single_item_id).first()
+    print(f'rashodovao bih ovaj predmet: {single_item=}')
+    initial_price = single_item.initial_price
+    rate = single_item.single_item_item.item_depreciation_rate.rate
+    purchase_date = single_item.purchase_date
+    
+    single_item.current_price, single_item.expediture_price = current_price_calculation(initial_price, rate, purchase_date, expediture_date)
+    single_item.expediture_date = expediture_date
+    db.session.commit()
+    flash(f'Uspesno ste rashodovali predmet: {single_item.name}.', 'success')
     return redirect(url_for('single_items.single_item_list'))
 
 
@@ -226,7 +550,9 @@ def add_single_item():
     quantity = request.form.get('add_single_item_quantity')
     initial_price = float(request.form.get('add_single_item_initial_price')) / float(quantity)
     purchase_date = datetime.strptime(request.form.get('add_single_item_date'), '%Y-%m-%d').date()
-    current_price = current_price_calculation(initial_price, rate, purchase_date)
+    supplier = request.form.get('add_single_item_supplier')
+    invoice_number = request.form.get('add_single_item_invoice_number')
+    current_price, _ = current_price_calculation(initial_price, rate, purchase_date)
     print(f'{item_id=} {item_name=} {item_room=} {initial_price=} {purchase_date=} {quantity=}')
     new_single_items = []
     for i in range(1, int(quantity) + 1):
@@ -239,10 +565,58 @@ def add_single_item():
                                         initial_price=initial_price,
                                         current_price=current_price,
                                         purchase_date=purchase_date,
-                                        inventory_number=inventory_number)
+                                        inventory_number=inventory_number,
+                                        supplier=supplier,
+                                        invoice_number=invoice_number)
         new_single_items.append(new_single_item)
     db.session.add_all(new_single_items)
     db.session.commit()
+    return redirect(url_for('single_items.single_item_list'))
+
+
+@single_items.route('/edit_single_item', methods=['GET', 'POST'])
+def edit_single_item():
+    serial = request.form.get('edit_single_item_serial')
+    item_id = request.form.get('edit_single_item_item_id')
+    name = request.form.get('edit_single_item_name')
+    quantity = int(request.form.get('edit_single_item_quantity'))
+    initial_price = float(request.form.get('edit_single_item_initial_price')) / float(quantity)
+    current_price, _ = current_price_calculation(initial_price, Item.query.filter_by(id=item_id).first().item_depreciation_rate.rate, datetime.now().date())
+    purchase_date = datetime.strptime(request.form.get('edit_single_item_date'), '%Y-%m-%d').date()
+    supplier = request.form.get('edit_single_item_supplier')
+    invoice_number = request.form.get('edit_single_item_invoice_number')
+    print(f'{serial=}, {initial_price=}')
+    single_items = SingleItem.query.filter_by(serial=serial).all()
+    print(f'{single_items=}')
+    for single_item in single_items:
+        single_item.item_id = item_id
+        single_item.name = name
+        single_item.initial_price = initial_price
+        single_item.purchase_date = purchase_date
+        single_item.supplier = supplier
+        single_item.invoice_number = invoice_number
+        single_item.current_price = current_price
+    db.session.commit()
+    for i in range(1, (len(single_items) - quantity + 1)):
+        print(f'{quantity=}, {len(single_items)=}')
+        db.session.delete(single_items[-i])
+    if quantity > len(single_items):
+        for i in range(len(single_items), quantity):
+            i += 1 #! da bi bio veći za jedan od maximalnog broja len(single_items)
+            inventory_number = f'{int(item_id):04d}-{serial}-{i:04d}'
+            new_single_item = SingleItem(item_id=item_id,
+                                            serial=serial,
+                                            name=name,
+                                            initial_price=initial_price,
+                                            current_price=current_price,
+                                            purchase_date=purchase_date,
+                                            inventory_number=inventory_number,
+                                            room_id=1, #! virtuelni magacin
+                                            supplier=supplier,
+                                            invoice_number=invoice_number)
+            db.session.add(new_single_item)
+    db.session.commit()
+    flash('Uspesno ste izmenili seriju predmeta.', 'success')
     return redirect(url_for('single_items.single_item_list'))
 
 
@@ -479,8 +853,8 @@ def update_price():
         flash('Nemate dozvolu za pristum ovoj stranici.', 'danger')
     single_items = SingleItem.query.all()
     for sigle_item in single_items:
-        sigle_item.current_price = current_price_calculation(sigle_item.initial_price, sigle_item.single_item_item.item_depreciation_rate.rate, sigle_item.purchase_date)
-        print(f'{sigle_item.id=}')
-        
+        if sigle_item.expediture_date is None:
+            sigle_item.current_price, _ = current_price_calculation(sigle_item.initial_price, sigle_item.single_item_item.item_depreciation_rate.rate, sigle_item.purchase_date)
+    flash('Cena na kraju tekućegodine kod svih nerashodovanih predmeta je izmenjena.', 'success')
     db.session.commit()
     return redirect(url_for('single_items.single_item_list'))

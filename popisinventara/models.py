@@ -89,11 +89,15 @@ class SingleItem(db.Model):
     serial = db.Column(db.String(50), nullable=False)
     inventory_number = db.Column(db.String(50), nullable=False)
     name = db.Column(db.String(50), nullable=False)
+    supplier = db.Column(db.String(50), nullable=True)
+    invoice_number = db.Column(db.String(50), nullable=True)
     initial_price = db.Column(db.Float(), nullable=False)
     current_price = db.Column(db.Float(), nullable=False)
+    expediture_price = db.Column(db.Float(), nullable=True)
+    purchase_date = db.Column(db.Date(), nullable=False)
+    expediture_date = db.Column(db.Date(), nullable=True)
     room_id = db.Column(db.Integer, db.ForeignKey('room.id'), nullable=False)
     item_id = db.Column(db.Integer, db.ForeignKey('item.id'), nullable=False)
-    purchase_date = db.Column(db.Date(), nullable=False)
 
 
 class Inventory(db.Model):

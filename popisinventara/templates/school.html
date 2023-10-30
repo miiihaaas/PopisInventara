@@ -101,7 +101,7 @@
                     <td>{{room.dynamic_name}}</td>
                     <td>
                         <a href="#" class="btn-x btn-primary-x" data-bs-toggle="modal" data-bs-target="#myBuilding" onclick="openBuildingModal('{{ room.building_id }}', '{{ room.room_building.name }}', '{{ room.room_building.address }}')" title="Izmena podataka zgrade: {{ room.building_id }} - {{ room.room_building.name }}"><i class="fa fa-building awesomeedit" aria-hidden="true"></i></a>
-                        <a href="#" class="btn-x btn-primary-x" data-bs-toggle="modal" data-bs-target="#myBuilding" onclick="openRoomModal('{{ room.id }}', '{{ room.name }}', '{{ room.dynamic_name }}', '{{ room.building_id }}')" title="Izmena podataka prostorije: {{room.name}} - {{room.dynamic_name}}"><i class="fa fa-door-closed awesomeedit" aria-hidden="true"></i></a>
+                        <a href="#" class="btn-x btn-primary-x" data-bs-toggle="modal" data-bs-target="#myRoom" onclick="openRoomModal('{{ room.id }}', '{{ room.name }}', '{{ room.dynamic_name }}', '{{ room.building_id }}')" title="Izmena podataka prostorije: {{room.name}} - {{room.dynamic_name}}"><i class="fa fa-door-closed awesomeedit" aria-hidden="true"></i></a>
                     </td>
                 </tr>
                 {% endfor %}
