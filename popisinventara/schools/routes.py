@@ -57,6 +57,28 @@ def school(school_id):
                             form=form)
 
 
+@schools.route('/buildings_rooms', methods=['GET', 'POST'])
+def buildings_rooms():
+    if not current_user.is_authenticated:
+        flash('Da biste pristupili ovoj stranici treba da budete ulogovani.', 'danger')
+        return redirect(url_for('users.login'))
+    if current_user.authorization != 'admin':
+        flash('Nemate dozvolu za pristum ovoj stranici.', 'danger')
+    school = School.query.get_or_404(1)
+    buildings = Building.query.filter_by(school_id=1).all()
+    rooms = Room.query.all()
+    print(f'{rooms=}')
+    building_form = AddNewBuildingForm()
+    room_form = AddNewRoomForm()
+    room_form.building_id.choices = [(building.id, building.name) for building in buildings]
+    return render_template('buildings_rooms.html',
+                            building_form=building_form,
+                            room_form=room_form,
+                            buildings=buildings,
+                            rooms=rooms,
+                            school=school)
+
+
 @schools.route('/add_building', methods=['POST'])
 def add_building():
     if not current_user.is_authenticated:
@@ -71,7 +93,7 @@ def add_building():
     db.session.add(building)
     db.session.commit()
     flash('Nova zgrada je uspešno dodata.', 'success')
-    return redirect(url_for('schools.school', school_id=1))
+    return redirect(url_for('schools.buildings_rooms', school_id=1))
 
 
 @schools.route('/edit_building', methods=['GET', 'POST'])
@@ -89,7 +111,7 @@ def edit_building():
     building.name = building_name
     building.address = building_address
     db.session.commit()
-    return redirect(url_for('schools.school', school_id=1))
+    return redirect(url_for('schools.buildings_rooms', school_id=1))
 
 
 @schools.route('/add_room', methods=['POST'])
@@ -106,7 +128,7 @@ def add_room():
     db.session.add(room)
     db.session.commit()
     flash('Nova prostorija je uspešno dodata.', 'success')
-    return redirect(url_for('schools.school', school_id=1))
+    return redirect(url_for('schools.buildings_rooms', school_id=1))
 
 @schools.route('/edit_room', methods=['GET', 'POST'])
 def edit_room():
@@ -125,9 +147,4 @@ def edit_room():
     room.dynamic_name = room_dynamic_name
     room.building_id = room_building_id
     db.session.commit()
-    return redirect(url_for('schools.school', school_id=1))
-
-@schools.route('/rooms', methods=['GET', 'POST'])
-def rooms():
-    rooms = Room.query.all()
-    pass
+    return redirect(url_for('schools.buildings_rooms', school_id=1))

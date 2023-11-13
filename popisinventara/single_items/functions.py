@@ -1,4 +1,7 @@
 from datetime import datetime, date
+import os
+
+from fpdf import FPDF
 from popisinventara.models import SingleItem
 from popisinventara import db
 
@@ -29,3 +32,60 @@ def current_price_calculation(initial_price, rate, purchase_date, expediture_dat
     if expediture_date:
         price_at_end_of_current_year = 0
     return price_at_end_of_current_year, current_price
+
+
+current_file_path = os.path.abspath(__file__)
+project_folder = os.path.dirname(os.path.dirname((current_file_path)))
+font_path = os.path.join(project_folder, 'static', 'fonts', 'DejaVuSansCondensed.ttf')
+font_path_B = os.path.join(project_folder, 'static', 'fonts', 'DejaVuSansCondensed-Bold.ttf')
+
+
+def create_reverse_document(school, single_item):
+    class PDF(FPDF):
+        def __init__(self, **kwargs):
+            super(PDF, self).__init__(**kwargs)
+            self.add_font('DejaVuSansCondensed', '', font_path, uni=True)
+            self.add_font('DejaVuSansCondensed', 'B', font_path_B, uni=True)
+        def header(self):
+            self.set_font('DejaVuSansCondensed', '', 12)
+            self.cell(190/2, 10, school.schoolname, new_y='LAST', align='L', border=0)
+            self.cell(190/2, 10, f'Matični broj: {school.mb}', new_x='LMARGIN', new_y='NEXT', align='R', border=0)
+            self.cell(190/2, 10, school.address, new_y='LAST', align='L', border=0)
+            self.cell(190/2, 10, f'JBKJS: {school.jbkjs}', new_x='LMARGIN', new_y='NEXT', align='R', border=0)
+            self.cell(190/2, 10, f'{school.zip_code} {school.city}, {school.municipality}', new_x='LMARGIN', new_y='NEXT', align='L', border=0)
+    pdf = PDF()
+    pdf.add_page()
+    pdf.set_font('DejaVuSansCondensed', 'B', 14)
+    pdf.cell(0, 10, f'Reversni račun', new_x='LMARGIN', new_y='NEXT', align='C', border=0)
+    pdf.set_font('DejaVuSansCondensed', '', 12)
+    pdf.cell(0, 10, f'Datum izdavanja reversa: {single_item.reverse_date}', new_x='LMARGIN', new_y='NEXT', align='R', border=0)
+    pdf.cell(0, 10, f'Ovim putem potvrđujem da sam od {school.schoolname} dobio/la na korišćenje: ', new_x='LMARGIN', new_y='NEXT', align='L', border=0)
+    pdf.cell(60, 10, f'Naziv', new_y='LAST', align='L', border=1)
+    pdf.cell(60, 10, f'Inventarski broj', new_y='LAST', align='L', border=1)
+    pdf.cell(60, 10, f'Količina', new_x='LMARGIN', new_y='NEXT', align='L', border=1)
+    pdf.cell(60, 10, f'{single_item.name}', new_y='LAST', align='L', border=1)
+    pdf.cell(60, 10, f'{single_item.inventory_number}', new_y='LAST', align='L', border=1)
+    pdf.cell(60, 10, f'1 kom', new_x='LMARGIN', new_y='NEXT', align='L', border=1)
+    
+    pdf.cell(100, 10, f'Opremu preuzeo', new_y='LAST', align='C', border=0)
+    pdf.cell(100, 10, f'Opremu izdao', new_x='LMARGIN', new_y='NEXT', align='C', border=0)
+    pdf.cell(100, 10, f'{single_item.reverse_person}', new_y='LAST', align='C', border=0)
+    pdf.cell(100, 10, f'____________________', new_x='LMARGIN', new_y='NEXT', align='C', border=0)
+    
+    pdf.cell(0, 10, f'Datum povratka reversa: __________________', new_x='LMARGIN', new_y='NEXT', align='R', border=0)
+    pdf.cell(0, 10, f'Ovim putem potvrđujem da sam vratio/la predmet koji sam dobio/la od {school.schoolname} na korišćenje: ', new_x='LMARGIN', new_y='NEXT', align='L', border=0)
+    pdf.cell(60, 10, f'Naziv', new_y='LAST', align='L', border=1)
+    pdf.cell(60, 10, f'Inventarski broj', new_y='LAST', align='L', border=1)
+    pdf.cell(60, 10, f'Količina', new_x='LMARGIN', new_y='NEXT', align='L', border=1)
+    pdf.cell(60, 10, f'{single_item.name}', new_y='LAST', align='L', border=1)
+    pdf.cell(60, 10, f'{single_item.inventory_number}', new_y='LAST', align='L', border=1)
+    pdf.cell(60, 10, f'1 kom', new_x='LMARGIN', new_y='NEXT', align='L', border=1)
+    
+    pdf.cell(100, 10, f'Opremu vratio', new_y='LAST', align='C', border=0)
+    pdf.cell(100, 10, f'Opremu primio', new_x='LMARGIN', new_y='NEXT', align='C', border=0)
+    pdf.cell(100, 10, f'{single_item.reverse_person}', new_y='LAST', align='C', border=0)
+    pdf.cell(100, 10, f'____________________', new_x='LMARGIN', new_y='NEXT', align='C', border=0)
+    
+    path = f"{project_folder}/static/reverses/"
+    file_name = f'revers.pdf'
+    pdf.output(path + file_name)

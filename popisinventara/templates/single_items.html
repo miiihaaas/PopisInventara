@@ -221,6 +221,114 @@
         </div>
     </div>
 </div>
+<div class="modal fade" id="undoExpeditureSingleItem" tabindex="-1" role="dialog" aria-labelledby="undoExpeditureSingleItemLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="undoExpeditureSingleItemLabel">Rashodovanje predmeta - Storno</h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form method="POST" action="{{ url_for('single_items.undo_expediture_single_item') }}">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-control-label" for="single_item_id_expediture_undo">ID pojedinačnog predmeta</label>
+                        <input class="form-control" type="text" id="single_item_id_expediture_undo" name="single_item_id_expediture_undo" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-control-label" for="single_item_name_expediture_undo">Naziv predmeta</label>
+                        <input class="form-control" type="text" id="single_item_name_expediture_undo" name="single_item_name_expediture_undo" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-control-label" for="single_item_inventory_number_expediture_undo">Inventarski broj</label>
+                        <input class="form-control" type="text" id="single_item_inventory_number_expediture_undo" name="single_item_inventory_number_expediture_undo" disabled>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Otkažite</button>
+                        <button type="submit" class="btn btn-danger">Storno</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="reverseSingleItem" tabindex="-1" role="dialog" aria-labelledby="reverseSingleItemLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="reverseSingleItemLabel">Izdavanje predmeta na revers</h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form method="POST" action="{{ url_for('single_items.reverse_single_item') }}">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-control-label" for="single_item_id_reverse">ID pojedinačnog predmeta</label>
+                        <input class="form-control" type="text" id="single_item_id_reverse" name="single_item_id_reverse" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-control-label" for="single_item_name_reverse">Naziv predmeta</label>
+                        <input class="form-control" type="text" id="single_item_name_reverse" name="single_item_name_reverse" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-control-label" for="single_item_inventory_number_reverse">Inventarski broj</label>
+                        <input class="form-control" type="text" id="single_item_inventory_number_reverse" name="single_item_inventory_number_reverse" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-control-label" for="single_item_reverse_date_reverse">Datum izdavanja reversa</label>
+                        <input class="form-control" type="date" id="single_item_reverse_date_reverse" name="single_item_reverse_date_reverse">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-control-label" for="single_item_reverse_person_reverse">Ime i prezime</label>
+                        <input class="form-control" type="text" id="single_item_reverse_person_reverse" name="single_item_reverse_person_reverse">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Otkažite</button>
+                        <button type="submit" class="btn btn-danger">Izdajte revers</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="returnReverseSingleItem" tabindex="-1" role="dialog" aria-labelledby="returnReverseSingleItemLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="returnReverseSingleItemLabel">Povraćaj predmeta sa reversa</h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form method="POST" action="{{ url_for('single_items.return_reverse_single_item') }}">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-control-label" for="single_item_id_reverse_return">ID pojedinačnog predmeta</label>
+                        <input class="form-control" type="text" id="single_item_id_reverse_return" name="single_item_id_reverse_return" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-control-label" for="single_item_name_reverse_return">Naziv predmeta</label>
+                        <input class="form-control" type="text" id="single_item_name_reverse_return" name="single_item_name_reverse_return" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-control-label" for="single_item_inventory_number_reverse_return">Inventarski broj</label>
+                        <input class="form-control" type="text" id="single_item_inventory_number_reverse_return" name="single_item_inventory_number_reverse_return" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-control-label" for="single_item_reverse_person_reverse_return">Ime i prezime</label>
+                        <input class="form-control" type="text" id="single_item_reverse_person_reverse_return" name="single_item_reverse_person_reverse_return" disabled>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Otkažite</button>
+                        <button type="submit" class="btn btn-danger">Povraćaj reversa</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 <ul class="nav nav-tabs justify-content-center mb-4" id="myTab" role="tablist">
     <li class="nav-item" role="presentation">
         <button class="nav-link" id="single_item-tab" data-bs-toggle="tab" data-bs-target="#single_item" type="button" role="tab" aria-controls="single_item" aria-selected="false">Pojedinačni predmeti</button>
@@ -335,6 +443,22 @@
         document.getElementById("single_item_id_expediture").value = singleItemId
         document.getElementById("single_item_inventory_number_expediture").value = inventoryNumber
     }
+    function undoExpeditureSingleItem (singleItemId, inventoryNumber, itemName) {
+        document.getElementById("single_item_name_expediture_undo").value = itemName
+        document.getElementById("single_item_id_expediture_undo").value = singleItemId
+        document.getElementById("single_item_inventory_number_expediture_undo").value = inventoryNumber
+    }
+    function reverseSingleItem (singleItemId, inventoryNumber, itemName) {
+        document.getElementById("single_item_name_reverse").value = itemName
+        document.getElementById("single_item_id_reverse").value = singleItemId
+        document.getElementById("single_item_inventory_number_reverse").value = inventoryNumber
+    }
+    function returnReverseSingleItem (singleItemId, inventoryNumber, itemName, reverse_person) {
+        document.getElementById("single_item_name_reverse_return").value = itemName
+        document.getElementById("single_item_id_reverse_return").value = singleItemId
+        document.getElementById("single_item_inventory_number_reverse_return").value = inventoryNumber
+        document.getElementById("single_item_reverse_person_reverse_return").value = reverse_person
+    }
     function editSingleItem (singleItemSerial, singleItemItemId, singleItemName, singleItemQuantity, singleItemInitialPrice, singleItemDate, singleItemSupplier, singleItemInvoiceNumber) {
         if (singleItemSupplier === 'null') {
             singleItemSupplier = ''
@@ -413,19 +537,38 @@
                     render: function (data, type, row) {
                         // Generiše HTML za novu kolonu
                         if (row.room_id) {
+                            console.log(row)
                             // Koristi podatke iz reda da konstruiraš hyperlink
                             var url = '{{ url_for("single_items.single_item_rooms", item_id=1) }}';
                             url = url.replace(1, row.item_id);
                             // Kreiraj funkciju za dinamičko generisanje HTML-a unutar onclick
                             var editSingleItemRoomFunction = 'editSingleItemRoom(\'' + row.id + '\', \'' + row.inventory_number + '\', \'' + row.name + '\')';
                             var expeditureSingleItemFunction = 'expeditureSingleItem(\'' + row.id + '\', \'' + row.inventory_number + '\', \'' + row.name + '\')';
+                            var undoExpeditureSingleItemFunction = 'undoExpeditureSingleItem(\'' + row.id + '\', \'' + row.inventory_number + '\', \'' + row.name + '\')';
+                            var reverseSingleItemFunction = 'reverseSingleItem(\'' + row.id + '\', \'' + row.inventory_number + '\', \'' + row.name + '\')';
+                            var returnReverseSingleItemFunction = 'returnReverseSingleItem(\'' + row.id + '\', \'' + row.inventory_number + '\', \'' + row.name + '\', \'' + row.reverse_person + '\')';
+                            if (row.room_id === 3) { //ako je predmet izdat na revers: room_id = 3 magacin reversa
+                                console.log('predmet je izdat na revers')
 
-                            var html = '<td>' + 
+                                var html = '<td>' + 
+                                            '<a class="btn-x btn-primary-x" href="' + url + '" title="Pregled predmeta po prostorijama"><i class="fa fa-door-closed awesomeedit" aria-hidden="true"></i></a>' + 
+                                            '<a class="btn-x btn-primary-x" href="" data-bs-toggle="modal" onclick="'+ returnReverseSingleItemFunction +'" data-bs-target="#returnReverseSingleItem" title="Povraćaj reversa"><i class="fa fa-file-circle-minus awesomedelete" aria-hidden="true"></i></a>' +
+                                        '</td>';
+                            } else if (row.room_id === 2) { //ako je predmet rashodovan: room_id = 2 magacin rashodovanih predmeta
+                                console.log('predmet je rashodovan')
+                                var html = '<td>' + 
+                                            '<a class="btn-x btn-primary-x" href="' + url + '" title="Pregled predmeta po prostorijama"><i class="fa fa-door-closed awesomeedit" aria-hidden="true"></i></a>' + 
+                                            '<a class="btn-x btn-primary-x" href="" data-bs-toggle="modal" onclick="'+ undoExpeditureSingleItemFunction +'" data-bs-target="#undoExpeditureSingleItem" title="Rashodovati - Storno"><i class="fa fa-trash-can-arrow-up awesomedelete" aria-hidden="true"></i></a>' +
+                                        '</td>';
+                            } else {
+                                console.log('predmet nije izdat na revers')
+                                var html = '<td>' + 
                                             '<a class="btn-x btn-primary-x" href="' + url + '" title="Pregled predmeta po prostorijama"><i class="fa fa-door-closed awesomeedit" aria-hidden="true"></i></a>' + 
                                             '<a class="btn-x btn-primary-x" href="" data-bs-toggle="modal" onclick="'+ editSingleItemRoomFunction +'" data-bs-target="#changeRoom" title="Premeštanje predmeta u drugu prostoriju"><i class="fa fa-people-carry-box awesomedelete" aria-hidden="true"></i></a>' +
+                                            '<a class="btn-x btn-primary-x" href="" data-bs-toggle="modal" onclick="'+ reverseSingleItemFunction +'" data-bs-target="#reverseSingleItem" title="Izdati predmet na revers"><i class="fa fa-file-lines awesomeedit" aria-hidden="true"></i></a>' +
                                             '<a class="btn-x btn-primary-x" href="" data-bs-toggle="modal" onclick="'+ expeditureSingleItemFunction +'" data-bs-target="#expeditureSingleItem" title="Rashodovati"><i class="fa fa-trash-can awesomedelete" aria-hidden="true"></i></a>' +
                                         '</td>';
-
+                            }
                             return html;
                         }
                     }

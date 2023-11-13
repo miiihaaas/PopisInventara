@@ -96,6 +96,8 @@ class SingleItem(db.Model):
     expediture_price = db.Column(db.Float(), nullable=True)
     purchase_date = db.Column(db.Date(), nullable=False)
     expediture_date = db.Column(db.Date(), nullable=True)
+    reverse_person = db.Column(db.String(50), nullable=True)
+    reverse_date = db.Column(db.Date(), nullable=True)
     room_id = db.Column(db.Integer, db.ForeignKey('room.id'), nullable=False)
     item_id = db.Column(db.Integer, db.ForeignKey('item.id'), nullable=False)
 

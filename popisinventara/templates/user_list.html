@@ -3,130 +3,132 @@
 <div class="h1">Users</div>
 <div class="form-group">
     <a class="btn btn-primary mb-4" href="javascript:history.back()">Nazad</a>
+    {% if not active_inventory_list %}
     <button type="button" class="btn btn-primary mb-4" data-bs-toggle="modal" data-bs-target="#newUser">Registrujte novog korisnika</button>
-</div>
-<div class="modal fade" id="newUser" tabindex="-1" role="dialog" aria-labelledby="newUserLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="newUserLabel">Kreiranje novog korisnika</h5>
-                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
+    <div class="modal fade" id="newUser" tabindex="-1" role="dialog" aria-labelledby="newUserLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="newUserLabel">Kreiranje novog korisnika</h5>
+                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form method="POST" action="{{ url_for('users.register_user') }}">
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label class="form-control-label" for="name">Ime</label>
+                            <input class="form-control" type="text" id="name" name="name">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-control-label" for="surname">Prezime</label>
+                            <input class="form-control" type="text" id="surname" name="surname">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-control-label" for="email">Mejl</label>
+                            <input class="form-control" type="text" id="email" name="email">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-control-label" for="password">Lozinka</label>
+                            <input class="form-control" type="password" id="password" name="password">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-control-label" for="authorization">Autorizacija</label>
+                            <select name="authorization" id="authorization" class="form-select">
+                                <option value="admin">Administrator</option>
+                                <option value="user">Korisnik</option>
+                            </select>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Otkažite</button>
+                            <button type="submit" class="btn btn-primary" >Sačuvajte</button>
+                        </div>
+                    </div>
+                </form>
             </div>
-            <form method="POST" action="{{ url_for('users.register_user') }}">
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label class="form-control-label" for="name">Ime</label>
-                        <input class="form-control" type="text" id="name" name="name">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-control-label" for="surname">Prezime</label>
-                        <input class="form-control" type="text" id="surname" name="surname">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-control-label" for="email">Mejl</label>
-                        <input class="form-control" type="text" id="email" name="email">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-control-label" for="password">Lozinka</label>
-                        <input class="form-control" type="password" id="password" name="password">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-control-label" for="authorization">Autorizacija</label>
-                        <select name="authorization" id="authorization" class="form-select">
-                            <option value="admin">Administrator</option>
-                            <option value="user">Korisnik</option>
-                        </select>
+        </div>
+    </div>
+    <div class="modal fade" id="editUser" tabindex="-1" role="dialog" aria-labelledby="editUserLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editUserLabel">Izmena korisničkog profila</h5>
+                    <button type="button" clsass="close" data-bs-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true"><i class="fa-solid fa-xmark"></i></span>
+                    </button>
+                </div>
+                <form method="POST" action="{{ url_for('users.edit_user') }}">
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label class="form-control-label" for="user_id">ID</label>
+                            <input class="form-control" type="text" id="user_id" name="user_id" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-control-label" for="edit_name">Ime</label>
+                            <input class="form-control" type="text" id="edit_name" name="edit_name">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-control-label" for="edit_surname">Prezime</label>
+                            <input class="form-control" type="text" id="edit_surname" name="edit_surname">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-control-label" for="edit_email">Mejl</label>
+                            <input class="form-control" type="text" id="edit_email" name="edit_email">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-control-label" for="edit_authorization">Autorizacija</label>
+                            <select name="edit_authorization" id="edit_authorization" class="form-select">
+                                <option value="admin">Administrator</option>
+                                <option value="user">Korisnik</option>
+                            </select>
+                        </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Otkažite</button>
                         <button type="submit" class="btn btn-primary" >Sačuvajte</button>
                     </div>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-<div class="modal fade" id="editUser" tabindex="-1" role="dialog" aria-labelledby="editUserLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="editUserLabel">Izmena korisničkog profila</h5>
-                <button type="button" clsass="close" data-bs-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true"><i class="fa-solid fa-xmark"></i></span>
-                </button>
+                </form>
             </div>
-            <form method="POST" action="{{ url_for('users.edit_user') }}">
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label class="form-control-label" for="user_id">ID</label>
-                        <input class="form-control" type="text" id="user_id" name="user_id" readonly>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-control-label" for="edit_name">Ime</label>
-                        <input class="form-control" type="text" id="edit_name" name="edit_name">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-control-label" for="edit_surname">Prezime</label>
-                        <input class="form-control" type="text" id="edit_surname" name="edit_surname">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-control-label" for="edit_email">Mejl</label>
-                        <input class="form-control" type="text" id="edit_email" name="edit_email">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-control-label" for="edit_authorization">Autorizacija</label>
-                        <select name="edit_authorization" id="edit_authorization" class="form-select">
-                            <option value="admin">Administrator</option>
-                            <option value="user">Korisnik</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Otkažite</button>
-                    <button type="submit" class="btn btn-primary" >Sačuvajte</button>
-                </div>
-            </form>
         </div>
     </div>
-</div>
-<div class="modal fade" id="deleteUser" tabindex="-1" role="dialog" aria-labelledby="deleteUserLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="deleteUserLabel">Brisanje korisničkog profila</h5>
-                <button type="button" clsass="close" data-bs-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true"><i class="fa-solid fa-xmark"></i></span>
-                </button>
+    <div class="modal fade" id="deleteUser" tabindex="-1" role="dialog" aria-labelledby="deleteUserLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteUserLabel">Brisanje korisničkog profila</h5>
+                    <button type="button" clsass="close" data-bs-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true"><i class="fa-solid fa-xmark"></i></span>
+                    </button>
+                </div>
+                <form method="POST" action="{{ url_for('users.delete_user') }}">
+                    <div class="modal-body">
+                        <p>Da li ste sigurni da želite da obrišete profil korisnika? </p>
+                        <div class="form-group">
+                            <label class="form-control-label" for="delete_user_id">ID</label>
+                            <input class="form-control" type="text" id="delete_user_id" name="delete_user_id" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-control-label" for="delete_name">Ime</label>
+                            <input class="form-control" type="text" id="delete_name" name="delete_name">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-control-label" for="delete_surname">Prezime</label>
+                            <input class="form-control" type="text" id="delete_surname" name="delete_surname">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-control-label" for="delete_email">Mejl</label>
+                            <input class="form-control" type="text" id="delete_email" name="delete_email">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Otkažite</button>
+                        <button type="submit" class="btn btn-danger" >Obrišite</button>
+                    </div>
+                </form>
             </div>
-            <form method="POST" action="{{ url_for('users.delete_user') }}">
-                <div class="modal-body">
-                    <p>Da li ste sigurni da želite da obrišete profil korisnika? </p>
-                    <div class="form-group">
-                        <label class="form-control-label" for="delete_user_id">ID</label>
-                        <input class="form-control" type="text" id="delete_user_id" name="delete_user_id" readonly>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-control-label" for="delete_name">Ime</label>
-                        <input class="form-control" type="text" id="delete_name" name="delete_name">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-control-label" for="delete_surname">Prezime</label>
-                        <input class="form-control" type="text" id="delete_surname" name="delete_surname">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-control-label" for="delete_email">Mejl</label>
-                        <input class="form-control" type="text" id="delete_email" name="delete_email">
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Otkažite</button>
-                    <button type="submit" class="btn btn-danger" >Obrišite</button>
-                </div>
-            </form>
         </div>
     </div>
+    {% endif %}
 </div>
 <table id="data" border="1" class="table table-striped userlist">
     <thead>
@@ -148,11 +150,14 @@
             <td>{{ user.email }}</td>
             <td>{{ user.authorization }}</td>
             <td>
-                <a href="#" class="btn-x btn-primary-x" data-bs-toggle="modal" data-bs-target="#editUser" onclick="editUser('{{user.id}}', '{{user.name}}', '{{user.surname}}', '{{user.email}}', '{{user.authorization}}')" title="Izmenite korisnički profila: {{ user.name }} {{ user.surname }}"><i class="fa fa-edit awesomeedit" aria-hidden="true"></i></a>
-                {% if user.authorization == 'admin' and number_of_admins > 1 %}
-                <a href="" class="btn-x btn-primary-x" data-bs-toggle="modal" data-bs-target="#deleteUser" onclick="deleteUser('{{user.id}}', '{{user.name}}', '{{user.surname}}', '{{user.email}}')" title="Izbrišite korisnički profil: {{ user.name }} {{ user.surname }}"><i class="fa fa-user-slash awesomedelete" aria-hidden="true"></i></a>
-                {% elif user.authorization != 'admin' %}
-                <a href="" class="btn-x btn-primary-x" data-bs-toggle="modal" data-bs-target="#deleteUser" onclick="deleteUser('{{user.id}}', '{{user.name}}', '{{user.surname}}', '{{user.email}}')" title="Izbrišite korisnički profil: {{ user.name }} {{ user.surname }}"><i class="fa fa-user-slash awesomedelete" aria-hidden="true"></i></a>
+                {% if not active_inventory_list %}
+                    <a href="#" class="btn-x btn-primary-x" data-bs-toggle="modal" data-bs-target="#editUser" onclick="editUser('{{user.id}}', '{{user.name}}', '{{user.surname}}', '{{user.email}}', '{{user.authorization}}')" title="Izmenite korisnički profila: {{ user.name }} {{ user.surname }}"><i class="fa fa-edit awesomeedit" aria-hidden="true"></i></a>
+                    {% if user.authorization == 'admin' and number_of_admins > 1 %}
+                    <a href="" class="btn-x btn-primary-x" data-bs-toggle="modal" data-bs-target="#deleteUser" onclick="deleteUser('{{user.id}}', '{{user.name}}', '{{user.surname}}', '{{user.email}}')" title="Izbrišite korisnički profil: {{ user.name }} {{ user.surname }}"><i class="fa fa-user-slash awesomedelete" aria-hidden="true"></i></a>
+                    {% elif user.authorization != 'admin' %}
+                    <a href="" class="btn-x btn-primary-x" data-bs-toggle="modal" data-bs-target="#deleteUser" onclick="deleteUser('{{user.id}}', '{{user.name}}', '{{user.surname}}', '{{user.email}}')" title="Izbrišite korisnički profil: {{ user.name }} {{ user.surname }}"><i class="fa fa-user-slash awesomedelete" aria-hidden="true"></i></a>
+                    {% endif %}
+                {% else %}
                 {% endif %}
             </td>
         </tr>

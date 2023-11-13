@@ -1,11 +1,11 @@
 import time
 from datetime import date, datetime
-from flask import Blueprint, flash, json
+from flask import Blueprint, flash, json, render_template_string, send_file
 from flask import request, render_template, redirect, url_for
 from flask_login import current_user
 from popisinventara import db
-from popisinventara.single_items.functions import current_price_calculation
-from popisinventara.models import SingleItem, Item, Room, Inventory
+from popisinventara.single_items.functions import create_reverse_document, current_price_calculation
+from popisinventara.models import School, SingleItem, Item, Room, Inventory
 from sqlalchemy import and_
 
 
@@ -489,6 +489,8 @@ def api_single_items():
             'purchase_date': single_item.purchase_date,
             'supplier': single_item.supplier,
             'invoice_number': single_item.invoice_number,
+            'reverse_date': single_item.reverse_date,
+            'reverse_person': single_item.reverse_person,
             'button_name': single_item.single_item_room.room_building.name + " > " +  single_item.single_item_room.dynamic_name,
         }
         single_items_list.append(new_dict)
@@ -512,6 +514,57 @@ def move_single_item__to_room():
     return redirect(url_for('single_items.single_item_list'))
 
 
+@single_items.route('/open_file', methods=['GET', 'POST'])
+def open_file():
+    # Ovde dodajte kod koji će otvoriti fajl u novom tabu
+    print('ušao sam u funkciju open_file')
+    file_path = './static/reverses/revers.pdf'  # Promenite putanju prema vašem fajlu
+    return render_template_string("""
+        <script>
+            window.open("{{ url_for('single_items.single_item_list') }}", "_blank");
+            window.location.href = "{{ url_for('single_items.open_file') }}";
+        </script>
+    """)
+    
+
+
+@single_items.route('/reverse_single_item', methods=['GET', 'POST'])
+def reverse_single_item():
+    school = School.query.get_or_404(1)
+    single_item_id = request.form.get('single_item_id_reverse')
+    reverse_date = datetime.strptime(request.form.get('single_item_reverse_date_reverse'), '%Y-%m-%d').date()
+    reverse_person = request.form.get('single_item_reverse_person_reverse')
+    print(f'{single_item_id=} {reverse_date=} {reverse_person}')
+    single_item = SingleItem.query.filter_by(id=single_item_id).first()
+    print(f'revers za ovaj predmet: {single_item=}')
+    single_item.reverse_date = reverse_date
+    single_item.reverse_person = reverse_person
+    single_item.room_id = 3 #! room_id = 3 je magacin reversa
+    db.session.commit()
+    flash(f'Predmet: {single_item.name} je izdat na revers {single_item.reverse_person}.', 'success')
+    create_reverse_document(school, single_item)
+    open_file()
+    return render_template_string("""
+        <script>
+            window.open("{{ url_for('single_items.single_item_list') }}", "_blank");
+            window.location.href = "{{ url_for('single_items.open_file') }}";
+        </script>
+    """)
+
+
+@single_items.route('/return_reverse_single_item', methods=['GET', 'POST'])
+def return_reverse_single_item():
+    single_item_id = request.form.get('single_item_id_reverse_return')
+    single_item = SingleItem.query.filter_by(id=single_item_id).first()
+    print(f'povraćaj reversa za ovaj predmet: {single_item=}')
+    single_item.room_id = 1 #! room_id = 1 je virtuelni magacin
+    single_item.reverse_date = None
+    single_item.reverse_person = None
+    db.session.commit()
+    flash(f'Predmet: {single_item.name} je premešten u virtuelni magacin.', 'success')
+    return redirect(url_for('single_items.single_item_list'))
+
+
 @single_items.route('/expediture_single_item', methods=['GET', 'POST'])
 def expediture_single_item():
     single_item_id = request.form.get('single_item_id_expediture')
@@ -525,8 +578,22 @@ def expediture_single_item():
     
     single_item.current_price, single_item.expediture_price = current_price_calculation(initial_price, rate, purchase_date, expediture_date)
     single_item.expediture_date = expediture_date
+    single_item.room_id = 2 #! room_id = 2 je magacin rashoda
     db.session.commit()
     flash(f'Uspesno ste rashodovali predmet: {single_item.name}.', 'success')
+    return redirect(url_for('single_items.single_item_list'))
+
+
+@single_items.route('/undo_expediture_single_item', methods=['GET', 'POST'])
+def undo_expediture_single_item():
+    single_item_id = request.form.get('single_item_id_expediture_undo')
+    single_item = SingleItem.query.filter_by(id=single_item_id).first()
+    print(f'poništavam rashod za ovaj predmet: {single_item=}')
+    single_item.expediture_date = None
+    single_item.expediture_price = None
+    single_item.room_id = 1 #! room_id = 1 je virtuelni magacin
+    db.session.commit()
+    flash(f'Predmet: {single_item.name} je ponisten iz rashoda.', 'success')
     return redirect(url_for('single_items.single_item_list'))
 
 
@@ -688,6 +755,10 @@ def room_single_items(room_id):
 
 @single_items.route('/move_select', methods=['GET', 'POST'])
 def move_select_item():
+    active_inventory_list = Inventory.query.filter_by(status='active').first()
+    if active_inventory_list:
+        flash(f'Nije moguće premeštati predmete dok je aktivan popis.', 'danger')
+        return redirect(url_for('main.home'))
     if request.method == 'POST':
         if 'submit_to' in request.form:
             item_id = request.form.get('item_id_to_move_to')

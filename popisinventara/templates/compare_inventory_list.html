@@ -27,11 +27,12 @@
             <td>{{ item.quantity }}</td>
             <td>{{ item.quantity_input }}</td>
             <td>{{ item.quantity_input - item.quantity }}</td>
-            <td>WiP</td>
+            <td>{{ item.value_input - item.value }}</td>
         </tr>
         {% endfor %}
     </tbody>
 </table>
+{{compare_items_list}}
 {% if not inventory.status == 'finished' %}
 <form action="" method="post">
     <button class="btn btn-danger" type="submit">Zavrišite popis</button>

@@ -2,7 +2,7 @@ from flask import Blueprint
 from flask import render_template, redirect, url_for
 from flask_login import current_user
 from popisinventara import db
-from popisinventara.models import Item, Category, DepreciationRate
+from popisinventara.models import Inventory, Item, Category, DepreciationRate
 from flask import url_for
 from flask import request
 from flask import flash
@@ -20,6 +20,10 @@ def items():
         return redirect(url_for('users.login'))
     if current_user.authorization != 'admin':
         flash('Nemate dozvolu za pristup ovoj stranici.', 'danger')
+        return redirect(url_for('main.home'))
+    active_inventory_list = Inventory.query.filter_by(status='active').first()
+    if active_inventory_list:
+        flash(f'Nije moguće upravljati tipovima predmeta dok je aktivan popis.', 'danger')
         return redirect(url_for('main.home'))
     items = Item.query.all()
     rates = DepreciationRate.query.all()
@@ -80,6 +84,10 @@ def category():
     if current_user.authorization != 'admin':
         flash('Nemate dozvolu za pristup ovoj stranici.', 'danger')
         return redirect(url_for('main.home'))
+    active_inventory_list = Inventory.query.filter_by(status='active').first()
+    if active_inventory_list:
+        flash(f'Nije moguće upravljati kontima dok je aktivan popis.', 'danger')
+        return redirect(url_for('main.home'))
     categories = Category.query.all()
     return render_template('category.html', title="Konta", categories=categories)
 
@@ -131,6 +139,10 @@ def depreciation_rates():
         return redirect(url_for('users.login'))
     if current_user.authorization != 'admin':
         flash('Nemate dozvolu za pristup ovoj stranici.', 'danger')
+        return redirect(url_for('main.home'))
+    active_inventory_list = Inventory.query.filter_by(status='active').first()
+    if active_inventory_list:
+        flash(f'Nije moguće upravljati stopama amortizacije dok je aktivan popis.', 'danger')
         return redirect(url_for('main.home'))
     depreciation_rates = DepreciationRate.query.all()
     return render_template('depreciation_rates.html', title="Stope amortizacije", depreciation_rates=depreciation_rates)

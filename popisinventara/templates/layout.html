@@ -71,8 +71,10 @@
                   <li class="nav-item dropdown dropdown--align-right">
                     <a class="nav-link dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" href="#">Podešavanja</a>
                     <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdownMenuLink">
-                      <a class="dropdown-item" href="{{ url_for('schools.school', school_id=1) }}">Škola / Prostorije</a>
                       <a class="dropdown-item" href="{{ url_for('users.user_list') }}">Korisnički nalozi</a>
+                      <a class="dropdown-item" href="{{ url_for('schools.school', school_id=1) }}">Škola</a>
+                      <a class="dropdown-item" href="{{ url_for('schools.buildings_rooms') }}">Zgrade / Prostorije</a>
+                      <hr>
                       <a class="dropdown-item" href="{{ url_for('items.category') }}">Konta</a>
                       <a class="dropdown-item" href="{{ url_for('items.depreciation_rates') }}">Stopa amortizacije</a>
                     </div>

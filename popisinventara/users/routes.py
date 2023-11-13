@@ -4,7 +4,7 @@ from flask_login import login_user, login_required, logout_user, current_user
 from flask_mail import Message
 from popisinventara import bcrypt, db, mail
 from popisinventara.users.forms import LoginForm, RequestResetForm, ResetPasswordForm
-from popisinventara.models import User
+from popisinventara.models import Inventory, User
 
 
 
@@ -36,9 +36,13 @@ def user_list():
     if current_user.authorization != 'admin':
         flash('Nemate dozvolu za prikaz korisnika.', 'danger')
         return redirect(url_for('main.home'))
+    active_inventory_list = Inventory.query.filter_by(status='active').first()
     users = User.query.all()
     number_of_admins = User.query.filter_by(authorization='admin').count()
-    return render_template('user_list.html', users=users, number_of_admins=number_of_admins )
+    return render_template('user_list.html', 
+                            users=users, 
+                            number_of_admins=number_of_admins,
+                            active_inventory_list=active_inventory_list)
 
 
 @users.route("/register_user", methods=['GET', 'POST'])

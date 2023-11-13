@@ -7,6 +7,42 @@
 <form action="" method="post">
     <legend class="form-control-legend" for="description">Opis popisne liste</legend>
     <textarea class="form-control mb-4" name="description" id="description" cols="100" rows="3"></textarea>
+    <div class="form-group">
+        <legend class="form-control-legend" for="data">Dodeljivanje prostorija popisnim komisijama</legend>
+        <table id="data" border="1" class="table table-striped userlist">
+            <thead>
+                <tr>
+                    <th>ID prostorije</th>
+                    <th>Zgrada</th>
+                    <th>Prostorija</th>
+                    <th>Komisija</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for room in rooms %}
+                <tr>
+                    <td>
+                        <input class="form-control" type="text" value="{{room.id}}" name="room_id[]" readonly>
+                    </td>
+                    <td>
+                        <input class="form-control" type="text" value="{{room.room_building.name}}" disabled>
+                    </td>
+                    <td>
+                        <input class="form-control" type="text" value="{{room.dynamic_name}}" disabled>
+                    </td>
+                    <td>
+                        <select class="form-select" id="" name="user_id[]">
+                            <option value=""></option>
+                            {% for user in users %}
+                            <option value="{{user.id}}">{{ user.name }} {{ user.surname }}</option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
     <button type="submit" class="btn btn-primary">Kreirajte</button>
 </form>
 {% endblock content%}
