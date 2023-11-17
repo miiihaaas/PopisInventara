@@ -1,14 +1,16 @@
-body { background: url(img/loginbg.jpg) center center no-repeat; background-size: cover; background-attachment: fixed; font-family: 'Montserrat', sans-serif; padding-left: calc(100vw - 100%); margin-left: -17px; }
-legend { font-size: 1.6rem; color: #999; font-weight: 700; padding: 5px 0 0 0;}
+body { background: url(img/loginbg.jpg) center center no-repeat; background-size: cover; background-attachment: fixed; font-family: 'Montserrat', sans-serif; /*padding-left: calc(100vw - 100%);*/ }
+legend { font-size: 1.2rem; color: #555; font-weight: 500; padding: 5px 0 0 0;}
 h1 { font-size: 1.6rem; color: #999; font-weight: 700; padding: 15px 0 0 0; }
 h2 { font-size: 1.4rem; }
 h3 { font-size: 1.2rem; }
+.gap20 { gap: 20px; }
+.standardbox { border-radius: 6px; padding: 20px; background-color: #f5f5f5; }
 body.Dodavanje fieldset.form-group { max-width: 100% !important;}
 .invalid-input { border-color: red !important; }
 .alert { display: inline-block; padding: 5px 20px 3px 40px !important; }
-.alert-success { color: #009cdb; background-color: transparent;  border: 1px solid #009cdb; font-weight: 700; font-size: 16px; text-align: left; border-radius: 50px;}
+.alert-success { color: #009cdb; background-color: transparent;  border: 1px solid #009cdb; font-weight: 700; font-size: 16px; text-align: left; border-radius: 50px; margin-top: 20px; }
 .alert-success:before { position: absolute; content: '\f058'; font-family: "Font Awesome 6 Free"; left: 0; top: -8px; font-size: 32px; }
-.alert-danger { color: #92004f; background-color: transparent; border: 1px solid #92004f; font-weight: 700; font-size: 16px; text-align: left; border-radius: 50px;}
+.alert-danger { color: #92004f; background-color: transparent; border: 1px solid #92004f; font-weight: 700; font-size: 16px; text-align: left; border-radius: 50px; margin-top: 20px;}
 .alert-danger:before { position: absolute; content: '\f057'; font-family: "Font Awesome 6 Free"; left: 0; top: -8px; font-size: 32px; }
 .alert-message { color: #104e97; background-color: transparent; border: 1px solid #104e97; font-weight: 700; font-size: 16px; text-align: left; border-radius: 50px;}
 .alert-message:before { position: absolute; content: '\f06a'; font-family: "Font Awesome 6 Free"; left: 0; top: -8px; font-size: 32px; }
@@ -50,7 +52,7 @@ body.softveru a.btn.btn-info { margin-top: 40px !important; }
 header { background-color: #104e97; padding-bottom: 40px; }
 .bg-steel { background-color: #104e97; }
 nav#sidebar { min-width: 300px; }
-main.container:not(.login-screen) { margin:-40px 20px 20px 0; background-color: #fff; box-shadow: 0 0 10px #00000030; border-radius: 5px; padding: 0 20px 20px 20px; overflow: hidden; width: -webkit-fill-available; max-width: 100%; }
+main.container:not(.login-screen) { margin:-40px 20px 20px 20px; background-color: #fff; box-shadow: 0 0 10px #00000030; border-radius: 5px; padding: 0 20px 20px 20px; overflow: hidden; width: -webkit-fill-available; max-width: 100%; }
 title { display: block; font-size: 24px; font-weight: 700; color: #999; text-shadow: 1px 1px 1px #fff; background-color: #eee; padding: 10px; margin: 0 -20px 20px -20px; }
 .navbar>.container, .navbar>.container-fluid, .navbar>.container-lg, .navbar>.container-md, .navbar>.container-sm, .navbar>.container-xl, .navbar>.container-xxl { justify-content: space-between; }
 .navbar-brand img { max-width: 160px; }
@@ -90,7 +92,9 @@ title { display: block; font-size: 24px; font-weight: 700; color: #999; text-sha
 input[type=search] { min-height: 38px; height: 38px; border-radius: 5px; }
 select.form-select.form-select-sm { min-height: 38px; }
 table#data { border: 0; width: 100% !important; }
+table.table-striped { width: 100% !important; }
 .table>:not(caption)>*>* { padding: 6px; box-shadow: none; border: 0; border-right: 1px solid #fff; border-bottom: 1px solid #fff; }
+.table>:not(:last-child)>:last-child>* { border-bottom-color: #fff; }
 .table>thead { background-color: #ddd; font-size: 12px; }
 .table thead th { vertical-align: bottom; border-bottom: 1px solid #fff !important; }
 .table-striped tbody tr.odd { background-color: #eee; }
@@ -114,7 +118,9 @@ a.page-link:not(.page-item:first-child a.page-link, .page-item:last-child a.page
 .content-section h3 { font-size: 18px; color: #555; }
 .content-section .list-group-item { border: 0; padding: 10px 0;}
 .content-section ul.list-group li.list-group-item { border-bottom: 1px solid #ddd; margin-bottom: 1px; }
+.logincentered { display: flex; flex-direction: column; height: 89vh; justify-content: center; }
 fieldset.form-group { display: flex; flex-direction: column; max-width: 50%; margin: 0 auto 30px auto; }
+fieldset.loginfield { max-width: 30%; }
 form .form-group .btn { margin-bottom: 10px; }
 /*.container input.form-control { border: 0; border-bottom: 1px solid #ccc; border-radius: 0; background-color: transparent; }
 .container input.form-control:focus { box-shadow: none; border-bottom: 3px solid #940052 !important; }*/
@@ -122,17 +128,18 @@ body.Registracija form > div.form-group { text-align: center; }
 .form-group label { margin-bottom: 0; }
 footer { display: flex; max-width: 1320px; margin: auto; justify-content: center; font-size: 12px; }
 form > div.form-group { text-align: center; }
-.btn.btn-danger, .btn.btn-secondary { margin-bottom: 10px !important; }
-.btn.btn-secondary { background-image: linear-gradient(#009dde, #0174a5) !important; color:#ffffff !important; }
-.btn.btn-secondary:hover { background-image: linear-gradient(#0174a5, #0174a5) !important; }
+.btn.btn-danger { margin-bottom: 10px !important; }
+.btn.btn-secondary { background-image: linear-gradient(#ccc, #999) !important; color:#ffffff !important; }
+.btn.btn-secondary:hover { background-image: linear-gradient(#999, #555) !important; }
 .btn.btn-danger { background-image: linear-gradient(#eb0081, #940052) !important; }
 .btn.btn-danger:hover { background-image: linear-gradient(#940052, #940052) !important; }
-.btn.btn-secondary, .btn.btn-danger { margin: 0 0 0 0 !important; }
+/*.btn.btn-secondary,*/ .btn.btn-danger { margin: 0 0 0 0 !important; }
+.sec-nazad { margin-top: -25px !important; }
 .form-check-input:checked { background-color: #009cdd; border-color: #009cdd; }
 .select2-container--open { z-index: 1111; }
 .select2-selection.select2-selection--multiple { padding: 5px 5px 10px 5px !important; border-color: #ccc !important }
 .bg-danger { background-color: rgba(255,0,0,0.2) !important;  }
-.select2-selection.select2-selection--single { border-color: #ccc !important; padding: 4px; height: auto !important; background-image: none !important; background-color: transparent !important; }
+.select2-selection.select2-selection--single { border-color: #ccc !important; padding: 4px; height: auto !important; background-image: none !important; /*background-color: transparent !important;*/ }
 span.select2-selection__arrow { border-left: 0 !important; background-color: transparent !important; background-image: none !important; }
 .select2-container--classic .select2-selection--single .select2-selection__arrow b { border-color: #000 transparent transparent transparent !important; border-width: 6px 6px 0 6px !important; left: 0 !important; margin-top: 3px !important; }
 .select2-container--classic .select2-selection--single .select2-selection__arrow b:after { content: ''; border-color: #ffffff transparent transparent transparent; border-style: solid; border-width: 6px 6px 0 6px; margin-left: -6px; margin-top: -7px; position: absolute; }
@@ -154,6 +161,17 @@ span.select2.select2-container.select2-container--classic { width: 100% !importa
 .False { border-color: #ffaaaa !important; background-color: #ffeeee !important; }
 .negativna-vrednost { background-color: #dbedd6 !important; }
 .error-result { background-color: #ffeeee !important; border-color: #ffaaaa !important; }
+
+button.close { border: 0; border-radius: 5px; display: flex; width: 24px; height: 24px; justify-content: center; align-items: center; padding: 0; font-size: 24px; font-weight: 700; background-image: linear-gradient(#ff0000, #c50000); color: #fff; }
+button.close:hover { background: #b30000 !important; }
+.btn:focus { box-shadow: none; }
+.nav-tabs .nav-link { background-color: #eee; margin: 0 1px -1px; }
+.nav-tabs .nav-item .nav-link { color:#333; }
+.nav-tabs .nav-item .nav-link.active { font-weight: bold; }
+
+.select2widthmax .select2-container--default { width: max-content !important; }
+.select2widthmax { padding: 20px 0; }
+
 @media (min-width: 992px) {
 	/*body:not(.Korisnici) .btn-info { width: 100%}*/
 	body.Fakture table#data .btn.btn-info { width: 100%; }

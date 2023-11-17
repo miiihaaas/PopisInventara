@@ -1,9 +1,9 @@
 {% extends "layout.html" %}
 {% block content %}
     <div class="content-section">
-        <form method="POST" action="">
+        <form method="POST" action="" class="logincentered">
             {{ form.hidden_tag() }}
-            <fieldset class="form-group">
+            <fieldset class="form-group loginfield">
                 <legend class="border-bottom mb-4">{{legend}}</legend>
                 <div class="form-group">
                     {{ form.email.label(class="form-control-label") }}

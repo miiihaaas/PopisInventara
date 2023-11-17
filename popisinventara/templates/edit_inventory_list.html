@@ -2,9 +2,9 @@
 {% block content %}
 <div class="h1">{{ title }}</div>
 <div class="form-group mb-4">
-    <a class="btn btn-primary" href="javascript:history.back()">Nazad</a>
-    <a class="btn btn-secondary" href="">Štampa svih listi (bez količina)</a>
-    <a class="btn btn-secondary" href="">Štampa svih listi (sa količinama)</a>
+    <a class="btn btn-secondary" href="javascript:history.back()">Nazad</a>
+    <a class="btn btn-primary" href="">Štampa svih listi (bez količina)</a>
+    <a class="btn btn-primary" href="">Štampa svih listi (sa količinama)</a>
     <a class="btn btn-danger" href="{{url_for('inventory.compare_inventory_list', inventory_id=inventory_id)}}">Poređenje popisnih rezultata sa stanjem u sistemu</a>
 </div>
 <hr>

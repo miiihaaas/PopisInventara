@@ -2,7 +2,7 @@
 {% block content %}
 <div class="h1">Pregled svih predmeta</div>
 <div class="form-group mb-4">
-    <a class="btn btn-primary" href="javascript:history.back()">Nazad</a>
+    <a class="btn btn-secondary" href="javascript:history.back()">Nazad</a>
     {% if current_user.authorization == 'admin' %}
         {% if active_inventory_list %}
         <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newSingleItem" disabled>Dodajte novi predmet</button>
@@ -11,18 +11,20 @@
         {% endif %}
         <a class="btn btn-danger" href="{{ url_for('single_items.update_price') }}">Preračunaj sadašnju vrednost za svaku materijal</a>
     {% endif %}
-    <div class="form-group">
-        <label class="form-control-label" for="room_select">Filter po prostoriji</label>
-        <select class="form-select" name="room_select" id="room_select">
-            <option value="">Sve prostorije</option>
-            {% for room in room_list %}
-            <option value="{{room.id}}">({{room.name}}) {{room.dynamic_name}}</option>
-            {% endfor %}
-        </select>
-    </div>
-    <div class="form-check form-switch">
-        <input type="checkbox" class="form-check-input" id="current_year_procurement" name="current_year_procurement">
-        <label class="form-check-label" for="current_year_procurement">Nabavke u tekućoj godini</label>
+    <div class="d-flex justify-content-between align-items-center">
+        <div class="form-group select2widthmax">
+            <label class="form-control-label" for="room_select">Filter po prostoriji</label>
+            <select class="form-select" name="room_select" id="room_select">
+                <option value="">Sve prostorije</option>
+                {% for room in room_list %}
+                <option value="{{room.id}}">({{room.name}}) {{room.dynamic_name}}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-check form-switch">
+            <input type="checkbox" class="form-check-input" id="current_year_procurement" name="current_year_procurement">
+            <label class="form-check-label" for="current_year_procurement">Nabavke u tekućoj godini</label>
+        </div>
     </div>
 </div>
 <div class="modal fade" id="newSingleItem" tabindex="-1" role="dialog" aria-labelledby="newSingleItemLabel" aria-hidden="true">
