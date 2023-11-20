@@ -20,7 +20,27 @@
             <td>{{ list.date }}</td>
             <td>{{ list.description }}</td>
             {% if list.status == 'finished' %}
-            <td><a href="{{url_for('inventory.edit_inventory_list', inventory_id=list.id)}}" class="btn btn-primary">Pregled listi</a>  <a href="{{url_for('inventory.compare_inventory_list', inventory_id=list.id)}}" class="btn btn-primary">Poređenje rezultata</a></td>
+            <td>
+                <a href="{{url_for('inventory.edit_inventory_list', inventory_id=list.id)}}" class="btn btn-primary">Pregled listi</a>  
+                <a href="{{url_for('inventory.compare_inventory_list', inventory_id=list.id)}}" class="btn btn-primary">Poređenje rezultata</a>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-danger dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                        Izveštaji
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#">Izveštaj o rashodu</a></li>
+                        <li><a class="dropdown-item" href="#">Izveštaj o rashodu po kontima i predmetima</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="#">Izveštaj o novim nabavkama po kontima zbirno</a></li>
+                        <li><a class="dropdown-item" href="#">Izveštaj o novim nabavkama po kontima i predmetima</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="#">Obračun amortizacije osnovnih sredstava pregled po prostorijama i po predmetima</a></li>
+                        <li><a class="dropdown-item" href="#">Rekapitulacija obračuna amortizacije po prostorijama</a></li>
+                        <li><a class="dropdown-item" href="#">Knjiga osnovnih sredstava</a></li>
+                        <li><a class="dropdown-item" href="#">Izveštaj po kontima</a></li>
+                    </ul>
+                </div>
+            </td>
             {% endif %}
         </tr>
         {% endfor %}

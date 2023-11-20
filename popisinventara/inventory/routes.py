@@ -1,6 +1,6 @@
 import json
 from bs4 import BeautifulSoup
-from datetime import date
+from datetime import date, datetime
 from flask import Blueprint
 from flask import  render_template, flash, redirect, url_for
 from flask_login import current_user
@@ -40,7 +40,7 @@ def create_inventory_list():
         room_user_ids = list(zip(room_ids, user_ids))
         print(f'{room_ids=}; {user_ids=}')
         print(f'{room_user_ids=}')
-        data = []
+        inventory_initial_data = []
         for single_item in single_items:
             new_data = {
                 'room_id': single_item.room_id,
@@ -54,11 +54,11 @@ def create_inventory_list():
                     }
                 ]
             }
-            if not data:
-                data.append(new_data)
+            if not inventory_initial_data:
+                inventory_initial_data.append(new_data)
             else:
                 found = False
-                for existing_data in data:
+                for existing_data in inventory_initial_data:
                     if existing_data['room_id'] == new_data['room_id']:
                         for item in existing_data['items']:
                             if item['serial'] == new_data['items'][0]['serial']:
@@ -71,22 +71,61 @@ def create_inventory_list():
                             found = True
                         break
                 if not found:
-                    data.append(new_data)
-        print(f'{data=}')
-        working_data = []
+                    inventory_initial_data.append(new_data)
+        print(f'{inventory_initial_data=}')
+        inventory_working_data = []
 
-        for room in data:
+        for room in inventory_initial_data:
             new_room = {'room_id': room['room_id'], 'user_id': room['user_id'], 'items': []}
             for item in room['items']:
                 new_item = {'serial': item['serial'], 'quantity_input': 0, 'value_input': item['value'], 'comment': ''}
                 new_room['items'].append(new_item)
-            working_data.append(new_room)
+            inventory_working_data.append(new_room)
 
-        print(working_data)
+        print(f'{inventory_working_data=}')
+        
+        single_items_list = []
+        for single_item in single_items:
+            new_single_item = {
+                'id': single_item.id,
+                'serial': single_item.serial,
+                'inventory_number': single_item.inventory_number,
+                'name': single_item.name,
+                'supplier': single_item.supplier,
+                'invoice_number': single_item.invoice_number,
+                'initial_price': single_item.initial_price,
+                'current_price': single_item.current_price,
+                'expediture_price': single_item.expediture_price,
+                'purchase_date': single_item.purchase_date,
+                'expediture_date': single_item.expediture_date,
+                'reverse_person': single_item.reverse_person,
+                'reverse_date': single_item.reverse_date,
+                'room_id': single_item.room_id,
+                'item_id': single_item.item_id,
+                'category': single_item.single_item_item.item_category.category_number,
+                'depreciation_rate': single_item.single_item_item.item_depreciation_rate.rate,
+            }
+            single_items_list.append(new_single_item)
+        
+        
+        initial_data = {
+            'inventory': inventory_initial_data,
+            'single_items': single_items_list,
+        }
+        
+        working_data = {
+            'inventory': inventory_working_data,
+            'single_items': single_items_list,
+        }
+        print(f'{initial_data=}')
+        print(f'{working_data=}')
+        def serialize_date(obj):
+            if isinstance(obj, (date, datetime)):
+                return obj.isoformat()
         new_inventory_list = Inventory(description=description,
                                         date=date.today(),
-                                        initial_data=json.dumps(data),
-                                        working_data=json.dumps(working_data),
+                                        initial_data=json.dumps(initial_data, default=serialize_date),
+                                        working_data=json.dumps(working_data, default=serialize_date),
                                         status='active')
         db.session.add(new_inventory_list)
         db.session.commit()
@@ -104,10 +143,10 @@ def edit_inventory_list(inventory_id):
         return redirect(url_for('users.login'))
     inventory = Inventory.query.get_or_404(inventory_id)
     inventory_list_data = json.loads(inventory.initial_data)
-    print(f'{inventory_list_data=}')
+    # print(f'{inventory_list_data=}')
     room_buttons = []
     if current_user.authorization == 'admin':
-        for room_data in inventory_list_data:
+        for room_data in inventory_list_data['inventory']:
             room = Room.query.get_or_404(room_data['room_id'])
             new_room = {
                 'room_id': room_data['room_id'],
@@ -148,8 +187,9 @@ def edit_inventory_room_list(inventory_id, room_id):
         flash('Da biste pristupili ovoj stranici treba da budete ulogovani.', 'success')
         return redirect(url_for('users.login'))
     inventory = Inventory.query.get_or_404(inventory_id)
-    # print(f'{json.loads(inventory.working_data)=}')
-    for entry in json.loads(inventory.working_data):
+    # print(f'ovo tražim: {json.loads(inventory.working_data)=}')
+    inventory_list_data = json.loads(inventory.working_data)['inventory']
+    for entry in inventory_list_data:
         if entry['room_id'] == room_id:
             user_id = entry['user_id']
             break
@@ -160,7 +200,7 @@ def edit_inventory_room_list(inventory_id, room_id):
     if request.method == 'POST':
         print(f'save dugme iz sobe... nastavi kod')
         inventory = Inventory.query.get_or_404(inventory_id)
-        working_inventory_list_data = json.loads(inventory.working_data)
+        working_inventory_list_data = json.loads(inventory.working_data)['inventory']
         print(f'{working_inventory_list_data=}')
         data = []
         print(f'{request.form=}')
@@ -181,14 +221,18 @@ def edit_inventory_room_list(inventory_id, room_id):
             if room['room_id'] == room_id:
                 room['items'] = data
                 break
-        inventory.working_data = json.dumps(working_inventory_list_data)
+        working_data = {
+            'inventory': working_inventory_list_data,
+            'single_items': json.loads(inventory.working_data)['single_items'],
+        }
+        inventory.working_data = json.dumps(working_data)
         db.session.commit()
         flash(f'Popisna lista {room_id} je sačuvana!', 'success')
         return redirect(url_for('inventory.edit_inventory_list', inventory_id=inventory_id))
     if request.method == 'GET':
         inventory = Inventory.query.get_or_404(inventory_id)
-        initial_inventory_list_data = json.loads(inventory.initial_data)
-        working_inventory_list_data = json.loads(inventory.working_data)
+        initial_inventory_list_data = json.loads(inventory.initial_data)['inventory']
+        working_inventory_list_data = json.loads(inventory.working_data)['inventory']
         print(f'{working_inventory_list_data=}')
         for room in initial_inventory_list_data:
             print(f'{room=}')

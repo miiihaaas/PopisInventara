@@ -1,6 +1,6 @@
 import time
 from datetime import date, datetime
-from flask import Blueprint, flash, json, render_template_string, send_file
+from flask import Blueprint, flash, json, render_template_string, Markup
 from flask import request, render_template, redirect, url_for
 from flask_login import current_user
 from popisinventara import db
@@ -541,27 +541,33 @@ def reverse_single_item():
     single_item.reverse_person = reverse_person
     single_item.room_id = 3 #! room_id = 3 je magacin reversa
     db.session.commit()
-    flash(f'Predmet: {single_item.name} je izdat na revers {single_item.reverse_person}.', 'success')
     create_reverse_document(school, single_item)
-    open_file()
-    return render_template_string("""
-        <script>
-            window.open("{{ url_for('single_items.single_item_list') }}", "_blank");
-            window.location.href = "{{ url_for('single_items.open_file') }}";
-        </script>
-    """)
+    file_path = './static/reverses/revers.pdf'
+    pdf_link = Markup(f'<a class="alert-success-link" href="{file_path}" target="_blank">Odštampajte revers</a>')
+    flash(f'Predmet: {single_item.name} je izdat na revers {single_item.reverse_person}. {pdf_link}', 'success')
+    return redirect(url_for('single_items.single_item_list'))
 
 
 @single_items.route('/return_reverse_single_item', methods=['GET', 'POST'])
 def return_reverse_single_item():
+    print(f'{request.form=}')
+    action = request.form.get('action')
+    print('povraćaj reversa')
     single_item_id = request.form.get('single_item_id_reverse_return')
     single_item = SingleItem.query.filter_by(id=single_item_id).first()
-    print(f'povraćaj reversa za ovaj predmet: {single_item=}')
-    single_item.room_id = 1 #! room_id = 1 je virtuelni magacin
-    single_item.reverse_date = None
-    single_item.reverse_person = None
-    db.session.commit()
-    flash(f'Predmet: {single_item.name} je premešten u virtuelni magacin.', 'success')
+    if action == 'print_reverse':
+        school = School.query.get_or_404(1)
+        create_reverse_document(school, single_item)
+        file_path = './static/reverses/revers.pdf'
+        pdf_link = Markup(f'<a class="alert-success-link" href="{file_path}" target="_blank">Odštampajte revers</a>')
+        flash(f'Štampa reversa za predmet: {single_item.name} koji je izdat na korišćenje {single_item.reverse_person}. {pdf_link}', 'success')
+    elif action == 'return_reverse':
+        print(f'povraćaj reversa za ovaj predmet: {single_item=}')
+        single_item.room_id = 1 #! room_id = 1 je virtuelni magacin
+        single_item.reverse_date = None
+        single_item.reverse_person = None
+        db.session.commit()
+        flash(f'Predmet: {single_item.name} je premešten u virtuelni magacin.', 'success')
     return redirect(url_for('single_items.single_item_list'))
 
 
