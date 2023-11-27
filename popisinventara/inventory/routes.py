@@ -8,6 +8,7 @@ from flask import request
 from popisinventara import db
 from popisinventara.models import Inventory, Room, SingleItem, Item, User
 from popisinventara.inventory.functions import popisna_lista_gen, popisne_liste_gen
+from popisinventara.reports.functions import write_off_until_current_year
 
 
 inventory = Blueprint('inventory', __name__)
@@ -72,7 +73,7 @@ def create_inventory_list():
                         break
                 if not found:
                     inventory_initial_data.append(new_data)
-        print(f'{inventory_initial_data=}')
+        # print(f'{inventory_initial_data=}')
         inventory_working_data = []
 
         for room in inventory_initial_data:
@@ -82,10 +83,11 @@ def create_inventory_list():
                 new_room['items'].append(new_item)
             inventory_working_data.append(new_room)
 
-        print(f'{inventory_working_data=}')
+        # print(f'{inventory_working_data=}')
         
         single_items_list = []
         for single_item in single_items:
+            write_off_til_current_year, price_at_end_of_year, depreciation_per_year = write_off_until_current_year(single_item)
             new_single_item = {
                 'id': single_item.id,
                 'serial': single_item.serial,
@@ -104,6 +106,9 @@ def create_inventory_list():
                 'item_id': single_item.item_id,
                 'category': single_item.single_item_item.item_category.category_number,
                 'depreciation_rate': single_item.single_item_item.item_depreciation_rate.rate,
+                'depreciation_per_year': depreciation_per_year,
+                'write_off_until_current_year': write_off_til_current_year,
+                'price_at_end_of_year': price_at_end_of_year if price_at_end_of_year > 0 else 0,
             }
             single_items_list.append(new_single_item)
         
@@ -117,8 +122,8 @@ def create_inventory_list():
             'inventory': inventory_working_data,
             'single_items': single_items_list,
         }
-        print(f'{initial_data=}')
-        print(f'{working_data=}')
+        # print(f'{initial_data=}')
+        # print(f'{working_data=}')
         def serialize_date(obj):
             if isinstance(obj, (date, datetime)):
                 return obj.isoformat()

@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 {% block content %}
-<div class="h1">{{ legend }}</div>
+<div class="h1">{{ title }}</div>
 <div class="form-group">
     <a class="btn btn-secondary mb-4" href="javascript:history.back()">Nazad</a>
 </div>
@@ -9,19 +9,25 @@
     <thead>
         <tr>
             <th>Konto</th>
+            <th>Naziv inventara</th>
+            <th>Količina</th>
             <th>Nabavna vrednost</th>
             <th>Otpis do tekuće godine</th>
             <th>Otpis u tekućoj godini</th>
-            <th>Vrednost na kraju tekuće godine</th>
+            <th>Ukupan otpis</th>
+            <th>Vrednost na kraju godine</th>
         </tr>
     </thead>
     <tbody>
         {% for record in data %}
         <tr>
             <td>{{ record['category'] }}</td>
+            <td>{{ record['item'] }}</td>
+            <td>{{ record['quantity'] }}</td>
             <td>{{ '{:,.2f}'.format(record['initial_price']) }}</td>
             <td>{{ '{:,.2f}'.format(record['write_off_until_current_year']) }}</td>
             <td>{{ '{:,.2f}'.format(record['depreciation_per_year']) }}</td>
+            <td>{{ '{:,.2f}'.format(record['depreciation_per_year'] + record['write_off_until_current_year']) }}</td>
             <td>{{ '{:,.2f}'.format(record['price_at_end_of_year']) }}</td>
         </tr>
         {% endfor %}
