@@ -157,6 +157,9 @@ def add_depreciation_rate():
         return redirect(url_for('main.home'))
     name = request.form.get('add_depreciation_rate_name')
     rate = request.form.get('add_depreciation_rate_rate')
+    if rate not in range(0, 101):
+        flash('Nije dodata nova stopa amortizacije. Stopa amortizacije mora biti u rasponu od 0 do 100 procenata.', 'danger')
+        return redirect(url_for('items.depreciation_rates'))
     print(f'{rate=} {name=}')
     new_depreciation_rate = DepreciationRate(name=name, rate=rate)
     db.session.add(new_depreciation_rate)
@@ -176,6 +179,10 @@ def edit_depreciation_rate():
     depreciation_rate_id = request.form.get('edit_depreciation_rate_id')
     name = request.form.get('edit_depreciation_rate_name')
     rate = request.form.get('edit_depreciation_rate_rate')
+    
+    if rate not in range(0, 101):
+        flash('Nisu sačuvane izmene. Stopa amortizacije mora biti u rasponu od 0 do 100 procenata.', 'danger')
+        return redirect(url_for('items.depreciation_rates'))
     print(f'{depreciation_rate_id=} {rate=} {name=}')
     
     depreciation_rate = DepreciationRate.query.get(depreciation_rate_id)
