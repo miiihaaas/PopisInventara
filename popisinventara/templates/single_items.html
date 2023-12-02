@@ -354,6 +354,7 @@
                     <th>Inventarski broj</th>
                     <th>Naziv</th>
                     <th>Nabavna vrednost</th>
+                    <th>Otpis do tekuće godine</th>
                     <th>Vrednost na kraju godine</th>
                     <th>Prostorija</th>
                     <th>Datum nabavke</th>
@@ -375,6 +376,7 @@
                     <th>Naziv</th>
                     <th>Količina</th>
                     <th>Nabavna vrednost</th>
+                    <th>Otpis do tekuće godine</th>
                     <th>Vrednost na kraju godine</th>
                     <th>datum nabavke</th>
                     <th>Dobavljač</th>
@@ -409,6 +411,7 @@
                     <th>Naziv tipa predmeta</th>
                     <th>Količina</th>
                     <th>Nabavna vrednost</th>
+                    <th>Otpis do tekuće godine</th>
                     <th>Vrednost na kraju godine</th>
                     <th></th>
                 </tr>
@@ -492,7 +495,7 @@
             placeholder: 'Izabrane su sve prostorije',
             allowClear: true,
             wdth: '100%',
-            tags: true,
+            tags: false,
             closeOnSelect: true,
         })
         var data_1 =$("#data_1").DataTable({
@@ -522,6 +525,21 @@
                         }
                         // Inače, vraćamo nenumeroisanu vrednost za druge tipove
                         return data
+                    }
+                },
+                { 
+                    data: 'write_off',
+                    render: function (data, type, row) {
+                        // Ako je tip prikaza podataka ili tip sortiranja, vraćamo zaokruženu vrednost
+                        if (type === 'display' || type === 'type') {
+                            f = new Intl.NumberFormat('sr-RS', { 
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            })
+                            return f.format(parseFloat(data).toFixed(2));
+                        }
+                        // Inače, vraćamo nenumeroisanu vrednost za druge tipove
+                        return data;
                     }
                 },
                 { 
@@ -651,6 +669,21 @@
                     }
                 },
                 { 
+                    data: 'write_off',
+                    render: function (data, type, row) {
+                        // Ako je tip prikaza podataka ili tip sortiranja, vraćamo zaokruženu vrednost
+                        if (type === 'display' || type === 'type') {
+                            f = new Intl.NumberFormat('sr-RS', { 
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            })
+                            return f.format(parseFloat(data).toFixed(2));
+                        }
+                        // Inače, vraćamo nenumeroisanu vrednost za druge tipove
+                        return data;
+                    }
+                },
+                { 
                     data: 'current_price',
                     render: function (data, type, row) {
                         // Ako je tip prikaza podataka ili tip sortiranja, vraćamo zaokruženu vrednost
@@ -724,8 +757,51 @@
                 { data: 'item_id' },
                 { data: 'name' },
                 { data: 'quantity' },
-                { data: 'initial_price' },
-                { data: 'current_price' },
+                { 
+                    data: 'initial_price',
+                    render: function (data, type, row) {
+                        // Ako je tip prikaza podataka ili tip sortiranja, vraćamo zaokruženu vrednost
+                        if (type === 'display' || type === 'type') {
+                            f = new Intl.NumberFormat('sr-RS', { 
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            })
+                            return f.format(parseFloat(data).toFixed(2));
+                        }
+                        // Inače, vraćamo nenumeroisanu vrednost za druge tipove
+                        return data
+                    }
+                },
+                { 
+                    data: 'write_off',
+                    render: function (data, type, row) {
+                        // Ako je tip prikaza podataka ili tip sortiranja, vraćamo zaokruženu vrednost
+                        if (type === 'display' || type === 'type') {
+                            f = new Intl.NumberFormat('sr-RS', { 
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            })
+                            return f.format(parseFloat(data).toFixed(2));
+                        }
+                        // Inače, vraćamo nenumeroisanu vrednost za druge tipove
+                        return data;
+                    }
+                },
+                { 
+                    data: 'current_price',
+                    render: function (data, type, row) {
+                        // Ako je tip prikaza podataka ili tip sortiranja, vraćamo zaokruženu vrednost
+                        if (type === 'display' || type === 'type') {
+                            f = new Intl.NumberFormat('sr-RS', { 
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            })
+                            return f.format(parseFloat(data).toFixed(2));
+                        }
+                        // Inače, vraćamo nenumeroisanu vrednost za druge tipove
+                        return data;
+                    }
+                },
                 {
                     data: null,
                     render: function (data, type, row) {
@@ -749,7 +825,7 @@
             placeholder: 'Izaberite opciju',
             allowClear: true,
             width: '100%',
-            tags: true,
+            tags: false,
             closeOnSelect: true,
         })
         $('#add_single_item_item_id').select2({
@@ -757,7 +833,7 @@
             placeholder: 'Izaberite opciju',
             allowClear: true,
             width: '100%',
-            tags: true,
+            tags: false,
             closeOnSelect: true,
         })
         $('#add_single_item_room').select2({
@@ -765,7 +841,7 @@
             placeholder: 'Izaberite opciju',
             allowClear: true,
             width: '100%',
-            tags: true,
+            tags: false,
             closeOnSelect: true,
         })
     });

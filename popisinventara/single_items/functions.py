@@ -12,6 +12,11 @@ def current_price_calculation(initial_price, rate, purchase_date, expediture_dat
         today = expediture_date
     else:
         today = date.today()
+    if rate == 100:
+        #! (sitan inventar) ako je rate 100% onda su cena kupljenog predmeta na kraju godine i trenutna cena jednaka 0
+        price_at_end_of_current_year = 0
+        current_price = 0
+        return price_at_end_of_current_year, current_price
     #! koliko je meseci ostalo u godini u kojoj je kupljen predmet
     first_year_months_remaining = 12 - purchase_date.month + 1
     last_year_months_passed = today.month

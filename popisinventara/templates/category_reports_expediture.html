@@ -20,11 +20,11 @@
         {% for record in data %}
         <tr>
             <td>{{ record['category'] }}</td>
-            <td>{{ '{:,.2f}'.format(record['initial_price']) }}</td>
-            <td>{{ '{:,.2f}'.format(record['write_off_until_current_year']) }}</td>
+            <td>{{ '{:,.2f}'.format(record['initial_price']).replace(',', ':').replace('.', ',').replace(':','.') }}</td>
+            <td>{{ '{:,.2f}'.format(record['write_off_until_current_year']).replace(',', ':').replace('.', ',').replace(':','.') }}</td>
             <td>{{ '{:,.2f}'.format(record['depreciation_per_year']) }}</td>
-            <td>{{ '{:,.2f}'.format(record['depreciation_per_year'] + record['write_off_until_current_year']) }}</td>
-            <td>{{ '{:,.2f}'.format(record['price_at_end_of_year']) }}</td>
+            <td>{{ '{:,.2f}'.format(record['depreciation_per_year'] + record['write_off_until_current_year']).replace(',', ':').replace('.', ',').replace(':','.') }}</td>
+            <td>{{ '{:,.2f}'.format(record['price_at_end_of_year']).replace(',', ':').replace('.', ',').replace(':','.') }}</td>
         </tr>
         {% endfor %}
     </tbody>

@@ -5,7 +5,7 @@
     <a class="btn btn-secondary mb-4" href="javascript:history.back()">Nazad</a>
     <div class="btn-group">
         <button type="button" class="btn btn-danger dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-            Izveštaji
+            Ostali izveštaji
         </button>
         <ul class="dropdown-menu">
             <li><a class="dropdown-item" href="{{ url_for('reports.category_reports_expediture', inventory_id=inventory_id) }}">Rekapitulacija po kontu - rashod</a></li>
@@ -33,7 +33,7 @@
         {% for record in data %}
         <tr>
             <td>{{ record['category'] }}</td>
-            <td>{{ '{:,.2f}'.format(record['initial_price']) }}</td>
+            <td>{{ '{:,.2f}'.format(record['initial_price']).replace(',', ':').replace('.', ',').replace(':','.') }}</td>
         </tr>
         {% endfor %}
     </tbody>
