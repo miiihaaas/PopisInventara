@@ -4,6 +4,7 @@ from flask import Blueprint, flash, json, render_template_string, Markup
 from flask import request, render_template, redirect, url_for
 from flask_login import current_user
 from popisinventara import db
+from popisinventara.reports.functions import write_off_until_current_year
 from popisinventara.single_items.functions import create_reverse_document, current_price_calculation
 from popisinventara.models import School, SingleItem, Item, Room, Inventory
 from sqlalchemy import and_
@@ -124,12 +125,14 @@ def api_item(): #! kupulativno po tipu predmeta
     if room_select and not current_year_procurement:
         print('dodaj kod za filter: soba')
         for item in single_item_list:
+            write_off, _, __ = write_off_until_current_year(item)
             if item.room_id == int(room_select):
                 new_dict = {
                     'item_id': item.item_id,
                     'name': item.single_item_item.name,
                     'quantity': 1,
                     'initial_price': item.initial_price,
+                    'write_off': write_off,
                     'current_price': item.current_price,
                     'purchase_date': item.purchase_date,
                 }
@@ -139,6 +142,7 @@ def api_item(): #! kupulativno po tipu predmeta
                         existing_dict['quantity'] += 1
                         existing_dict['initial_price'] += item.initial_price
                         existing_dict['current_price'] += item.current_price
+                        existing_dict['write_off'] += write_off
                         item_found = True
                         break
                 
@@ -147,12 +151,14 @@ def api_item(): #! kupulativno po tipu predmeta
     elif room_select and current_year_procurement:
         print('dodaj kod za filter: soba i ova godina')
         for item in single_item_list:
+            write_off, _, __ = write_off_until_current_year(item)
             if item.room_id == int(room_select) and item.purchase_date >= start_date and item.purchase_date <= end_date:
                 new_dict = {
                     'item_id': item.item_id,
                     'name': item.single_item_item.name,
                     'quantity': 1,
                     'initial_price': item.initial_price,
+                    'write_off': write_off,
                     'current_price': item.current_price,
                     'purchase_date': item.purchase_date,
                 }
@@ -162,6 +168,7 @@ def api_item(): #! kupulativno po tipu predmeta
                         existing_dict['quantity'] += 1
                         existing_dict['initial_price'] += item.initial_price
                         existing_dict['current_price'] += item.current_price
+                        existing_dict['write_off'] += write_off
                         item_found = True
                         break
                 
@@ -170,12 +177,14 @@ def api_item(): #! kupulativno po tipu predmeta
     elif not room_select and current_year_procurement:
         print('dodaj kod za filter: ova godina')
         for item in single_item_list:
+            write_off, _, __ = write_off_until_current_year(item)
             if item.purchase_date >= start_date and item.purchase_date <= end_date:
                 new_dict = {
                     'item_id': item.item_id,
                     'name': item.single_item_item.name,
                     'quantity': 1,
                     'initial_price': item.initial_price,
+                    'write_off': write_off,
                     'current_price': item.current_price,
                     'purchase_date': item.purchase_date,
                 }
@@ -185,6 +194,7 @@ def api_item(): #! kupulativno po tipu predmeta
                         existing_dict['quantity'] += 1
                         existing_dict['initial_price'] += item.initial_price
                         existing_dict['current_price'] += item.current_price
+                        existing_dict['write_off'] += write_off
                         item_found = True
                         break
                 
@@ -192,11 +202,13 @@ def api_item(): #! kupulativno po tipu predmeta
                     cumulatively_per_item.append(new_dict)
     else:
         for item in single_item_list:
+            write_off, _, __ = write_off_until_current_year(item)
             new_dict = {
                 'item_id': item.item_id,
                 'name': item.single_item_item.name,
                 'quantity': 1,
                 'initial_price': item.initial_price,
+                'write_off': write_off,
                 'current_price': item.current_price,
                 'purchase_date': item.purchase_date,
             }
@@ -207,6 +219,7 @@ def api_item(): #! kupulativno po tipu predmeta
                     existing_dict['quantity'] += 1
                     existing_dict['initial_price'] += item.initial_price
                     existing_dict['current_price'] += item.current_price
+                    existing_dict['write_off'] += write_off
                     item_found = True
                     break
                 
@@ -267,6 +280,7 @@ def api_serial(): #! kumulativno po seriji
     # room_select = request.args.get('room_select')
     cumulatively_per_series = []
     for item in single_item_list:
+        write_off, _, __ = write_off_until_current_year(item)
         series = item.inventory_number.split('-')[1]
         new_dict = {
             'item_id': item.item_id,
@@ -274,6 +288,7 @@ def api_serial(): #! kumulativno po seriji
             'name': item.name,
             'quantity': 1,
             'initial_price': item.initial_price,
+            'write_off': write_off,
             'current_price': item.current_price,
             'purchase_date': item.purchase_date,
             'supplier': item.supplier,
@@ -306,6 +321,7 @@ def api_serial(): #! kumulativno po seriji
         cumulatively_per_series = []
 
         for item in single_item_list:
+            write_off, _, __ = write_off_until_current_year(item)
             if item.room_id == int(room_select):
                 series = item.inventory_number.split('-')[1]
                 new_dict = {
@@ -314,6 +330,7 @@ def api_serial(): #! kumulativno po seriji
                     'name': item.name,
                     'quantity': 1,
                     'initial_price': item.initial_price,
+                    'write_off': write_off,
                     'current_price': item.current_price,
                     'purchase_date': item.purchase_date,
                     'supplier': item.supplier,
@@ -326,6 +343,7 @@ def api_serial(): #! kumulativno po seriji
                         existing_dict['quantity'] += 1
                         existing_dict['initial_price'] += item.initial_price
                         existing_dict['current_price'] += item.current_price
+                        existing_dict['write_off'] += write_off
                         series_found = True
                         break
                 
@@ -478,11 +496,13 @@ def api_single_items():
     
     single_items_list = []
     for single_item in single_items_query:
+        write_off, _, __ = write_off_until_current_year(single_item)
         new_dict = {
             'id': single_item.id,
             'inventory_number': single_item.inventory_number,
             'name': single_item.name,
             'initial_price': single_item.initial_price,
+            'write_off': write_off,
             'current_price': single_item.current_price,
             'item_id': single_item.item_id,
             'room_id': single_item.room_id,
