@@ -1,6 +1,6 @@
 from flask import Blueprint
 from flask_login import current_user
-from popisinventara.models import School, Room, Building
+from popisinventara.models import School, Room, Building, Inventory
 from popisinventara.schools.forms import EditSchoolForm, AddNewBuildingForm, AddNewRoomForm
 from flask import url_for, redirect
 from flask import render_template
@@ -19,6 +19,8 @@ def school(school_id):
         return redirect(url_for('users.login'))
     if current_user.authorization != 'admin':
         flash('Nemate dozvolu za pristum ovoj stranici.', 'danger')
+        return redirect(url_for('main.home'))
+    active_inventory_list = Inventory.query.filter_by(status='active').first()
     school = School.query.get_or_404(school_id)
     buildings = Building.query.filter_by(school_id=school_id).all()
     rooms = Room.query.all()
@@ -28,6 +30,9 @@ def school(school_id):
     room_form = AddNewRoomForm()
     room_form.building_id.choices = [(building.id, building.name) for building in buildings]
     if form.validate_on_submit():
+        if active_inventory_list:
+            flash(f'Nije moguće menjati podatke škole dok je aktivan popis.', 'danger')
+            return redirect(url_for('main.home'))
         school.schoolname = form.schoolname.data
         school.address = form.address.data
         school.zip_code = form.zip_code.data
@@ -54,7 +59,8 @@ def school(school_id):
                             rooms=rooms,
                             building_form=building_form,
                             room_form=room_form,
-                            form=form)
+                            form=form,
+                            active_inventory_list=active_inventory_list)
 
 
 @schools.route('/buildings_rooms', methods=['GET', 'POST'])
@@ -64,6 +70,8 @@ def buildings_rooms():
         return redirect(url_for('users.login'))
     if current_user.authorization != 'admin':
         flash('Nemate dozvolu za pristum ovoj stranici.', 'danger')
+        return redirect(url_for('main.home'))
+    active_inventory_list = Inventory.query.filter_by(status='active').first()
     school = School.query.get_or_404(1)
     buildings = Building.query.filter_by(school_id=1).all()
     rooms = Room.query.all()
@@ -76,7 +84,8 @@ def buildings_rooms():
                             room_form=room_form,
                             buildings=buildings,
                             rooms=rooms,
-                            school=school)
+                            school=school,
+                            active_inventory_list=active_inventory_list)
 
 
 @schools.route('/add_building', methods=['POST'])
@@ -86,6 +95,11 @@ def add_building():
         return redirect(url_for('users.login'))
     if current_user.authorization != 'admin':
         flash('Nemate dozvolu za pristum ovoj stranici.', 'danger')
+        return redirect(url_for('main.home'))
+    active_inventory_list = Inventory.query.filter_by(status='active').first()
+    if active_inventory_list:
+        flash(f'Nije moguće dodavati nove zgrade dok je aktivan popis.', 'danger')
+        return redirect(url_for('main.home'))
     print('dodavanje nove zgrade. nastavi kod')
     building = Building(school_id=1, 
                         name=request.form.get('name'),
@@ -103,6 +117,11 @@ def edit_building():
         return redirect(url_for('users.login'))
     if current_user.authorization != 'admin':
         flash('Nemate dozvolu za pristum ovoj stranici.', 'danger')
+        return redirect(url_for('main.home'))
+    active_inventory_list = Inventory.query.filter_by(status='active').first()
+    if active_inventory_list:
+        flash(f'Nije moguće vršiti izmene podataka zgrade dok je aktivan popis.', 'danger')
+        return redirect(url_for('main.home'))
     building_id = request.form.get('edit_building_id')
     building_name = request.form.get('edit_building_name')
     building_address = request.form.get('edit_building_address')
@@ -121,6 +140,11 @@ def add_room():
         return redirect(url_for('users.login'))
     if current_user.authorization != 'admin':
         flash('Nemate dozvolu za pristum ovoj stranici.', 'danger')
+        return redirect(url_for('main.home'))
+    active_inventory_list = Inventory.query.filter_by(status='active').first()
+    if active_inventory_list:
+        flash(f'Nije moguće dodavati nove prostrije dok je aktivan popis.', 'danger')
+        return redirect(url_for('main.home'))
     print('dodavanje nove Prostorije. nastavi kod')
     room = Room(name=request.form.get('name'),
                 dynamic_name=request.form.get('dynamic_name'),
@@ -137,6 +161,11 @@ def edit_room():
         return redirect(url_for('users.login'))
     if current_user.authorization != 'admin':
         flash('Nemate dozvolu za pristum ovoj stranici.', 'danger')
+        return redirect(url_for('main.home'))
+    active_inventory_list = Inventory.query.filter_by(status='active').first()
+    if active_inventory_list:
+        flash(f'Nije moguće vršiti izmene podataka prostorije dok je aktivan popis.', 'danger')
+        return redirect(url_for('main.home'))
     room_id = request.form.get('edit_room_id')
     room_name = request.form.get('edit_room_name')
     room_dynamic_name = request.form.get('edit_room_dynamic_name')

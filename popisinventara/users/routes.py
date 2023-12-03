@@ -53,6 +53,10 @@ def register_user():
     if current_user.authorization != 'admin':
         flash('Nemate dozvolu za registraciju korisnika.', 'danger')
         return redirect(url_for('main.home'))
+    active_inventory_list = Inventory.query.filter_by(status='active').first()
+    if active_inventory_list:
+        flash(f'Nije moguće registrovati nove korisnike dok je aktivan popis.', 'danger')
+        return redirect(url_for('main.home'))
     name = request.form.get('name').capitalize()
     surname = request.form.get('surname').capitalize()
     authorization = request.form.get('authorization')
@@ -72,6 +76,10 @@ def register_user():
 
 @users.route("/edit_user", methods=['GET', 'POST'])
 def edit_user():
+    active_inventory_list = Inventory.query.filter_by(status='active').first()
+    if active_inventory_list:
+        flash(f'Nije moguće menjati podatke profila korisnika dok je aktivan popis.', 'danger')
+        return redirect(url_for('main.home'))
     if not current_user.is_authenticated:
         flash('Da biste pristupili ovoj stranici treba da budete ulogovani.', 'danger')
         return redirect(url_for('users.login'))
@@ -92,6 +100,10 @@ def edit_user():
 
 @users.route("/delete_user", methods=['GET', 'POST'])
 def delete_user():
+    active_inventory_list = Inventory.query.filter_by(status='active').first()
+    if active_inventory_list:
+        flash(f'Nije moguće brisati profil korisnika dok je aktivan popis.', 'danger')
+        return redirect(url_for('main.home'))
     if not current_user.is_authenticated:
         flash('Da biste pristupili ovoj stranici treba da budete ulogovani.', 'danger')
         return redirect(url_for('users.login'))
