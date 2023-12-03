@@ -3,7 +3,13 @@
 <div class="h1">Podaci škole</div> 
 <div class="tab-pane fade show" id="school" role="tabpanel" aria-labelledby="school-tab">
     <a class="btn btn-secondary sec-nazad" href="javascript:history.back()">Nazad</a>
-    <button type="button" class="btn btn-primary mb-4" data-bs-toggle="modal" data-bs-target="#mySchool">Izmenite podatke škole</button>
+    {% if current_user.authorization == 'admin' %}
+        {% if active_inventory_list %}
+            <button type="button" class="btn btn-primary mb-4" data-bs-toggle="modal" data-bs-target="#mySchool" disabled>Izmenite podatke škole</button>
+            {% else %}
+            <button type="button" class="btn btn-primary mb-4" data-bs-toggle="modal" data-bs-target="#mySchool">Izmenite podatke škole</button>
+        {% endif %}
+    {% endif %}
     <form method="POST">
         {{ form.csrf_token }}
         <div class="row form-group">
