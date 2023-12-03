@@ -7,18 +7,40 @@ from popisinventara import db
 from popisinventara.reports.functions import write_off_until_current_year
 from popisinventara.single_items.functions import create_reverse_document, current_price_calculation
 from popisinventara.models import School, SingleItem, Item, Room, Inventory
-from sqlalchemy import and_
+from sqlalchemy import and_, or_, extract
 
 
 single_items = Blueprint('single_items', __name__)
 
 
+def single_item_list_without_expeditured_items():
+    '''
+    This function returns a query of all single items that have not been expeditured yet or expeditured year is equal to current year.
+    It does this by filtering out all single items that have an expediture date set.
+    The list is then returned.
+    '''
+    current_month = datetime.now().month #! ako se u januaru i februaru radi popis od prošle godine
+    if current_month in (1, 2):
+        current_year = datetime.now().year - 1
+    else:
+        current_year = datetime.now().year
+
+    single_item_list = SingleItem.query.filter(
+        or_(
+            SingleItem.expediture_date.is_(None),
+            extract('year', SingleItem.expediture_date) == current_year
+        )
+    )
+
+    return single_item_list
+
 @single_items.route('/single_item_list')
 def single_item_list():
     active_inventory_list = Inventory.query.filter_by(status='active').first()
-    single_item_list = SingleItem.query.all()
+    single_item_list = single_item_list_without_expeditured_items().all()
     item_list = Item.query.all()
-    room_list = Room.query.all()
+    all_room_list = Room.query.all()
+    room_list = [room for room in all_room_list if room.id not in [2, 3]] #! sve sobe osim magacina za rashod (id=2) i magacina za revers (id=)
     
     cumulatively_per_series = []
     for item in single_item_list:
@@ -105,7 +127,7 @@ def single_item_list():
 
 @single_items.route('/api/item')
 def api_item(): #! kupulativno po tipu predmeta
-    single_item_list = SingleItem.query.all()
+    single_item_list = single_item_list_without_expeditured_items().all()
     # search filter
     search = request.args.get('search[value]')
     room_select = request.args.get('room_select')
@@ -276,7 +298,7 @@ def api_item(): #! kupulativno po tipu predmeta
 
 @single_items.route('/api/serial')
 def api_serial(): #! kumulativno po seriji
-    single_item_list = SingleItem.query.all()
+    single_item_list = single_item_list_without_expeditured_items().all()
     # room_select = request.args.get('room_select')
     cumulatively_per_series = []
     for item in single_item_list:
@@ -299,6 +321,7 @@ def api_serial(): #! kumulativno po seriji
         for existing_dict in cumulatively_per_series:
             if existing_dict['series'] == series:
                 existing_dict['quantity'] += 1
+                existing_dict['write_off'] += write_off
                 existing_dict['initial_price'] += item.initial_price
                 existing_dict['current_price'] += item.current_price
                 series_found = True
@@ -411,6 +434,8 @@ def api_serial(): #! kumulativno po seriji
     length = request.args.get('length', type=int)
     cumulatively_per_series = cumulatively_per_series[start:start + length]
     
+    # update_price()
+    
     return {
         'data': cumulatively_per_series,
         'recordsFiltered': total_filtered,
@@ -421,7 +446,7 @@ def api_serial(): #! kumulativno po seriji
 
 @single_items.route('/api/singleitems')
 def api_single_items():
-    single_items_query = SingleItem.query
+    single_items_query = single_item_list_without_expeditured_items()
     
     # search filter
     search = request.args.get('search[value]')
@@ -522,10 +547,17 @@ def api_single_items():
     }
 
 
-@single_items.route('/move_single_item__to_room', methods=['GET', 'POST'])
-def move_single_item__to_room():
+@single_items.route('/move_single_item_to_room', methods=['GET', 'POST'])
+def move_single_item_to_room():
     single_item_id = request.form.get('single_item_id')
     room_id = request.form.get('edit_single_item_room')
+    active_inventory_list = Inventory.query.filter_by(status='active').first()
+    if active_inventory_list:
+        flash(f'Nije moguće premeštati predmete dok je aktivan popis.', 'danger')
+        return redirect(url_for('single_items.single_item_list'))
+    if not room_id or not room_id.strip():
+        flash('Da bi ste premestili predmet, morate izabrati prostoriju u koju treba premestiti predmet.', 'danger')
+        return redirect(url_for('single_items.single_item_list'))
     print(f'{single_item_id=} {room_id=}')
     single_item = SingleItem.query.filter_by(id=single_item_id).first()
     single_item.room_id = room_id
@@ -550,10 +582,22 @@ def open_file():
 
 @single_items.route('/reverse_single_item', methods=['GET', 'POST'])
 def reverse_single_item():
+    active_inventory_list = Inventory.query.filter_by(status='active').first()
+    if active_inventory_list:
+        flash(f'Nije moguće izdavati predmet na revers dok je aktivan popis.', 'danger')
+        return redirect(url_for('single_items.single_item_list'))
     school = School.query.get_or_404(1)
     single_item_id = request.form.get('single_item_id_reverse')
-    reverse_date = datetime.strptime(request.form.get('single_item_reverse_date_reverse'), '%Y-%m-%d').date()
+    reverse_date_input = request.form.get('single_item_reverse_date_reverse')
+    if not reverse_date_input or not reverse_date_input.strip():
+        flash('Da bi ste izdali predmet na revers, morate uneti validan datum reversa.', 'danger')
+        return redirect(url_for('single_items.single_item_list'))
+    else:
+        reverse_date = datetime.strptime(reverse_date_input, '%Y-%m-%d').date()
     reverse_person = request.form.get('single_item_reverse_person_reverse')
+    if not reverse_person or not reverse_person.strip():
+        flash('Da bi ste izdali predmet na revers, morate uneti ime osobe kojoj se izdaje revers.', 'danger')
+        return redirect(url_for('single_items.single_item_list'))
     print(f'{single_item_id=} {reverse_date=} {reverse_person}')
     single_item = SingleItem.query.filter_by(id=single_item_id).first()
     print(f'revers za ovaj predmet: {single_item=}')
@@ -570,6 +614,7 @@ def reverse_single_item():
 
 @single_items.route('/return_reverse_single_item', methods=['GET', 'POST'])
 def return_reverse_single_item():
+    active_inventory_list = Inventory.query.filter_by(status='active').first()
     print(f'{request.form=}')
     action = request.form.get('action')
     print('povraćaj reversa')
@@ -582,6 +627,9 @@ def return_reverse_single_item():
         pdf_link = Markup(f'<a class="alert-success-link" href="{file_path}" target="_blank">Odštampajte revers</a>')
         flash(f'Štampa reversa za predmet: {single_item.name} koji je izdat na korišćenje {single_item.reverse_person}. {pdf_link}', 'success')
     elif action == 'return_reverse':
+        if active_inventory_list:
+            flash(f'Nije moguće vršiti povraćaj reversa dok je aktivan popis.', 'danger')
+            return redirect(url_for('single_items.single_item_list'))
         print(f'povraćaj reversa za ovaj predmet: {single_item=}')
         single_item.room_id = 1 #! room_id = 1 je virtuelni magacin
         single_item.reverse_date = None
@@ -593,10 +641,27 @@ def return_reverse_single_item():
 
 @single_items.route('/expediture_single_item', methods=['GET', 'POST'])
 def expediture_single_item():
+    active_inventory_list = Inventory.query.filter_by(status='active').first()
+    if active_inventory_list:
+        flash(f'Nije moguće rashodovati predmete dok je aktivan popis.', 'danger')
+        return redirect(url_for('single_items.single_item_list'))
     single_item_id = request.form.get('single_item_id_expediture')
-    expediture_date = datetime.strptime(request.form.get('single_item_expediture_date_expediture'), '%Y-%m-%d').date()
-    print(f'{single_item_id=} {expediture_date=}')
+    expediture_date = request.form.get('single_item_expediture_date_expediture')
     single_item = SingleItem.query.filter_by(id=single_item_id).first()
+    if not expediture_date or not expediture_date.strip():
+        flash('Da bi ste rashodovali predmet, morate uneti validan datum rashoda.', 'danger')
+        return redirect(url_for('single_items.single_item_list'))
+    elif expediture_date > date.today().strftime('%Y-%m-%d'):
+        flash('Odabrani datum rashoda je u budućnosti. Da bi ste rashodovali predmet, morate uneti validan datum rashoda.', 'danger')
+        return redirect(url_for('single_items.single_item_list'))
+    elif expediture_date < single_item.purchase_date.strftime('%Y-%m-%d'):
+        flash('Odabrani datum rashoda je pre kupovine predmeta. Da bi ste rashodovali predmet, morate uneti datum rashoda koji je nakon kupovine predmeta.', 'danger')
+        return redirect(url_for('single_items.single_item_list'))
+    elif False:
+        print('dodati uslov da je datum rashoda obavezan da bude u tekućoj godini // ispravi False u potrebni uslov')
+    else:
+        expediture_date = datetime.strptime(request.form.get('single_item_expediture_date_expediture'), '%Y-%m-%d').date()
+    print(f'{single_item_id=} {expediture_date=}')
     print(f'rashodovao bih ovaj predmet: {single_item=}')
     initial_price = single_item.initial_price
     rate = single_item.single_item_item.item_depreciation_rate.rate
@@ -612,6 +677,10 @@ def expediture_single_item():
 
 @single_items.route('/undo_expediture_single_item', methods=['GET', 'POST'])
 def undo_expediture_single_item():
+    active_inventory_list = Inventory.query.filter_by(status='active').first()
+    if active_inventory_list:
+        flash(f'Nije moguće stornirati rashodovani predmet dok je aktivan popis.', 'danger')
+        return redirect(url_for('single_items.single_item_list'))
     single_item_id = request.form.get('single_item_id_expediture_undo')
     single_item = SingleItem.query.filter_by(id=single_item_id).first()
     print(f'poništavam rashod za ovaj predmet: {single_item=}')
@@ -620,6 +689,7 @@ def undo_expediture_single_item():
     single_item.room_id = 1 #! room_id = 1 je virtuelni magacin
     db.session.commit()
     flash(f'Predmet: {single_item.name} je ponisten iz rashoda.', 'success')
+    update_price()
     return redirect(url_for('single_items.single_item_list'))
 
 
@@ -630,6 +700,11 @@ def add_single_item():
         return redirect(url_for('users.login'))
     if current_user.authorization != 'admin':
         flash('Nemate dozvolu za pristum ovoj stranici.', 'danger')
+        return redirect(url_for('main.home'))
+    active_inventory_list = Inventory.query.filter_by(status='active').first()
+    if active_inventory_list:
+        flash(f'Da bi ste dodali novi predmet, morate prvo završiti aktivnu popisnu listu koja je započeta: {active_inventory_list.date}.', 'danger')
+        return redirect(url_for('main.home'))
     single_items_list = SingleItem.query.all()
     if len(single_items_list) == 0:
         max_serial_number = 1
@@ -669,6 +744,16 @@ def add_single_item():
 
 @single_items.route('/edit_single_item', methods=['GET', 'POST'])
 def edit_single_item():
+    if not current_user.is_authenticated:
+        flash('Da biste pristupili ovoj stranici treba da budete ulogovani.', 'danger')
+        return redirect(url_for('users.login'))
+    if current_user.authorization != 'admin':
+        flash('Nemate dozvolu za pristum ovoj stranici.', 'danger')
+        return redirect(url_for('main.home'))
+    active_inventory_list = Inventory.query.filter_by(status='active').first()
+    if active_inventory_list:
+        flash(f'Nije moguće vršiti izmene podataka predmeta dok je aktivan popis.', 'danger')
+        return redirect(url_for('main.home'))
     serial = request.form.get('edit_single_item_serial')
     item_id = request.form.get('edit_single_item_item_id')
     name = request.form.get('edit_single_item_name')
@@ -682,13 +767,16 @@ def edit_single_item():
     single_items = SingleItem.query.filter_by(serial=serial).all()
     print(f'{single_items=}')
     for single_item in single_items:
+        inventory_number = single_item.inventory_number
+        i = int(inventory_number.split('-')[2])
         single_item.item_id = item_id
         single_item.name = name
         single_item.initial_price = initial_price
+        single_item.current_price = current_price
         single_item.purchase_date = purchase_date
+        single_item.inventory_number = f'{int(item_id):04d}-{serial}-{i:04d}'
         single_item.supplier = supplier
         single_item.invoice_number = invoice_number
-        single_item.current_price = current_price
     db.session.commit()
     for i in range(1, (len(single_items) - quantity + 1)):
         print(f'{quantity=}, {len(single_items)=}')
@@ -709,6 +797,7 @@ def edit_single_item():
                                             invoice_number=invoice_number)
             db.session.add(new_single_item)
     db.session.commit()
+    update_price()
     flash('Uspesno ste izmenili seriju predmeta.', 'success')
     return redirect(url_for('single_items.single_item_list'))
 
@@ -785,6 +874,12 @@ def move_select_item():
     if active_inventory_list:
         flash(f'Nije moguće premeštati predmete dok je aktivan popis.', 'danger')
         return redirect(url_for('main.home'))
+    if not current_user.is_authenticated:
+        flash('Da biste pristupili ovoj stranici treba da budete ulogovani.', 'danger')
+        return redirect(url_for('users.login'))
+    if current_user.authorization != 'admin':
+        flash('Nemate dozvolu za pristum ovoj stranici.', 'danger')
+        return redirect(url_for('main.home'))
     if request.method == 'POST':
         if 'submit_to' in request.form:
             item_id = request.form.get('item_id_to_move_to')
@@ -794,8 +889,6 @@ def move_select_item():
             item_id = request.form.get('item_id_to_move_from')
             room_id = request.form.get('room_id_to_move_from')
             return redirect(url_for('single_items.move_from', item_id=item_id, room_id=room_id))
-
-    
     item_list = Item.query.all()
     room_list_to = Room.query.all() 
     room_list_from = Room.query.all() #! ne treba listati prostorije koje nemaju ovaj predmet za tip kretnje iz prostorije u druge prostorije
@@ -808,6 +901,16 @@ def move_select_item():
 
 @single_items.route("/move_from/<int:item_id>/<int:room_id>", methods=['GET', 'POST'])
 def move_from(item_id, room_id):
+    active_inventory_list = Inventory.query.filter_by(status='active').first()
+    if active_inventory_list:
+        flash(f'Nije moguće premeštati predmete dok je aktivan popis.', 'danger')
+        return redirect(url_for('main.home'))
+    if not current_user.is_authenticated:
+        flash('Da biste pristupili ovoj stranici treba da budete ulogovani.', 'danger')
+        return redirect(url_for('users.login'))
+    if current_user.authorization != 'admin':
+        flash('Nemate dozvolu za pristum ovoj stranici.', 'danger')
+        return redirect(url_for('main.home'))
     item = Item.query.filter_by(id=item_id).first()
     room_from = Room.query.filter_by(id=room_id).first()
     room_list = Room.query.all()
@@ -891,6 +994,16 @@ def move_from(item_id, room_id):
 
 @single_items.route("/move_to/<int:item_id>/<int:room_id>", methods=['GET', 'POST'])
 def move_to(item_id, room_id):
+    active_inventory_list = Inventory.query.filter_by(status='active').first()
+    if active_inventory_list:
+        flash(f'Nije moguće premeštati predmete dok je aktivan popis.', 'danger')
+        return redirect(url_for('main.home'))
+    if not current_user.is_authenticated:
+        flash('Da biste pristupili ovoj stranici treba da budete ulogovani.', 'danger')
+        return redirect(url_for('users.login'))
+    if current_user.authorization != 'admin':
+        flash('Nemate dozvolu za pristum ovoj stranici.', 'danger')
+        return redirect(url_for('main.home'))
     item = Item.query.filter_by(id=item_id).first()
     room = Room.query.filter_by(id=room_id).first()
     single_item_list = SingleItem.query.filter_by(item_id=item_id).all()
@@ -943,6 +1056,10 @@ def move_to(item_id, room_id):
 
 @single_items.route('/update_price', methods=['GET', 'POST'])
 def update_price():
+    active_inventory_list = Inventory.query.filter_by(status='active').first()
+    if active_inventory_list:
+        flash(f'Nije moguće preračunavanje vrednosti predmeta dok je aktivan popis.', 'danger')
+        return redirect(url_for('main.home'))
     if not current_user.is_authenticated:
         flash('Da biste pristupili ovoj stranici treba da budete ulogovani.', 'danger')
         return redirect(url_for('users.login'))

@@ -13,14 +13,22 @@
 <div class="tab-content" id="myTabContent">
     <div class="tab-pane fade show" id="building" role="tabpanel" aria-labelledby="building-tab">
         <a class="btn btn-secondary sec-nazad" href="javascript:history.back()">Nazad</a>
-        <button type="button" class="btn btn-primary mb-4" data-bs-toggle="modal" data-bs-target="#newBuilding">Dodajte novu zgradu</button>
+        {% if current_user.authorization == 'admin' %}
+            {% if active_inventory_list %}
+                <button type="button" class="btn btn-primary mb-4" data-bs-toggle="modal" data-bs-target="#newBuilding" disabled>Dodajte novu zgradu</button>
+                {% else %}
+                <button type="button" class="btn btn-primary mb-4" data-bs-toggle="modal" data-bs-target="#newBuilding">Dodajte novu zgradu</button>
+            {% endif %}
+        {% endif %}
         <table id="data_1" border="1" class="table table-striped userlist">
             <thead>
                 <tr>
-                    <td>ID</td>
-                    <td>Zgrada</td>
-                    <td>Adresa</td>
-                    <td></td>
+                    <th>ID</th>
+                    <th>Zgrada</th>
+                    <th>Adresa</th>
+                    {% if not active_inventory_list %}
+                    <th></th>
+                    {% endif %}
                 </tr>
             </thead>
             <tbody>
@@ -29,7 +37,9 @@
                     <td>{{ building.id }}</td>
                     <td>{{ building.name }}</td>
                     <td>{{ building.address }}</td>
-                    <td><a href="#" class="btn-x btn-primary-x" data-bs-toggle="modal" data-bs-target="#myBuilding" onclick="openBuildingModal('{{ building.id }}', '{{ building.name }}', '{{ building.address }}')" title="Izmena podataka zgrade: {{ building.name }}"><i class="fa fa-building awesomeedit" aria-hidden="true"></i></a></td>
+                    {% if not active_inventory_list %}
+                        <td><a href="#" class="btn-x btn-primary-x" data-bs-toggle="modal" data-bs-target="#myBuilding" onclick="openBuildingModal('{{ building.id }}', '{{ building.name }}', '{{ building.address }}')" title="Izmena podataka zgrade: {{ building.name }}"><i class="fa fa-building awesomeedit" aria-hidden="true"></i></a></td>
+                    {% endif %}
                 </tr>
                 {% endfor %}
             </tbody>
@@ -37,14 +47,22 @@
     </div>
     <div class="tab-pane fade show active" id="room" role="tabpanel" aria-labelledby="room-tab">
         <a class="btn btn-secondary sec-nazad" href="javascript:history.back()">Nazad</a>
-        <button type="button" class="btn btn-primary mb-4" data-bs-toggle="modal" data-bs-target="#newRoom">Dodajte novu prostoriju</button>
+        {% if current_user.authorization == 'admin' %}
+            {% if active_inventory_list %}
+                <button type="button" class="btn btn-primary mb-4" data-bs-toggle="modal" data-bs-target="#newRoom" disabled>Dodajte novu prostoriju</button>
+            {% else %}
+                <button type="button" class="btn btn-primary mb-4" data-bs-toggle="modal" data-bs-target="#newRoom">Dodajte novu prostoriju</button>
+            {% endif %}
+        {% endif %}
         <table id="data_2" border="1" class="table table-striped userlist">
             <thead>
                 <tr>
-                    <td>Zgrada</td>
-                    <td>Prostorija_id</td>
-                    <td>Prostorija</td>
-                    <td></td>
+                    <th>Zgrada</th>
+                    <th>Prostorija_id</th>
+                    <th>Prostorija</th>
+                    {% if not active_inventory_list %}
+                        <th></th>
+                    {% endif %}
                 </tr>
             </thead>
             <tbody>
@@ -53,10 +71,12 @@
                     <td>{{ room.building_id }} - {{ room.room_building.name }}</td>
                     <td>{{room.name}} - {{room.dynamic_name}}</td>
                     <td>{{room.dynamic_name}}</td>
-                    <td>
-                        <a href="#" class="btn-x btn-primary-x" data-bs-toggle="modal" data-bs-target="#myBuilding" onclick="openBuildingModal('{{ room.building_id }}', '{{ room.room_building.name }}', '{{ room.room_building.address }}')" title="Izmena podataka zgrade: {{ room.building_id }} - {{ room.room_building.name }}"><i class="fa fa-building awesomeedit" aria-hidden="true"></i></a>
-                        <a href="#" class="btn-x btn-primary-x" data-bs-toggle="modal" data-bs-target="#myRoom" onclick="openRoomModal('{{ room.id }}', '{{ room.name }}', '{{ room.dynamic_name }}', '{{ room.building_id }}')" title="Izmena podataka prostorije: {{room.name}} - {{room.dynamic_name}}"><i class="fa fa-door-closed awesomeedit" aria-hidden="true"></i></a>
-                    </td>
+                    {% if not active_inventory_list %}
+                        <td>
+                            <a href="#" class="btn-x btn-primary-x" data-bs-toggle="modal" data-bs-target="#myBuilding" onclick="openBuildingModal('{{ room.building_id }}', '{{ room.room_building.name }}', '{{ room.room_building.address }}')" title="Izmena podataka zgrade: {{ room.building_id }} - {{ room.room_building.name }}"><i class="fa fa-building awesomeedit" aria-hidden="true"></i></a>
+                            <a href="#" class="btn-x btn-primary-x" data-bs-toggle="modal" data-bs-target="#myRoom" onclick="openRoomModal('{{ room.id }}', '{{ room.name }}', '{{ room.dynamic_name }}', '{{ room.building_id }}')" title="Izmena podataka prostorije: {{room.name}} - {{room.dynamic_name}}"><i class="fa fa-door-closed awesomeedit" aria-hidden="true"></i></a>
+                        </td>
+                    {% endif %}
                 </tr>
                 {% endfor %}
             </tbody>
