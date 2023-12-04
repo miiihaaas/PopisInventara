@@ -714,10 +714,55 @@ def add_single_item():
     rate = Item.query.filter_by(id=item_id).first().item_depreciation_rate.rate
     print(f'{rate=}')
     item_name = request.form.get('add_single_item_name')
+    if not item_name or not item_name.strip():
+        flash('Da bi ste dodali novi predmet, morate uneti naziv predmeta.', 'danger')
+        return redirect(url_for('single_items.single_item_list'))
     item_room = request.form.get('add_single_item_room')
+    if not item_room or not item_room.strip():
+        item_room = 1 #! ako nije selektovana nijedna soba onda je room_id = 1 je virtuelni magacin
     quantity = request.form.get('add_single_item_quantity')
+    if not quantity or not quantity.strip():
+        flash('Da bi ste dodali novi predmet, morate uneti količinu predmeta.', 'danger')
+        return redirect(url_for('single_items.single_item_list'))
+    # Pokušaj konvertovati quantity u cijeli broj
+    try:
+        quantity = int(quantity)
+    except ValueError:
+        # Ako nije moguće konvertovati u cijeli broj
+        print(f'{type(quantity)=}')
+        flash('Količina predmeta mora biti ceo broj.', 'danger')
+        return redirect(url_for('single_items.single_item_list'))
+
+    # Provjeri da li je quantity sada cijeli broj
+    if not isinstance(quantity, int):
+        flash('Količina predmeta mora biti ceo broj.', 'danger')
+        return redirect(url_for('single_items.single_item_list'))
+    if int(quantity) < 1:
+        flash('Količina predmeta mora biti veća od 0.', 'danger')
+        return redirect(url_for('single_items.single_item_list'))
+    #! nastaviti (initial_price, quantity, purchase_date)
     initial_price = float(request.form.get('add_single_item_initial_price')) / float(quantity)
-    purchase_date = datetime.strptime(request.form.get('add_single_item_date'), '%Y-%m-%d').date()
+    if initial_price < 0:
+        flash('Cena predmeta mora biti veća od 0.', 'danger')
+        return redirect(url_for('single_items.single_item_list'))
+    purchase_date_str = request.form.get('add_single_item_date')
+
+    # Provjeri da li je purchase_date_str prazan ili sastoji se samo od praznina
+    if not purchase_date_str or not purchase_date_str.strip():
+        flash('Da bi ste dodali novi predmet, morate uneti datum kupovine predmeta.', 'danger')
+        return redirect(url_for('single_items.single_item_list'))
+
+    # Pokušaj parsirati purchase_date_str u datetime.date
+    try:
+        purchase_date = datetime.strptime(purchase_date_str, '%Y-%m-%d').date()
+    except ValueError:
+        flash('Neispravan format datuma. Molimo unesite datum u formatu YYYY-MM-DD.', 'danger')
+        return redirect(url_for('single_items.single_item_list'))
+
+    # Provjeri da li je purchase_date u prošlosti
+    if purchase_date > datetime.now().date():
+        flash('Datum kupovine ne može biti u budućnosti.', 'danger')
+        return redirect(url_for('single_items.single_item_list'))
     supplier = request.form.get('add_single_item_supplier')
     invoice_number = request.form.get('add_single_item_invoice_number')
     current_price, _ = current_price_calculation(initial_price, rate, purchase_date)
@@ -739,6 +784,10 @@ def add_single_item():
         new_single_items.append(new_single_item)
     db.session.add_all(new_single_items)
     db.session.commit()
+    if quantity == 1:
+        flash(f'Novi predmet je uspešno dodat.', 'success')
+    else:
+        flash(f'Uspešno je dodato {quantity} novih predmeta.', 'success')
     return redirect(url_for('single_items.single_item_list'))
 
 
@@ -757,10 +806,52 @@ def edit_single_item():
     serial = request.form.get('edit_single_item_serial')
     item_id = request.form.get('edit_single_item_item_id')
     name = request.form.get('edit_single_item_name')
-    quantity = int(request.form.get('edit_single_item_quantity'))
+    if not name or not name.strip():
+        flash('Da bi ste izmenili predmet, morate uneti naziv predmeta.', 'danger')
+        return redirect(url_for('single_items.single_item_list'))
+    quantity = request.form.get('edit_single_item_quantity')
+    if not quantity or not quantity.strip():
+        flash('Da bi ste dodali novi predmet, morate uneti količinu predmeta.', 'danger')
+        return redirect(url_for('single_items.single_item_list'))
+    # Pokušaj konvertovati quantity u cijeli broj
+    try:
+        quantity = int(quantity)
+    except ValueError:
+        # Ako nije moguće konvertovati u cijeli broj
+        print(f'{type(quantity)=}')
+        flash('Količina predmeta mora biti ceo broj.', 'danger')
+        return redirect(url_for('single_items.single_item_list'))
+
+    # Provjeri da li je quantity sada cijeli broj
+    if not isinstance(quantity, int):
+        flash('Količina predmeta mora biti ceo broj.', 'danger')
+        return redirect(url_for('single_items.single_item_list'))
+    if int(quantity) < 1:
+        flash('Količina predmeta mora biti veća od 0.', 'danger')
+        return redirect(url_for('single_items.single_item_list'))
     initial_price = float(request.form.get('edit_single_item_initial_price')) / float(quantity)
+    if initial_price < 0:
+        flash('Cena predmeta mora biti veća od 0.', 'danger')
+        return redirect(url_for('single_items.single_item_list'))
+    purchase_date_str = request.form.get('edit_single_item_date')
+
+    # Provjeri da li je purchase_date_str prazan ili sastoji se samo od praznina
+    if not purchase_date_str or not purchase_date_str.strip():
+        flash('Da bi ste izmenili predmet, morate uneti datum kupovine predmeta.', 'danger')
+        return redirect(url_for('single_items.single_item_list'))
+
+    # Pokušaj parsirati purchase_date_str u datetime.date
+    try:
+        purchase_date = datetime.strptime(purchase_date_str, '%Y-%m-%d').date()
+    except ValueError:
+        flash('Neispravan format datuma. Molimo unesite datum u formatu YYYY-MM-DD.', 'danger')
+        return redirect(url_for('single_items.single_item_list'))
+
+    # Provjeri da li je purchase_date u prošlosti
+    if purchase_date > datetime.now().date():
+        flash('Datum kupovine ne može biti u budućnosti.', 'danger')
+        return redirect(url_for('single_items.single_item_list'))
     current_price, _ = current_price_calculation(initial_price, Item.query.filter_by(id=item_id).first().item_depreciation_rate.rate, datetime.now().date())
-    purchase_date = datetime.strptime(request.form.get('edit_single_item_date'), '%Y-%m-%d').date()
     supplier = request.form.get('edit_single_item_supplier')
     invoice_number = request.form.get('edit_single_item_invoice_number')
     print(f'{serial=}, {initial_price=}')
@@ -798,7 +889,7 @@ def edit_single_item():
             db.session.add(new_single_item)
     db.session.commit()
     update_price()
-    flash('Uspesno ste izmenili seriju predmeta.', 'success')
+    flash(f'Uspesno ste izmenili seriju predmeta {serial}.', 'success')
     return redirect(url_for('single_items.single_item_list'))
 
 
