@@ -981,8 +981,9 @@ def move_select_item():
             room_id = request.form.get('room_id_to_move_from')
             return redirect(url_for('single_items.move_from', item_id=item_id, room_id=room_id))
     item_list = Item.query.all()
-    room_list_to = Room.query.all() 
-    room_list_from = Room.query.all() #! ne treba listati prostorije koje nemaju ovaj predmet za tip kretnje iz prostorije u druge prostorije
+    all_room_list = Room.query.all()
+    room_list_to = [room for room in all_room_list if room.id not in [2, 3]] #! 2 - magacin rashoda, 3 - magacin reversa -> ne može se na ovaj način premestiti u taj magacin
+    room_list_from = [room for room in all_room_list if room.id not in [2, 3]] #! 2 - magacin rashoda, 3 - magacin reversa -> ne može se na ovaj način premestiti u taj magacinv !!!! ne treba listati prostorije koje nemaju ovaj predmet za tip kretnje iz prostorije u druge prostorije
     print(f'{item_list=}')
     return render_template('move_select.html', title='Izbor predmeta za premeštanje',
                             item_list=item_list,

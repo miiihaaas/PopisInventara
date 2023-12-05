@@ -4,48 +4,50 @@
 <div class="form-group mb-4">
     <a class="btn btn-secondary" href="javascript:history.back()">Nazad</a>
 </div>
-<table id="data_1" border="1" class="table table-striped userlist">
-    <thead>
-        <tr>
-            <th>id</th>
-            <th>Datum</th>
-            <th>Opis</th>
-            <th>Opcije</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for list in inventory_lists %}
-        <tr>
-            <td>{{ list.id }}</td>
-            <td>{{ list.date }}</td>
-            <td>{{ list.description }}</td>
-            {% if list.status == 'finished' %}
-            <td>
-                <a href="{{url_for('inventory.edit_inventory_list', inventory_id=list.id)}}" class="btn btn-primary">Pregled listi</a>  
-                <a href="{{url_for('inventory.compare_inventory_list', inventory_id=list.id)}}" class="btn btn-primary">Poređenje rezultata</a>
-                <div class="btn-group">
-                    <button type="button" class="btn btn-danger dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                        Izveštaji
-                    </button>
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="{{ url_for('reports.category_reports_expediture', inventory_id=list.id) }}">Rekapitulacija po kontu - rashod</a></li>
-                        <li><a class="dropdown-item" href="{{ url_for('reports.category_reports_expediture_item', inventory_id=list.id) }}">Rekapitulacija po kontu - rashod po predmetima</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="{{ url_for('reports.category_reports_new_purchases_past', inventory_id=list.id) }}">Rekapitulacija po kontima - nove nabavke</a></li>
-                        <li><a class="dropdown-item" href="{{ url_for('reports.category_reports_new_purchases_item', inventory_id=list.id) }}">Rekapitulacija po kontima - nove nabavke po predmetima</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="#">Obračun amortizacije osnovnih sredstava pregled po prostorijama i po predmetima #</a></li>
-                        <li><a class="dropdown-item" href="#">Rekapitulacija obračuna amortizacije po prostorijama #</a></li>
-                        <li><a class="dropdown-item" href="#">Knjiga osnovnih sredstava #</a></li>
-                        <li><a class="dropdown-item" href="{{ url_for('reports.category_reports_past', inventory_id=list.id) }}">Izveštaj po kontima</a></li>
-                    </ul>
-                </div>
-            </td>
-            {% endif %}
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+<div class="form-group mb-4">
+    <table id="data_1" border="1" class="table table-striped userlist">
+        <thead>
+            <tr>
+                <th>id</th>
+                <th>Datum</th>
+                <th>Opis</th>
+                <th>Opcije</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for list in inventory_lists %}
+            <tr>
+                <td>{{ list.id }}</td>
+                <td>{{ list.date }}</td>
+                <td>{{ list.description }}</td>
+                {% if list.status == 'finished' %}
+                <td>
+                    <a href="{{url_for('inventory.edit_inventory_list', inventory_id=list.id)}}" class="btn btn-primary">Pregled listi</a>  
+                    <a href="{{url_for('inventory.compare_inventory_list', inventory_id=list.id)}}" class="btn btn-primary">Poređenje rezultata</a>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-danger dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                            Izveštaji
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{{ url_for('reports.category_reports_expediture', inventory_id=list.id) }}">Rekapitulacija po kontu - rashod</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('reports.category_reports_expediture_item', inventory_id=list.id) }}">Rekapitulacija po kontu - rashod po predmetima</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ url_for('reports.category_reports_new_purchases_past', inventory_id=list.id) }}">Rekapitulacija po kontima - nove nabavke</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('reports.category_reports_new_purchases_item', inventory_id=list.id) }}">Rekapitulacija po kontima - nove nabavke po predmetima</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#">Obračun amortizacije osnovnih sredstava pregled po prostorijama i po predmetima #</a></li>
+                            <li><a class="dropdown-item" href="#">Rekapitulacija obračuna amortizacije po prostorijama #</a></li>
+                            <li><a class="dropdown-item" href="#">Knjiga osnovnih sredstava #</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('reports.category_reports_past', inventory_id=list.id) }}">Izveštaj po kontima</a></li>
+                        </ul>
+                    </div>
+                </td>
+                {% endif %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
 {% endblock content%}
 
 {% block scripts %}
@@ -55,7 +57,6 @@
             order: [[1, "asc"]],
             language: {
                 url: "//cdn.datatables.net/plug-ins/1.12.1/i18n/sr-SP.json",
-                stateSave: true
             },
         });
         $('#add_item_rate, #add_item_category').select2({

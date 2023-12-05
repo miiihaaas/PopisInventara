@@ -25,7 +25,6 @@
         <thead>
             <tr>
                 <th>Zgrada</th>
-                <th>room_id</th>
                 <th>Prostorija</th>
                 <th>Serija</th>
                 <th>Količina</th>
@@ -35,10 +34,9 @@
         </thead>
         <tbody>
             {% for data in data_list %}
-            {% if room_from.id != data['room_id'] %}
+            {% if room_from.id != data['room_id'] and data.quantity > 0 %}
             <tr>
                 <td>{{ data.building }}</td>
-                <td>{{ data.room_id }}</td>
                 <td>{{ data.room }}</td>
                 <td>{{ data.serial }}</td>
                 <td>{{ data.quantity }}</td>
@@ -60,6 +58,15 @@
 
 {% block scripts %}
 <script>
+    $("#data").DataTable({
+        order: [[1, "asc"]],
+        language: {
+            url: "//cdn.datatables.net/plug-ins/1.12.1/i18n/sr-SP.json",
+            stateSave: true
+        },
+        // lengthMenu: [100, 200, 400], // Postavljanje podrazumevanih vrednosti za prikazivanje
+        paging: false, // Isključivanje paginacije
+    });
     document.addEventListener('DOMContentLoaded', function () {
         var form = document.getElementById('moveForm');
         form.addEventListener('submit', function (event) {
