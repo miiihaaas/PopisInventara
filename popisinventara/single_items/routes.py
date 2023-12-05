@@ -1074,9 +1074,11 @@ def move_from(item_id, room_id):
                 single_item_to_move_from.room_id = room_id_to_move
                 single_item_in_room_list.remove(single_item_to_move_from)
         db.session.commit()
+        room_to_move = Room.query.get_or_404(room_id_to_move)
+        flash(f'Premešteni su predmeti iz izabrane prostorije:  ({room_to_move.name}) {room_to_move.dynamic_name}.', 'success')
         return redirect(url_for('single_items.single_item_rooms', item_id=item_id))
     
-    return render_template('move_from.html', title='Premeštanje predmeta iz izabrane prostorije',
+    return render_template('move_from.html', title='Premeštanje predmeta iz izabrane prostorije u više različitih prostorija',
                             item=item,
                             room_from=room_from,
                             single_item_list=single_item_list,
@@ -1138,6 +1140,7 @@ def move_to(item_id, room_id):
         except Exception as e:
             print(f'Greška pri čuvanju promena u bazi: {e}')
             db.session.rollback() # U slučaju greške, poništite transakciju
+        flash(f'Predmeti su premešteni u prostoriju: ({room.name}) {room.dynamic_name}.', 'success')
         return redirect(url_for('single_items.single_item_rooms', item_id=item_id))
     return render_template('move_to.html', title='Premeštanje predmeta u izabranu prostoriju',
                             item=item,

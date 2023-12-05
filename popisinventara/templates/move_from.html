@@ -21,9 +21,11 @@
 </div>
 <form action="" method="post" id="moveForm">
     <input type="hidden" name="data_to_move_from" id="data_to_move_from">
+    {% if quantity_of_single_items_in_room > 0 %}
     <table id="data" border="1" class="table table-striped userlist">
         <thead>
             <tr>
+                <td>room_id</td>
                 <th>Zgrada</th>
                 <th>Prostorija</th>
                 <th>Serija</th>
@@ -34,8 +36,9 @@
         </thead>
         <tbody>
             {% for data in data_list %}
-            {% if room_from.id != data['room_id'] and data.quantity > 0 %}
+            {% if room_from.id != data['room_id'] %}
             <tr>
+                <td>{{ data.room_id }}</td>
                 <td>{{ data.building }}</td>
                 <td>{{ data.room }}</td>
                 <td>{{ data.serial }}</td>
@@ -47,10 +50,9 @@
             {% endfor %}
         </tbody>
     </table>
-    {% if quantity_of_single_items_in_room > 0 %}
     <button type="submit" class="btn btn-primary" onclick="submitForm()">Premestite</button>
     {% else %}
-    <p>U prostoriji <strong>{{room.dynamic_name}}</strong> nema predmeta <strong>{{item.name}}</strong>.</p>
+    <p>U prostoriji <strong>{{room_from.dynamic_name}}</strong> nema predmeta <strong>{{item.name}}</strong>.</p>
     {% endif %}
 </form>
 
@@ -80,7 +82,7 @@
                 var row = rows[i];
                 var inputs = row.getElementsByTagName('input');
                 
-                var room_id = row.cells[1].innerText; // Assuming the room_id is in the second cell
+                var room_id = row.cells[0].innerText; // Assuming the room_id is in the 1st cell
                 var serial = row.cells[3].innerText; // Assuming the serial is in the third cell
                 var quantity_to_move_from = inputs[0].value;
                 

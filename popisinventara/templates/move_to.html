@@ -20,6 +20,7 @@
     <table id="data" border="1" class="table table-striped userlist">
         <thead>
             <tr>
+                <th>room_id</th>
                 <th>Zgrada</th>
                 <th>Prostorija</th>
                 <th>Serija</th>
@@ -32,6 +33,7 @@
             {% for data in data_list %}
             {% if room.id != data['room_id'] %}
             <tr>
+                <td>{{ data.room_id }}</td>
                 <td>{{ data.building }}</td>
                 <td>{{ data.room }}</td>
                 <td>{{ data.serial }}</td>
@@ -58,6 +60,12 @@
         },
         // lengthMenu: [100, 200, 400], // Postavljanje podrazumevanih vrednosti za prikazivanje
         paging: false, // Isključivanje paginacije
+        // columnDefs: [
+        // {
+        //     targets: [1], // Indeks kolone koju želite sakriti (brojanje počinje od 0)
+        //     visible: false
+        // }
+    // ]
     });
     document.addEventListener('DOMContentLoaded', function () {
         var form = document.getElementById('moveForm');
@@ -72,7 +80,7 @@
                 var row = rows[i];
                 var inputs = row.getElementsByTagName('input');
                 
-                var room_id = row.cells[1].innerText; // Assuming the room_id is in the second cell
+                var room_id = row.cells[0].innerText; // Assuming the room_id is in the 1st cell
                 var serial = row.cells[3].innerText; // Assuming the serial is in the third cell
                 var quantity_to_move_to = inputs[0].value;
                 
