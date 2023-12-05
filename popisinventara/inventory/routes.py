@@ -24,7 +24,7 @@ def create_inventory_list():
         return redirect(url_for('main.home'))
     virtual_warehouse = SingleItem.query.filter_by(room_id=1).count()
     if virtual_warehouse:
-        flash('Pre kreiranja popisnih sliti treba rasporediti sve predmete i virtuelnog magacina!', 'danger')
+        flash('Pre kreiranja popisnih sliti treba rasporediti sve predmete iz virtuelnog magacina!', 'danger')
         return redirect(url_for('main.home'))
     active_inventory_list = Inventory.query.filter_by(status='active').first()
     print(f'{active_inventory_list=}')
