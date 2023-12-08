@@ -53,8 +53,8 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="editUserLabel">Izmena korisničkog profila</h5>
-                    <button type="button" clsass="close" data-bs-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true"><i class="fa-solid fa-xmark"></i></span>
+                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
                 <form method="POST" action="{{ url_for('users.edit_user') }}">
@@ -96,8 +96,8 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="deleteUserLabel">Brisanje korisničkog profila</h5>
-                    <button type="button" clsass="close" data-bs-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true"><i class="fa-solid fa-xmark"></i></span>
+                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
                 <form method="POST" action="{{ url_for('users.delete_user') }}">
@@ -109,15 +109,15 @@
                         </div>
                         <div class="form-group">
                             <label class="form-control-label" for="delete_name">Ime</label>
-                            <input class="form-control" type="text" id="delete_name" name="delete_name">
+                            <input class="form-control" type="text" id="delete_name" name="delete_name" readonly>
                         </div>
                         <div class="form-group">
                             <label class="form-control-label" for="delete_surname">Prezime</label>
-                            <input class="form-control" type="text" id="delete_surname" name="delete_surname">
+                            <input class="form-control" type="text" id="delete_surname" name="delete_surname" readonly>
                         </div>
                         <div class="form-group">
                             <label class="form-control-label" for="delete_email">Mejl</label>
-                            <input class="form-control" type="text" id="delete_email" name="delete_email">
+                            <input class="form-control" type="text" id="delete_email" name="delete_email" readonly>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -133,12 +133,12 @@
 <table id="data" border="1" class="table table-striped userlist">
     <thead>
         <tr>
-            <td>ID</td>
-            <td>Ime</td>
-            <td>Prezime</td>
-            <td>Mejl</td>
-            <td>Autorizacija</td>
-            <td></td>
+            <th>ID</th>
+            <th>Ime</th>
+            <th>Prezime</th>
+            <th>Mejl</th>
+            <th>Autorizacija</th>
+            <th></th>
         </tr>
     </thead>
     <tbody>
@@ -148,7 +148,13 @@
             <td>{{ user.name }}</td>
             <td>{{ user.surname }}</td>
             <td>{{ user.email }}</td>
-            <td>{{ user.authorization }}</td>
+            <td>
+                {% if user.authorization == 'user' %}
+                Korisnik
+                {% else %}
+                    Administrator
+                {% endif %}
+            </td>
             <td>
                 {% if not active_inventory_list %}
                     <a href="#" class="btn-x btn-primary-x" data-bs-toggle="modal" data-bs-target="#editUser" onclick="editUser('{{user.id}}', '{{user.name}}', '{{user.surname}}', '{{user.email}}', '{{user.authorization}}')" title="Izmenite korisnički profila: {{ user.name }} {{ user.surname }}"><i class="fa fa-edit awesomeedit" aria-hidden="true"></i></a>

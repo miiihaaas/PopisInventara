@@ -26,6 +26,7 @@
                     <th>ID</th>
                     <th>Zgrada</th>
                     <th>Adresa</th>
+                    <th>Mesto</th>
                     {% if not active_inventory_list %}
                     <th></th>
                     {% endif %}
@@ -37,8 +38,9 @@
                     <td>{{ building.id }}</td>
                     <td>{{ building.name }}</td>
                     <td>{{ building.address }}</td>
+                    <td>{{ building.city }}</td>
                     {% if not active_inventory_list %}
-                        <td><a href="#" class="btn-x btn-primary-x" data-bs-toggle="modal" data-bs-target="#myBuilding" onclick="openBuildingModal('{{ building.id }}', '{{ building.name }}', '{{ building.address }}')" title="Izmena podataka zgrade: {{ building.name }}"><i class="fa fa-building awesomeedit" aria-hidden="true"></i></a></td>
+                        <td><a href="#" class="btn-x btn-primary-x" data-bs-toggle="modal" data-bs-target="#myBuilding" onclick="openBuildingModal('{{ building.id }}', '{{ building.name }}', '{{ building.address }}', '{{ building.city }}')" title="Izmena podataka zgrade: {{ building.name }}"><i class="fa fa-building awesomeedit" aria-hidden="true"></i></a></td>
                     {% endif %}
                 </tr>
                 {% endfor %}
@@ -58,8 +60,9 @@
             <thead>
                 <tr>
                     <th>Zgrada</th>
-                    <th>Prostorija_id</th>
-                    <th>Prostorija</th>
+                    <th>Mesto</th>
+                    <th>ID prostorije</th>
+                    <th>Dinamički naziv prostorije Prostorija</th>
                     {% if not active_inventory_list %}
                         <th></th>
                     {% endif %}
@@ -68,12 +71,13 @@
             <tbody>
                 {% for room in rooms %}
                 <tr>
-                    <td>{{ room.building_id }} - {{ room.room_building.name }}</td>
-                    <td>{{room.name}} - {{room.dynamic_name}}</td>
+                    <td>{{ room.room_building.name }}</td>
+                    <td>{{ room.room_building.city }}</td>
+                    <td>{{room.name}}</td>
                     <td>{{room.dynamic_name}}</td>
                     {% if not active_inventory_list %}
                         <td>
-                            <a href="#" class="btn-x btn-primary-x" data-bs-toggle="modal" data-bs-target="#myBuilding" onclick="openBuildingModal('{{ room.building_id }}', '{{ room.room_building.name }}', '{{ room.room_building.address }}')" title="Izmena podataka zgrade: {{ room.building_id }} - {{ room.room_building.name }}"><i class="fa fa-building awesomeedit" aria-hidden="true"></i></a>
+                            <a href="#" class="btn-x btn-primary-x" data-bs-toggle="modal" data-bs-target="#myBuilding" onclick="openBuildingModal('{{ room.building_id }}', '{{ room.room_building.name }}', '{{ room.room_building.address }}', '{{ room.room_building.city }}')" title="Izmena podataka zgrade: {{ room.building_id }} - {{ room.room_building.name }}"><i class="fa fa-building awesomeedit" aria-hidden="true"></i></a>
                             <a href="#" class="btn-x btn-primary-x" data-bs-toggle="modal" data-bs-target="#myRoom" onclick="openRoomModal('{{ room.id }}', '{{ room.name }}', '{{ room.dynamic_name }}', '{{ room.building_id }}')" title="Izmena podataka prostorije: {{room.name}} - {{room.dynamic_name}}"><i class="fa fa-door-closed awesomeedit" aria-hidden="true"></i></a>
                         </td>
                     {% endif %}
@@ -225,6 +229,10 @@
                         <label class="form-control-label" for="edit_building_address">Adresa</label>
                         <input class="form-control" type="text" id="edit_building_address" name="edit_building_address">
                     </div>
+                    <div class="form-group">
+                        <label class="form-control-label" for="edit_building_city">Adresa</label>
+                        <input class="form-control" type="text" id="edit_building_city" name="edit_building_city">
+                    </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Otkažite</button>
                         <button type="submit" class="btn btn-primary" >Sačuvajte</button>
@@ -281,10 +289,11 @@
 
 {% block scripts %}
 <script>
-    function openBuildingModal(buildingId, buildingName, buildingAddress) {
+    function openBuildingModal(buildingId, buildingName, buildingAddress, buildingCity) {
         document.getElementById("edit_building_id").value = buildingId;
         document.getElementById("edit_building_name").value = buildingName;
         document.getElementById("edit_building_address").value = buildingAddress;
+        document.getElementById("edit_building_city").value = buildingCity;
     }
     function openRoomModal(roomId, roomName, roomDynamicName, buildingId) {
         document.getElementById("edit_room_id").value = roomId;

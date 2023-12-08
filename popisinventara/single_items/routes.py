@@ -562,7 +562,7 @@ def move_single_item_to_room():
     single_item = SingleItem.query.filter_by(id=single_item_id).first()
     single_item.room_id = room_id
     db.session.commit()
-    flash(f'Uspesno ste premestili predmet {single_item.name} u prostoriju {single_item.single_item_room.name}.', 'success')
+    flash(f'Uspešno ste premestili predmet {single_item.name} u prostoriju {single_item.single_item_room.name}.', 'success')
     return redirect(url_for('single_items.single_item_list'))
 
 
@@ -671,7 +671,7 @@ def expediture_single_item():
     single_item.expediture_date = expediture_date
     single_item.room_id = 2 #! room_id = 2 je magacin rashoda
     db.session.commit()
-    flash(f'Uspesno ste rashodovali predmet: {single_item.name}.', 'success')
+    flash(f'Uspešno ste rashodovali predmet: {single_item.name}.', 'success')
     return redirect(url_for('single_items.single_item_list'))
 
 
@@ -889,7 +889,7 @@ def edit_single_item():
             db.session.add(new_single_item)
     db.session.commit()
     update_price()
-    flash(f'Uspesno ste izmenili seriju predmeta {serial}.', 'success')
+    flash(f'Uspešno ste izmenili seriju predmeta {serial}.', 'success')
     return redirect(url_for('single_items.single_item_list'))
 
 
