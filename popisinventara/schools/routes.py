@@ -42,7 +42,7 @@ def school(school_id):
         school.mb = form.mb.data
         school.jbkjs = form.jbkjs.data
         db.session.commit()
-        flash('Uspesno ste izmenili podatke škole.', 'success')
+        flash('Uspešno ste izmenili podatke škole.', 'success')
         return redirect(url_for('schools.school', school_id=school_id))
     elif request.method == 'GET':
         form.schoolname.data = school.schoolname
@@ -103,7 +103,8 @@ def add_building():
     print('dodavanje nove zgrade. nastavi kod')
     building = Building(school_id=1, 
                         name=request.form.get('name'),
-                        address = request.form.get('address'))
+                        address = request.form.get('address'),
+                        city=request.form.get('city'))
     db.session.add(building)
     db.session.commit()
     flash('Nova zgrada je uspešno dodata.', 'success')
@@ -125,10 +126,12 @@ def edit_building():
     building_id = request.form.get('edit_building_id')
     building_name = request.form.get('edit_building_name')
     building_address = request.form.get('edit_building_address')
+    building_city = request.form.get('edit_building_city')
         
     building = Building.query.get_or_404(building_id)
     building.name = building_name
     building.address = building_address
+    building.city = building_city
     db.session.commit()
     return redirect(url_for('schools.buildings_rooms', school_id=1))
 

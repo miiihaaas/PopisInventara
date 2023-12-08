@@ -32,7 +32,6 @@
         {% endfor %}
     </tbody>
 </table>
-{{compare_items_list}}
 {% if not inventory.status == 'finished' %}
 <form action="" method="post">
     <button class="btn btn-danger" type="submit">Zavrišite popis</button>
@@ -42,5 +41,16 @@
 {% endblock content%}
 
 {% block scripts %}
-
+<script>
+    $(document).ready(function () {
+        $("#data_1").DataTable({
+            language: {
+                url: "//cdn.datatables.net/plug-ins/1.12.1/i18n/sr-SP.json",
+                stateSave: true
+            },
+            // lengthMenu: [100, 200, 400], // Postavljanje podrazumevanih vrednosti za prikazivanje
+            paging: false, // Isključivanje paginacije
+        });
+    });
+</script>
 {% endblock %}

@@ -31,6 +31,7 @@ class Building(db.Model):
     school_id = db.Column(db.Integer, db.ForeignKey('school.id'), nullable=False)
     name = db.Column(db.String(20), nullable=False)
     address = db.Column(db.String(50), nullable=False)
+    city = db.Column(db.String(50), nullable=False)
     rooms = db.relationship('Room', backref='room_building', lazy='dynamic')
     
     

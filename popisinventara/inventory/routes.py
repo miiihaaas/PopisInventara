@@ -1,5 +1,4 @@
 import json
-from bs4 import BeautifulSoup
 from datetime import date, datetime
 from flask import Blueprint
 from flask import  render_template, flash, redirect, url_for
@@ -31,18 +30,24 @@ def create_inventory_list():
     if active_inventory_list:
         flash(f'Da bi ste kreirali novu popisnu listu, morate prvo završiti aktivnu popisnu listu koja je započeta: {active_inventory_list.date}.', 'danger')
         return redirect(url_for('main.home'))
-    rooms = Room.query.all()
+    all_room_list = Room.query.all()
+    rooms = [room for room in all_room_list if room.id not in [1, 2]] #! 1 - virtuelni magacin se ne popisuje; 2 - magacin rashodovanih predmeta se ne popisuje
     users = User.query.filter_by(authorization='user').all()
     if request.method == 'POST':
         description = request.form.get('description')
         single_items = SingleItem.query.all()
         room_ids = request.form.getlist('room_id[]')
         user_ids = request.form.getlist('user_id[]')
+        if any(item == '' for item in user_ids):
+            flash('Morate dodeliti predsednika popisne komisije za svaku prostoriju.', 'danger')
+            return redirect(url_for('inventory.create_inventory_list'))
         room_user_ids = list(zip(room_ids, user_ids))
         print(f'{room_ids=}; {user_ids=}')
         print(f'{room_user_ids=}')
         inventory_initial_data = []
         for single_item in single_items:
+            if str(single_item.room_id) not in room_ids:
+                continue
             new_data = {
                 'room_id': single_item.room_id,
                 'user_id': [user_id for (room_id, user_id) in room_user_ids if room_id == str(single_item.room_id)][0],
@@ -283,8 +288,9 @@ def compare_inventory_list(inventory_id):
         flash(f'Popis "{inventory.description}" je završen.', 'success')
         return redirect(url_for('main.home'))
     initial_inventory_list_data = json.loads(inventory.initial_data)
+    initial_inventory_list_data_rooms = initial_inventory_list_data['inventory']
     compare_items_list = [] #! ideja je da se prvo napravi lista initial, pa da se njoj dodaju quantity_input iz working_inventory_list_data
-    for room in initial_inventory_list_data:
+    for room in initial_inventory_list_data_rooms:
         print(f'{room=}')
         for item in room['items']:
             print(f'{item=}')
@@ -314,8 +320,9 @@ def compare_inventory_list(inventory_id):
                 
             print(f'{compare_items_list=}')
     working_inventory_list_data = json.loads(inventory.working_data)
-    #! ovdenastavi: ideja je da se prvo napravi lista initial, pa da se njoj dodaju quantity_input iz working_inventory_list_data
-    for room in working_inventory_list_data:
+    working_inventory_list_data_rooms = working_inventory_list_data['inventory'] 
+    #! ovde nastavi: ideja je da se prvo napravi lista initial, pa da se njoj dodaju quantity_input iz working_inventory_list_data
+    for room in working_inventory_list_data_rooms:
         for item in room['items']:
             single_item = SingleItem.query.filter(SingleItem.inventory_number.like(f'%-{item["serial"]}-%')).first()
             input_item = {

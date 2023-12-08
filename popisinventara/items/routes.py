@@ -62,7 +62,7 @@ def add_item():
     new_item = Item(name=name, category_id=category, depreciation_rate_id=depreciation_rate)
     db.session.add(new_item)
     db.session.commit()
-    flash(f'Dodat je predmet "{name}".', 'success')
+    flash(f'Dodat je tip predmeta "{name}".', 'success')
     return redirect(url_for('items.items'))
 
 
@@ -98,7 +98,7 @@ def edit_item():
     item.category_id = category
     item.depreciation_rate_id = depreciation_rate
     db.session.commit()
-    flash(f'Uspesno ste izmenili predmet "{name}".', 'success')
+    flash(f'Uspešno ste izmenili tip predmeta "{name}".', 'success')
     return redirect(url_for('items.items'))
 
 
@@ -179,7 +179,7 @@ def edit_category():
     category.category_number = category_number
     category.name = category_name
     db.session.commit()
-    flash(f'Uspesno ste izmenili konto "{category_name}".', 'success')
+    flash(f'Uspešno ste izmenili konto "{category_name}".', 'success')
     return redirect(url_for('items.category'))
 
 
