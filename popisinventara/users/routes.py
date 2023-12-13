@@ -40,6 +40,8 @@ def user_list():
     users = User.query.all()
     number_of_admins = User.query.filter_by(authorization='admin').count()
     return render_template('user_list.html', 
+                            title='Lista korisnika',
+                            legend='Lista korisnika',
                             users=users, 
                             number_of_admins=number_of_admins,
                             active_inventory_list=active_inventory_list)

@@ -17,7 +17,9 @@
                 <th>Serija</th>
                 <th>Tip predmeta</th>
                 <th>Naziv predmeta</th>
+                {% if current_user.authorization == "admin" %}
                 <th>Količina</th>
+                {% endif %}
                 <th>Popisana količina</th>
                 <th>Komentar</th>
             </tr>
@@ -29,7 +31,9 @@
                 <td name="serial_{{ item.serial }}">{{ item.serial }}</td>
                 <td>{{ item.item_name }}</td>
                 <td>{{ item.name }}</td>
+                {% if current_user.authorization == "admin" %}
                 <td>{{ item.quantity }}</td>
+                {% endif %}
                 {%if inventory.status == 'finished' %}
                 <td><input class="form-control" type="number" min="0" name="quantity_input_{{ item.serial }}" value="{{item.quantity_input}}" disabled></td>
                 <td><input class="form-control" type="text" name="comment_{{ item.serial }}" value="{{item.comment}}" disabled></td>
@@ -47,7 +51,7 @@
     {% endif %}
 </form>
 <div class="modal fade" id="newSingleItem" tabindex="-1" role="dialog" aria-labelledby="newSingleItemLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
+    <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="newSingleItemLabel">Dodavanje novog spredmeta u popisnu listu</h5>
@@ -55,37 +59,32 @@
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            <form method="POST" action="{{ url_for('single_items.add_single_item')}}">
+            <form method="POST" action="{{ url_for('inventory.add_single_item_to_room')}}">
                 <div class="modal-body">
                     <div class="form-group">
-                        <label class="form-control-label" for="add_single_item_item_id">ID</label>
-                        <select class="form-select" name="add_single_item_item_id" id="add_single_item_item_id">
+                        <label class="form-control-label" for="add_single_item_data">ID / Serija / Tip predmeta / Pedmet</label>
+                        <select class="form-select" name="add_single_item_data" id="add_single_item_data">
                             <option value=""></option>
-                            {% for item in item_list %}
-                            <option value="{{item.id}}">{{item.name}} ({{item.item_category.category_number}}-{{item.item_category.name}} / {{item.item_depreciation_rate.group}}-{{item.item_depreciation_rate.name}}-{{item.item_depreciation_rate.rate}}%)</option>
+                            {% for item in all_serials_items_list %}
+                            <option value="{{item[1]}}">{{item[0]}} / {{ item[1] }} / {{ item[2] }} / {{ item[3] }}</option>
                             {% endfor %}
                         </select>
                     </div>
                     <div class="form-group">
-                        <label class="form-control-label" for="add_single_item_name">Serija</label>
-                        <input class="form-control" type="text" id="add_single_item_name" name="add_single_item_name">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-control-label" for="add_single_item_room">Naziv</label>
-                        <select class="form-select" name="add_single_item_room" id="add_single_item_room">
-                            <option value=""></option>
-                            {% for room in room_list %}
-                            <option value="{{room.id}}">({{room.name}}) {{room.dynamic_name}}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-control-label" for="add_single_item_quantity">Količina</label>
+                        <label class="form-control-label" for="add_single_item_quantity">Popisana količina</label>
                         <input class="form-control" type="number" id="add_single_item_quantity" name="add_single_item_quantity">
                     </div>
+                    <div class="form-group" style="display: none;">
+                        <label class="form-control-label" for="add_single_item_inventory_id">Popis_id</label>
+                        <input class="form-control" type="text" id="add_single_item_inventory_id" name="add_single_item_inventory_id" value="{{inventory_id}}" readonly>
+                    </div>
+                    <div class="form-group" style="display: none;">
+                        <label class="form-control-label" for="add_single_item_room_id">Room_id</label>
+                        <input class="form-control" type="text" id="add_single_item_room_id" name="add_single_item_room_id" value="{{room_id}}" readonly>
+                    </div>
                     <div class="form-group">
-                        <label class="form-control-label" for="add_single_item_initial_price">Komentar</label>
-                        <input class="form-control" type="text" id="add_single_item_initial_price" name="add_single_item_initial_price">
+                        <label class="form-control-label" for="add_single_item_comment">Komentar</label>
+                        <input class="form-control" type="text" id="add_single_item_comment" name="add_single_item_comment">
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Otkažite</button>
@@ -100,5 +99,17 @@
 {% endblock content%}
 
 {% block scripts %}
-
+<script>
+    $(document).ready(function () {
+        $("#data_1").DataTable({
+            order: [[1, "asc"]],
+            language: {
+                url: "//cdn.datatables.net/plug-ins/1.12.1/i18n/sr-SP.json",
+                stateSave: true
+            },
+            // lengthMenu: [100, 200, 400], // Postavljanje podrazumevanih vrednosti za prikazivanje
+            paging: false, // Isključivanje paginacije
+        });
+    });
+</script>
 {% endblock %}

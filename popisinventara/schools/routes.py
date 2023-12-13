@@ -80,6 +80,8 @@ def buildings_rooms():
     room_form = AddNewRoomForm()
     room_form.building_id.choices = [(building.id, building.name) for building in buildings]
     return render_template('buildings_rooms.html',
+                            title='Zgrade i prostorije',
+                            legend='Zgrade i prostorije',
                             building_form=building_form,
                             room_form=room_form,
                             buildings=buildings,

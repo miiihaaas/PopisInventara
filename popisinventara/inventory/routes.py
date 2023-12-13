@@ -50,13 +50,15 @@ def create_inventory_list():
                 continue
             new_data = {
                 'room_id': single_item.room_id,
-                'user_id': [user_id for (room_id, user_id) in room_user_ids if room_id == str(single_item.room_id)][0],
+                'user_id': [int(user_id) for (room_id, user_id) in room_user_ids if room_id == str(single_item.room_id)][0],
                 'items': [
                     {
                         # 'item_id': single_item.item_id,
-                        'serial': single_item.inventory_number.split('-')[1],
+                        'serial': int(single_item.inventory_number.split('-')[1]),
                         'quantity': 1, 
-                        'value': single_item.current_price,
+                        'quantity_input': 0,
+                        'current_price': single_item.current_price,
+                        'total_value': single_item.current_price,
                     }
                 ]
             }
@@ -69,7 +71,7 @@ def create_inventory_list():
                         for item in existing_data['items']:
                             if item['serial'] == new_data['items'][0]['serial']:
                                 item['quantity'] += 1
-                                item['value'] += new_data['items'][0]['value']
+                                item['total_value'] += new_data['items'][0]['current_price']
                                 found = True
                                 break
                         if not found:
@@ -84,7 +86,7 @@ def create_inventory_list():
         for room in inventory_initial_data:
             new_room = {'room_id': room['room_id'], 'user_id': room['user_id'], 'items': []}
             for item in room['items']:
-                new_item = {'serial': item['serial'], 'quantity_input': 0, 'value_input': item['value'], 'comment': ''}
+                new_item = {'serial': item['serial'], 'quantity': item['quantity'], 'quantity_input': 0, 'current_price': item['current_price'] , 'total_value': 0, 'comment': ''}
                 new_room['items'].append(new_item)
             inventory_working_data.append(new_room)
 
@@ -154,6 +156,7 @@ def edit_inventory_list(inventory_id):
     inventory = Inventory.query.get_or_404(inventory_id)
     inventory_list_data = json.loads(inventory.initial_data)
     # print(f'{inventory_list_data=}')
+    #! generiši filtrirane popisne liste za prostorije korisnika, tj sve popisne liste za admina
     room_buttons = []
     if current_user.authorization == 'admin':
         for room_data in inventory_list_data['inventory']:
@@ -166,8 +169,8 @@ def edit_inventory_list(inventory_id):
             }
             room_buttons.append(new_room)
     else:
-        for room_data in inventory_list_data:
-            if room_data['user_id'] == str(current_user.id):
+        for room_data in inventory_list_data['inventory']:
+            if room_data['user_id'] == current_user.id:
                 room = Room.query.get_or_404(room_data['room_id'])
                 new_room = {
                     'room_id': room_data['room_id'],
@@ -212,24 +215,43 @@ def edit_inventory_room_list(inventory_id, room_id):
         inventory = Inventory.query.get_or_404(inventory_id)
         working_inventory_list_data = json.loads(inventory.working_data)['inventory']
         print(f'{working_inventory_list_data=}')
-        data = []
+        #! izvlači podakte o items u prostoriji koja se edituje
+        items_in_room = []
+        for room in working_inventory_list_data:
+            if room['room_id'] == room_id:
+                items_in_room = room['items']
+                break
+        print(f'debug items_in_room: {items_in_room=}')
+
         print(f'{request.form=}')
         for item_id in request.form:
             print(f'{item_id=}')
             if item_id.startswith('quantity_input_'):
-                serial = item_id.split("_")[-1]
+                serial = int(item_id.split("_")[-1])
                 quantity_input = int(request.form.get(item_id))
                 comment = request.form.get(f'comment_{item_id.split("_")[-1]}')
-
-                data.append({
-                    'serial': serial,
-                    'quantity_input': quantity_input,
-                    'comment': comment
-                })
-        print(f'{data=}')
+                single_item = SingleItem.query.filter_by(serial=serial).first()
+                if serial in [int(item['serial']) for item in items_in_room]:
+                    for item in items_in_room:
+                        if item['serial'] == serial:
+                            item['quantity_input'] = quantity_input
+                            item['total_value'] = quantity_input * single_item.current_price
+                            item['comment'] = comment
+                            break
+                else:
+                    items_in_room.append({
+                                            'serial': serial,
+                                            'quantity': 0, #! 
+                                            'quantity_input': quantity_input,
+                                            'current_price': single_item.current_price,
+                                            'total_value': quantity_input * single_item.current_price,
+                                            'comment': comment
+                                        })
+                
+        print(f'{items_in_room=}')
         for room in working_inventory_list_data:
             if room['room_id'] == room_id:
-                room['items'] = data
+                room['items'] = items_in_room
                 break
         working_data = {
             'inventory': working_inventory_list_data,
@@ -243,15 +265,29 @@ def edit_inventory_room_list(inventory_id, room_id):
         inventory = Inventory.query.get_or_404(inventory_id)
         initial_inventory_list_data = json.loads(inventory.initial_data)['inventory']
         working_inventory_list_data = json.loads(inventory.working_data)['inventory']
+        single_items = SingleItem.query.all()
+        serials_in_room = []
+        for room in working_inventory_list_data:
+            if room['room_id'] == room_id:
+                serials_in_room = [int(serial['serial']) for serial in room['items']]
+                break
+        print(f'{serials_in_room=}')
+        
+        
+        all_serials_items_list = list(set((int(single_item.item_id), int(single_item.serial), single_item.single_item_item.name, single_item.name) for single_item in single_items if int(single_item.serial) not in serials_in_room)) #! izbaciti serije koje se već nalaze u ovoj prostoriji
+        sorted_list = sorted(all_serials_items_list, key=lambda x: (x[0], x[1]))
+        print(f'sorted list: {sorted_list}')
+        all_serials_items_list = sorted_list
+        print(f'list: {all_serials_items_list=}')
         print(f'{working_inventory_list_data=}')
-        for room in initial_inventory_list_data:
+        for room in working_inventory_list_data:
             print(f'{room=}')
             if room['room_id'] == room_id:
                 inventory_item_list_data = room['items']
                 for item_data in inventory_item_list_data:
                     print(f'{item_data=}')
                     print(f'{item_data["serial"]=}')
-                    single_item = SingleItem.query.filter(SingleItem.inventory_number.like(f'%-{item_data["serial"]}-%')).first()
+                    single_item = SingleItem.query.filter_by(serial = item_data["serial"]).first()
                     print(f'{single_item.id=} {single_item.name=}')
                     item_data['item_id'] = single_item.item_id
                     item_data['item_name'] = single_item.single_item_item.name
@@ -268,12 +304,15 @@ def edit_inventory_room_list(inventory_id, room_id):
         inventory_item_list_data = sorted_inventory
         print(f'test: {inventory_item_list_data=}')
         room_name = f'{Room.query.get_or_404(room_id).room_building.name} - ({Room.query.get_or_404(room_id).name}) {Room.query.get_or_404(room_id).dynamic_name}'
-        popisna_lista_gen(inventory_item_list_data, room_name, inventory_id)
+        #! popisna_lista_gen(inventory_item_list_data, room_name, inventory_id)
     return render_template('edit_inventory_room_list.html', 
                             title=f"Izmena popisne liste: {room_id}",
                             inventory_item_list_data=inventory_item_list_data,
                             inventory=inventory,
-                            room_name=room_name)
+                            room_name=room_name,
+                            all_serials_items_list=all_serials_items_list,
+                            inventory_id=inventory_id,
+                            room_id=room_id,)
 
 
 @inventory.route('/compare_inventory_list/<int:inventory_id>', methods=['GET', 'POST'])
@@ -363,3 +402,67 @@ def read_inventory_list():
     inventory_lists = Inventory.query.all()
     return render_template('read_inventory_list.html', title="Pregled popisnih listi",
                             inventory_lists=inventory_lists)
+
+
+@inventory.route('/add_single_item_to_room', methods=['GET', 'POST'])
+def add_single_item_to_room():
+    room_id = int(request.form.get('add_single_item_room_id'))
+    inventory_id = int(request.form.get('add_single_item_inventory_id'))
+    single_item_serial = int(request.form.get('add_single_item_data'))
+    single_item_quantity = int(request.form.get('add_single_item_quantity'))
+    signle_item_comment = request.form.get('add_single_item_comment')
+    inventory = Inventory.query.get_or_404(inventory_id)
+    inventory_list_data = json.loads(inventory.working_data)['inventory']
+    working_data = json.loads(inventory.working_data)
+    initial_data = json.loads(inventory.initial_data)
+    # print(f'{working_data=}')
+    
+    
+    # proverava da li predmet sa istom serijom već postoji u popisnoj listi
+    desired_room_data = None
+    for room_data in inventory_list_data:
+        if room_data['room_id'] == room_id:
+            desired_room_data = room_data
+            break
+    for item in desired_room_data['items']:
+        if item['serial'] == single_item_serial:
+            flash('Izabrana serija već postoji stavka u popisnoj listi.', 'danger')
+            return redirect(url_for('inventory.edit_inventory_room_list', inventory_id = inventory_id, room_id = room_id))
+        
+    print(f'{inventory_list_data=}')
+    print(f'{desired_room_data=}')
+    single_item = SingleItem.query.filter_by(serial=single_item_serial).first() #! treba uzimati podatak iz istance pre popisa: initial_data['single_items'] a ne iz db jer db menja current price
+    print(f'debug total_value: {single_item.current_price=} * {single_item_quantity=}')
+    item_working_data = {
+                'serial': single_item_serial,
+                'quantity': 0,
+                'quantity_input': single_item_quantity,
+                'current_price': single_item.current_price, 
+                'total_value': single_item.current_price * single_item_quantity,
+                'comment': signle_item_comment
+            }
+    item_initial_data = {
+                'serial': single_item_serial,
+                'quantity': 0,
+                'quantity_input': single_item_quantity,
+                'total_value': 0, #! zato što je dodat red u listu i inicijalna vrednost je 0
+                'comment': signle_item_comment
+            }
+    
+    print(f'{item_working_data=}')
+    for room_dict in working_data['inventory']:
+        if room_dict['room_id'] == room_id:
+            room_dict['items'].append(item_working_data)
+            break
+    print(f'posle dodatka novog reda: {working_data["inventory"]=}')
+    
+    for room_dict in initial_data['inventory']:
+        if room_dict['room_id'] == room_id:
+            room_dict['items'].append(item_initial_data)
+            break
+    inventory.initial_data = json.dumps(initial_data)
+    inventory.working_data = json.dumps(working_data)
+    db.session.commit()
+    
+    flash('Dodata je nova stavka u popisnu listu.', 'success')
+    return redirect(url_for('inventory.edit_inventory_room_list', inventory_id = inventory_id, room_id = room_id))

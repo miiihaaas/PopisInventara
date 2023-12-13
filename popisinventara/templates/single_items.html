@@ -217,7 +217,7 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Otkažite</button>
-                        <button type="submit" class="btn btn-danger">Rasknjižite predmet</button>
+                        <button type="submit" class="btn btn-danger">Rashodujte predmet</button>
                     </div>
                 </div>
             </form>
@@ -360,7 +360,7 @@
                     <th>Prostorija</th>
                     <th>Datum nabavke</th>
                     <th>Dobavljač</th>
-                    <th>Broj faktuer</th>
+                    <th>Broj fakture</th>
                     <th></th>
                 </tr>
             </thead>
@@ -379,9 +379,9 @@
                     <th>Nabavna vrednost</th>
                     <th>Otpis do tekuće godine</th>
                     <th>Vrednost na kraju godine</th>
-                    <th>datum nabavke</th>
+                    <th>Datum nabavke</th>
                     <th>Dobavljač</th>
-                    <th>Broj faktuer</th>
+                    <th>Broj fakture</th>
                     <th></th>
                 </tr>
             </thead>
@@ -595,19 +595,19 @@
                                 console.log('predmet je izdat na revers')
 
                                 var html = '<td>' + 
-                                            '<a class="btn-x btn-primary-x" href="' + url + '" title="Pregled predmeta po prostorijama"><i class="fa fa-door-closed awesomeedit" aria-hidden="true"></i></a>' + 
+                                            // '<a class="btn-x btn-primary-x" href="' + url + '" title="Pregled predmeta po prostorijama"><i class="fa fa-door-closed awesomeedit" aria-hidden="true"></i></a>' + 
                                             '<a class="btn-x btn-primary-x" href="" data-bs-toggle="modal" onclick="'+ returnReverseSingleItemFunction +'" data-bs-target="#returnReverseSingleItem" title="Povraćaj reversa"><i class="fa fa-file-circle-minus awesomedelete" aria-hidden="true"></i></a>' +
                                         '</td>';
                             } else if (row.room_id === 2) { //ako je predmet rashodovan: room_id = 2 magacin rashodovanih predmeta
                                 console.log('predmet je rashodovan')
                                 var html = '<td>' + 
-                                            '<a class="btn-x btn-primary-x" href="' + url + '" title="Pregled predmeta po prostorijama"><i class="fa fa-door-closed awesomeedit" aria-hidden="true"></i></a>' + 
+                                            // '<a class="btn-x btn-primary-x" href="' + url + '" title="Pregled predmeta po prostorijama"><i class="fa fa-door-closed awesomeedit" aria-hidden="true"></i></a>' + 
                                             '<a class="btn-x btn-primary-x" href="" data-bs-toggle="modal" onclick="'+ undoExpeditureSingleItemFunction +'" data-bs-target="#undoExpeditureSingleItem" title="Rashodovati - Storno"><i class="fa fa-trash-can-arrow-up awesomedelete" aria-hidden="true"></i></a>' +
                                         '</td>';
                             } else {
                                 console.log('predmet nije izdat na revers')
                                 var html = '<td>' + 
-                                            '<a class="btn-x btn-primary-x" href="' + url + '" title="Pregled predmeta po prostorijama"><i class="fa fa-door-closed awesomeedit" aria-hidden="true"></i></a>' + 
+                                            // '<a class="btn-x btn-primary-x" href="' + url + '" title="Pregled predmeta po prostorijama"><i class="fa fa-door-closed awesomeedit" aria-hidden="true"></i></a>' + 
                                             '<a class="btn-x btn-primary-x" href="" data-bs-toggle="modal" onclick="'+ editSingleItemRoomFunction +'" data-bs-target="#changeRoom" title="Premeštanje predmeta u drugu prostoriju"><i class="fa fa-people-carry-box awesomedelete" aria-hidden="true"></i></a>' +
                                             '<a class="btn-x btn-primary-x" href="" data-bs-toggle="modal" onclick="'+ reverseSingleItemFunction +'" data-bs-target="#reverseSingleItem" title="Izdati predmet na revers"><i class="fa fa-file-lines awesomeedit" aria-hidden="true"></i></a>' +
                                             '<a class="btn-x btn-primary-x" href="" data-bs-toggle="modal" onclick="'+ expeditureSingleItemFunction +'" data-bs-target="#expeditureSingleItem" title="Rashodovati"><i class="fa fa-trash-can awesomedelete" aria-hidden="true"></i></a>' +
@@ -819,7 +819,11 @@
                     }
                 }
 ,
-            ]
+            ],
+            language: {
+                url: "//cdn.datatables.net/plug-ins/1.12.1/i18n/sr-SP.json",
+                stateSave: true
+            },
         })
         $('#edit_single_item_item_id').select2({
             dropdownParent: $('#editSingleItem'),
@@ -839,6 +843,14 @@
         })
         $('#add_single_item_room').select2({
             dropdownParent: $('#newSingleItem'),
+            placeholder: 'Izaberite opciju',
+            allowClear: true,
+            width: '100%',
+            tags: false,
+            closeOnSelect: true,
+        })
+        $('#edit_single_item_room').select2({
+            dropdownParent: $('#changeRoom'),
             placeholder: 'Izaberite opciju',
             allowClear: true,
             width: '100%',
