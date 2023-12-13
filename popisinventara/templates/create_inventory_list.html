@@ -15,7 +15,7 @@
                     <th>ID prostorije</th>
                     <th>Zgrada</th>
                     <th>Prostorija</th>
-                    <th>Komisija</th>
+                    <th>Predsednik popisne komisija</th>
                 </tr>
             </thead>
             <tbody>
@@ -43,7 +43,7 @@
             </tbody>
         </table>
     </div>
-    <button type="submit" class="btn btn-primary">Kreirajte</button>
+    <button type="submit" class="btn btn-primary" id="createButton" disabled>Kreirajte</button>
 </form>
 {% endblock content%}
 
@@ -66,6 +66,21 @@
             width: '100%',
             tags: false,
             closeOnSelect: true,
+        });
+        // Dodajte promenu događaja (change event) na sve select elemente sa klasom "form-select"
+        $('.form-select').on('change', function () {
+            // Proverite sve select elemente
+            var allSelected = true;
+            $('.form-select').each(function () {
+                // Ako bilo koji od select elemenata nema vrednost, postavite allSelected na false
+                if (!$(this).val()) {
+                    allSelected = false;
+                    return false; // Prekini petlju ako je pronađen neizabran element
+                }
+            });
+
+            // Omogući ili onemogući dugme "Kreirajte" u zavisnosti od vrednosti allSelected
+            $('#createButton').prop('disabled', !allSelected);
         });
     });
 </script>

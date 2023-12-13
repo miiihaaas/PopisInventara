@@ -1,7 +1,6 @@
 {% extends "layout.html" %}
 {% block content %}
-<div class="h1">Podaci škole</div> 
-
+<div class="h1">{{ legend }}</div>
 <ul class="nav nav-tabs justify-content-center mb-4" id="myTab" role="tablist">
     <li class="nav-item" role="presentation">
         <button class="nav-link" id="building-tab" data-bs-toggle="tab" data-bs-target="#building" type="button" role="tab" aria-controls="building" aria-selected="false">Zgrade</button>
@@ -62,7 +61,7 @@
                     <th>Zgrada</th>
                     <th>Mesto</th>
                     <th>ID prostorije</th>
-                    <th>Dinamički naziv prostorije Prostorija</th>
+                    <th>Dinamički naziv prostorije</th>
                     {% if not active_inventory_list %}
                         <th></th>
                     {% endif %}
@@ -75,11 +74,15 @@
                     <td>{{ room.room_building.city }}</td>
                     <td>{{room.name}}</td>
                     <td>{{room.dynamic_name}}</td>
-                    {% if not active_inventory_list %}
-                        <td>
-                            <a href="#" class="btn-x btn-primary-x" data-bs-toggle="modal" data-bs-target="#myBuilding" onclick="openBuildingModal('{{ room.building_id }}', '{{ room.room_building.name }}', '{{ room.room_building.address }}', '{{ room.room_building.city }}')" title="Izmena podataka zgrade: {{ room.building_id }} - {{ room.room_building.name }}"><i class="fa fa-building awesomeedit" aria-hidden="true"></i></a>
-                            <a href="#" class="btn-x btn-primary-x" data-bs-toggle="modal" data-bs-target="#myRoom" onclick="openRoomModal('{{ room.id }}', '{{ room.name }}', '{{ room.dynamic_name }}', '{{ room.building_id }}')" title="Izmena podataka prostorije: {{room.name}} - {{room.dynamic_name}}"><i class="fa fa-door-closed awesomeedit" aria-hidden="true"></i></a>
-                        </td>
+                    {% if not active_inventory_list or room.id > 3 %}
+                        {% if room.id < 4 %}
+                            <td></td>
+                        {% else %}
+                            <td>
+                                <a href="#" class="btn-x btn-primary-x" data-bs-toggle="modal" data-bs-target="#myBuilding" onclick="openBuildingModal('{{ room.building_id }}', '{{ room.room_building.name }}', '{{ room.room_building.address }}', '{{ room.room_building.city }}')" title="Izmena podataka zgrade: {{ room.building_id }} - {{ room.room_building.name }}"><i class="fa fa-building awesomeedit" aria-hidden="true"></i></a>
+                                <a href="#" class="btn-x btn-primary-x" data-bs-toggle="modal" data-bs-target="#myRoom" onclick="openRoomModal('{{ room.id }}', '{{ room.name }}', '{{ room.dynamic_name }}', '{{ room.building_id }}')" title="Izmena podataka prostorije: {{room.name}} - {{room.dynamic_name}}"><i class="fa fa-door-closed awesomeedit" aria-hidden="true"></i></a>
+                            </td>
+                        {% endif %}
                     {% endif %}
                 </tr>
                 {% endfor %}

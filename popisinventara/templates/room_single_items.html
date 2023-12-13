@@ -20,19 +20,35 @@
 <table id="data" border="1" class="table table-striped userlist">
     <thead>
         <tr>
-            <td>ID predmeta</td>
-            <td>Naziv predmeta</td>
-            <td>Serija</td>
-            <td>Količina</td>
+            <th>ID tipa predmeta</th>
+            <th>Naziv predmeta</th>
+            <th>Serija</th>
+            <th>Količina</th>
+            {% if not active_inventory_list %}
+                <th></th>
+            {% endif %}v
         </tr>
     </thead>
     <tbody>
         {% for data in data_list %}
         <tr>
-            <td><a href="{{url_for('single_items.single_item_rooms', item_id=data.id)}}" class="btn btn-primary">{{ data.id }}</a></td>
+            <td>{{ data.id }}</td>
             <td>{{ data.name }}</td>
             <td>{{ data.serial }}</td>
             <td>{{ data.quantity }}</td>
+            {% if not active_inventory_list %}
+                {% if room.id in [2, 3] %}
+                    <td>
+                        <a href="{{url_for('single_items.single_item_rooms', item_id=data.id)}}" class="btn-x btn-primary-x" title="Pregled predmeta po prostorijama"><i class="fa fa-door-closed awesomeedit" aria-hidden="true"></i></a>
+                    </td>
+                {% else %}
+                    <td>
+                        <a href="{{url_for('single_items.move_to', item_id=data.id, room_id=room.id)}}" class="btn-x btn-primary-x" title="Premeštanje u izabranu prostoriju iz različitih prostorija"><i class="fa fa-right-to-bracket awesomeedit" aria-hidden="true"></i></a>
+                        <a href="{{url_for('single_items.single_item_rooms', item_id=data.id)}}" class="btn-x btn-primary-x" title="Pregled predmeta po prostorijama"><i class="fa fa-door-closed awesomeedit" aria-hidden="true"></i></a>
+                        <a href="{{url_for('single_items.move_from', item_id=data.id, room_id=room.id)}}" class="btn-x btn-primary-x" title="Premeštanje iz izabrane prostorije u više različitih prostorija"><i class="fa fa-right-from-bracket awesomeedit" aria-hidden="true"></i></a>
+                    </td>
+                {% endif %}
+            {% endif %}
         </tr>
         {% endfor %}
     </tbody>
