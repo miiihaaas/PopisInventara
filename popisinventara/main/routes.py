@@ -2,7 +2,7 @@ from flask import Blueprint
 from flask import  render_template, flash, redirect, url_for
 from flask_login import current_user
 from popisinventara.models import Inventory, SingleItem
-import requests
+# import requests
 
 main = Blueprint('main', __name__)
 
@@ -28,39 +28,39 @@ def about():
     return render_template('about.html', title='About')
 
 
-def get_weather_forecast(city, country):
-    """
-    Dobija vremensku prognozu za dati grad i zemlju.
+# def get_weather_forecast(city, country):
+#     """
+#     Dobija vremensku prognozu za dati grad i zemlju.
 
-    Args:
-        city: Grad za koji se dobija vremenska prognoza.
-        country: Zemlja za koju se dobija vremenska prognoza.
-        api_key: API ključ za OpenWeatherMap.
+#     Args:
+#         city: Grad za koji se dobija vremenska prognoza.
+#         country: Zemlja za koju se dobija vremenska prognoza.
+#         api_key: API ključ za OpenWeatherMap.
 
-    Returns:
-        Vremenska prognoza za dati grad i zemlju.
-    """
+#     Returns:
+#         Vremenska prognoza za dati grad i zemlju.
+#     """
 
-    url = "https://api.openweathermap.org/data/2.5/weather?q={city},{country}&appid={api_key}".format(
-        city=city,
-        country=country,
-        api_key='e4ebf2e69926051f34ffc7798fc5d717',
-    )
+#     url = "https://api.openweathermap.org/data/2.5/weather?q={city},{country}&appid={api_key}".format(
+#         city=city,
+#         country=country,
+#         api_key='e4ebf2e69926051f34ffc7798fc5d717',
+#     )
 
-    response = requests.get(url)
+#     response = requests.get(url)
 
-    if response.status_code == 200:
-        data = response.json()
+#     if response.status_code == 200:
+#         data = response.json()
 
-        return {
-            "temperature": data["main"]["temp"],
-            "humidity": data["main"]["humidity"],
-            "pressure": data["main"]["pressure"],
-            "wind_speed": data["wind"]["speed"],
-            "weather_description": data["weather"][0]["description"],
-        }
-    else:
-        return None
+#         return {
+#             "temperature": data["main"]["temp"],
+#             "humidity": data["main"]["humidity"],
+#             "pressure": data["main"]["pressure"],
+#             "wind_speed": data["wind"]["speed"],
+#             "weather_description": data["weather"][0]["description"],
+#         }
+#     else:
+#         return None
 
 
 
