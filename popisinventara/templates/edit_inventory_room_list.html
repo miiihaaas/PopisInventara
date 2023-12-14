@@ -13,9 +13,9 @@
     <table id="data_1" border="1" class="table table-striped userlist">
         <thead>
             <tr>
-                <th>ID</th>
+                <th>ID tipa predmeta</th>
                 <th>Serija</th>
-                <th>Tip predmeta</th>
+                <th>Naziv tipa predmeta</th>
                 <th>Naziv predmeta</th>
                 {% if current_user.authorization == "admin" %}
                 <th>Količina</th>
@@ -54,7 +54,7 @@
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="newSingleItemLabel">Dodavanje novog spredmeta u popisnu listu</h5>
+                <h5 class="modal-title" id="newSingleItemLabel">Dodavanje novog predmeta u popisnu listu</h5>
                 <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -62,7 +62,7 @@
             <form method="POST" action="{{ url_for('inventory.add_single_item_to_room')}}">
                 <div class="modal-body">
                     <div class="form-group">
-                        <label class="form-control-label" for="add_single_item_data">ID / Serija / Tip predmeta / Pedmet</label>
+                        <label class="form-control-label" for="add_single_item_data">ID / Serija / Tip predmeta / Predmet</label>
                         <select class="form-select" name="add_single_item_data" id="add_single_item_data">
                             <option value=""></option>
                             {% for item in all_serials_items_list %}
@@ -111,5 +111,13 @@
             paging: false, // Isključivanje paginacije
         });
     });
+    $('#add_single_item_data').select2({
+        dropdownParent: $('#newSingleItem'),
+        placeholder: 'Izaberite predmet',
+        allowClear: true,
+        width: '100%',
+        tags: false,
+        closeOnSelect: true,
+    })
 </script>
 {% endblock %}
