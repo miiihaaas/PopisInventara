@@ -206,10 +206,12 @@ def depreciation_rate_validation(name, rate):
     if not rate or not rate.strip():
         flash('Niste uneli validan procenat stope amortizacije.', 'danger')
         return False
-    elif not float(rate):
-        flash('Procenat stope amortizacije mora da sadrzi samo cifre.', 'danger')
+    try:
+        float_rate = float(rate)
+    except ValueError:
+        flash('Procenat stope amortizacije mora sadržati samo cifre.', 'danger')
         return False
-    elif not (0 <= float(rate) <= 100):
+    if not (0 <= float(rate) <= 100):
         flash('Procenat stope amortizacije mora biti u rasponu od 0 do 100 procenata.', 'danger')
         return False
     active_inventory_list = Inventory.query.filter_by(status='active').first()

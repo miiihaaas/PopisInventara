@@ -81,7 +81,7 @@ class DepreciationRate(db.Model):
 class Category(db.Model): #! ovo je Konto
     id = db.Column(db.Integer, primary_key=True)
     category_number = db.Column(db.String(6), nullable=False) #! broj konta
-    name = db.Column(db.String(50), nullable=False)
+    name = db.Column(db.String(100), nullable=False)
     items = db.relationship('Item', backref='item_category', lazy='dynamic')
 
 

@@ -23,7 +23,7 @@ def create_inventory_list():
         return redirect(url_for('main.home'))
     virtual_warehouse = SingleItem.query.filter_by(room_id=1).count()
     if virtual_warehouse:
-        flash('Pre kreiranja popisnih sliti treba rasporediti sve predmete iz virtuelnog magacina!', 'danger')
+        flash('Pre kreiranja popisnih listi treba prestiti sve predmete iz virtuelnog magacina.', 'danger')
         return redirect(url_for('main.home'))
     active_inventory_list = Inventory.query.filter_by(status='active').first()
     print(f'{active_inventory_list=}')
@@ -303,10 +303,15 @@ def edit_inventory_room_list(inventory_id, room_id):
         sorted_inventory = sorted(inventory_item_list_data, key=lambda x: (x['item_id'], x['serial']))
         inventory_item_list_data = sorted_inventory
         print(f'test: {inventory_item_list_data=}')
-        room_name = f'{Room.query.get_or_404(room_id).room_building.name} - ({Room.query.get_or_404(room_id).name}) {Room.query.get_or_404(room_id).dynamic_name}'
-        #! popisna_lista_gen(inventory_item_list_data, room_name, inventory_id)
+        room = Room.query.get_or_404(room_id)
+        room_name = f'{Room.query.get_or_404(room.id).room_building.name} - ({Room.query.get_or_404(room.id).name}) {Room.query.get_or_404(room.id).dynamic_name}'
+        popisna_lista_gen(inventory_item_list_data, room, inventory_id)
+    if inventory.status == 'finished':
+        title = f"Pregled popisne liste: {room_id}"
+    else:
+        title = f"Izmena popisne liste: {room_id}"
     return render_template('edit_inventory_room_list.html', 
-                            title=f"Izmena popisne liste: {room_id}",
+                            title=title,
                             inventory_item_list_data=inventory_item_list_data,
                             inventory=inventory,
                             room_name=room_name,
