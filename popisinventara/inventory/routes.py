@@ -333,12 +333,13 @@ def compare_inventory_list(inventory_id):
         return redirect(url_for('main.home'))
     initial_inventory_list_data = json.loads(inventory.initial_data)
     initial_inventory_list_data_rooms = initial_inventory_list_data['inventory']
+    print(f'{initial_inventory_list_data_rooms=}')
     compare_items_list = [] #! ideja je da se prvo napravi lista initial, pa da se njoj dodaju quantity_input iz working_inventory_list_data
     for room in initial_inventory_list_data_rooms:
         print(f'{room=}')
         for item in room['items']:
             print(f'{item=}')
-            single_item = SingleItem.query.filter(SingleItem.inventory_number.like(f'%-{item["serial"]}-%')).first()
+            single_item = SingleItem.query.filter_by(serial=item['serial']).first()
             initial_item = {
                 'item_id': single_item.item_id,
                 'serial': item['serial'],
@@ -368,7 +369,7 @@ def compare_inventory_list(inventory_id):
     #! ovde nastavi: ideja je da se prvo napravi lista initial, pa da se njoj dodaju quantity_input iz working_inventory_list_data
     for room in working_inventory_list_data_rooms:
         for item in room['items']:
-            single_item = SingleItem.query.filter(SingleItem.inventory_number.like(f'%-{item["serial"]}-%')).first()
+            single_item = SingleItem.query.filter_by(serial=item['serial']).first()
             input_item = {
                 'item_id': single_item.item_id,
                 'serial': item['serial'],
@@ -382,7 +383,7 @@ def compare_inventory_list(inventory_id):
             print(f'{room["items"]=}')
             serial = item['serial']
             quantity_input = item['quantity_input']
-            value_input = item['value_input'] * quantity_input #! mora da se isravi dict room da ima kay value...
+            value_input = item['current_price'] * quantity_input #! mora da se isravi dict room da ima kay value...
             print(f'{quantity_input=}')
             found = False
             for existing_item in compare_items_list:
