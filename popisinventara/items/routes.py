@@ -2,7 +2,7 @@ from flask import Blueprint
 from flask import render_template, redirect, url_for
 from flask_login import current_user
 from popisinventara import db
-from popisinventara.models import Inventory, Item, Category, DepreciationRate
+from popisinventara.models import Inventory, Item, Category, DepreciationRate, SingleItem
 from flask import url_for
 from flask import request
 from flask import flash
@@ -92,7 +92,10 @@ def edit_item():
         flash('Niste odabrali procenat amortizacije za tip predmeta.', 'danger')
         return redirect(url_for('items.items'))
     print(f'{item_id=} {name=} {category=} {depreciation_rate=}')
-    
+    single_items = SingleItem.query.filter_by(item_id=item_id).all()
+    if single_items:
+        flash(f'Nije moguće izmeniti tip predmeta "{name}" jer postoje predmeti ovog tipa u školi.', 'danger')
+        return redirect(url_for('items.items'))
     item = Item.query.get(item_id)
     item.name = name
     item.category_id = category
@@ -168,12 +171,20 @@ def edit_category():
         flash('Nemate dozvolu za pristup ovoj stranici.', 'danger')
         return redirect(url_for('main.home'))
     print('dodaj kod za editovanje kategorije')
-    category_id = request.form.get('edit_category_id')
+    category_id = int(request.form.get('edit_category_id'))
     category_number = request.form.get('edit_category_number')
     category_name = request.form.get('edit_category_name')
     if category_validation(category_number, category_name) == False:
         return redirect(url_for('items.category'))
     print(f'{category_id=} {category_number=} {category_name=}')
+    items = Item.query.filter_by(category_id=category_id).all()
+    items_id = [item.id for item in items]
+    for id in items_id:
+        single_item = SingleItem.query.filter_by(item_id=id).first()
+        print(f'{single_item.id=}')
+        if single_item:
+            flash(f'Nije moguće izmeniti konto "{category_name}" jer je već u upotrebi.', 'danger')
+            return redirect(url_for('items.category'))
     
     category = Category.query.get(category_id)
     category.category_number = category_number
@@ -248,12 +259,20 @@ def edit_depreciation_rate():
     if current_user.authorization != 'admin':
         flash('Nemate dozvolu za pristup ovoj stranici.', 'danger')
         return redirect(url_for('main.home'))
-    depreciation_rate_id = request.form.get('edit_depreciation_rate_id')
+    depreciation_rate_id = int(request.form.get('edit_depreciation_rate_id'))
     name = request.form.get('edit_depreciation_rate_name')
     rate = request.form.get('edit_depreciation_rate_rate')
     if depreciation_rate_validation(name, rate) == False:
         return redirect(url_for('items.depreciation_rates'))
     print(f'{depreciation_rate_id=} {rate=} {name=}')
+    items = Item.query.filter_by(depreciation_rate_id=depreciation_rate_id).all()
+    items_id = [item.id for item in items]
+    for id in items_id:
+        single_item = SingleItem.query.filter_by(item_id=id).first()
+        print(f'{single_item.id=}')
+        if single_item:
+            flash(f'Nije moguće izmeniti stopu amortizacije "{name}" jer je već u upotrebi.', 'danger')
+            return redirect(url_for('items.depreciation_rates'))
     
     depreciation_rate = DepreciationRate.query.get_or_404(depreciation_rate_id)
     depreciation_rate.name = name
