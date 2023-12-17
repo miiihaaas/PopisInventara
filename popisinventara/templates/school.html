@@ -50,6 +50,16 @@
         </div>
     </form>
 </div>
+<hr>
+<div class="form-group">
+    <form id="settingsForm" action="{{url_for('schools.edit_settings')}}" method="post">
+        <legend>Podešavanja aplikacije</legend>
+        <div class="form-check form-switch">
+            <input type="checkbox" class="form-check-input" id="show_quantity" name="show_quantity" {% if school.settings_show_quantity %}checked{% endif %}>
+            <label class="form-check-label" for="show_quantity">Predsednici popisne komisije mogu da vide količine u popisnim listama</label>
+        </div>
+    </form>
+</div>
 
 <div class="modal fade" id="mySchool" tabindex="-1" role="dialog" aria-labelledby="mySchoolLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
@@ -231,7 +241,12 @@
             width: '100%',
             tags: false,
             closeOnSelect: true,
-        })
+        });
+        // Postavite događaj na promenu prekidača
+        $('#show_quantity').change(function () {
+            // Pošalji POST zahtev kada se promeni prekidač
+            $('#settingsForm').submit();
+        });
     });
 </script>
 {% endblock %}

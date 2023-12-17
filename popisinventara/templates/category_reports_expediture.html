@@ -20,19 +20,52 @@
         {% for record in data %}
         <tr>
             <td>{{ record['category'] }}</td>
-            <td>{{ '{:,.2f}'.format(record['initial_price']).replace(',', ':').replace('.', ',').replace(':','.') }}</td>
-            <td>{{ '{:,.2f}'.format(record['write_off_until_current_year']).replace(',', ':').replace('.', ',').replace(':','.') }}</td>
-            <td>{{ '{:,.2f}'.format(record['depreciation_per_year']) }}</td>
-            <td>{{ '{:,.2f}'.format(record['depreciation_per_year'] + record['write_off_until_current_year']).replace(',', ':').replace('.', ',').replace(':','.') }}</td>
-            <td>{{ '{:,.2f}'.format(record['price_at_end_of_year']).replace(',', ':').replace('.', ',').replace(':','.') }}</td>
+            <td data-raw-value="{{ record['initial_price'] }}">
+                {{ '{:,.2f}'.format(record['initial_price']).replace(',', ':').replace('.', ',').replace(':','.') }}
+            </td>
+            <td data-raw-value="{{ record['write_off_until_current_year'] }}">
+                {{ '{:,.2f}'.format(record['write_off_until_current_year']).replace(',', ':').replace('.', ',').replace(':','.') }}
+            </td>
+            <td data-raw-value="{{ record['depreciation_per_year'] }}">
+                {{ '{:,.2f}'.format(record['depreciation_per_year']) }}
+            </td>
+            <td data-raw-value="{{ record['depreciation_per_year'] + record['write_off_until_current_year'] }}">
+                {{ '{:,.2f}'.format(record['depreciation_per_year'] + record['write_off_until_current_year']).replace(',', ':').replace('.', ',').replace(':','.') }}
+            </td>
+            <td data-raw-value="{{ record['price_at_end_of_year'] }}">
+                {{ '{:,.2f}'.format(record['price_at_end_of_year']).replace(',', ':').replace('.', ',').replace(':','.') }}
+            </td>
+            
         </tr>
         {% endfor %}
     </tbody>
+    <tfoot>
+        <tr>
+            <th>Ukupno</th>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th></th>
+        </tr>
+    </tfoot>
 </table>
 
 {% endblock content%}
 
 {% block scripts %}
 <script>
+    $(document).ready(function () {
+        $("#data").DataTable({
+            order: [[0, "asc"]],
+            language: {
+                url: "//cdn.datatables.net/plug-ins/1.12.1/i18n/sr-SP.json",
+                stateSave: true
+            },
+        });
+    });
 </script>
+
+
+
 {% endblock %}

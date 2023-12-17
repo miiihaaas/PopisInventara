@@ -386,21 +386,6 @@
                 </tr>
             </thead>
             <tbody>
-                <!-- {% for item in cumulatively_per_series %}
-                <tr>
-                    <td>{{ item['item_id'] }}</td>
-                    <td>{{ item['series'] }}</td>
-                    <td>{{ item['name'] }}</td>
-                    <td>{{ item['quantity'] }}</td>
-                    <td>{{ "%.2f"|format(item['initial_price']) }}</td>
-                    <td>{{ "%.2f"|format(item['current_price']) }}</td>
-                    <td>{{ item.purchase_date }}</td>
-                    <td>
-                        <a class="btn-x btn-primary-x" href="{{url_for('single_items.single_item_rooms', item_id=item['item_id'])}}" title="Pregled predmeta: [{{ item['name'] }}] po prostorijama"><i class="fa fa-door-closed awesomeedit" aria-hidden="true"></i></a></a>
-                        <a class="btn-x btn-primary-x" href="" title="Izmenite seriju predmeta: [{{ item['name'] }}]"><i class="fa fa-edit awesomedelete" aria-hidden="true"></i></a></a>
-                    </td>
-                </tr>
-                {% endfor %} -->
             </tbody>
         </table>
     </div>
@@ -418,18 +403,6 @@
                 </tr>
             </thead>
             <tbody>
-                <!-- {% for item in cumulatively_per_item %}
-                <tr>
-                    <td>{{ item['item_id'] }}</td>
-                    <td>{{ item['name'] }}</td>
-                    <td>{{ item['quantity'] }}</td>
-                    <td>{{ "%.2f"|format(item['initial_price']) }}</td>
-                    <td>{{ "%.2f"|format(item['current_price']) }}</td>
-                    <td>
-                        <a class="btn-x btn-primary-x" href="{{url_for('single_items.single_item_rooms', item_id=item['item_id'])}}" title="Pregled predmeta: [{{ item['name'] }}] po prostorijama"><i class="fa fa-door-closed awesomeedit" aria-hidden="true"></i></a>
-                    </td>
-                </tr>
-                {% endfor %} -->
             </tbody>
         </table>
     </div>
@@ -638,7 +611,7 @@
             data_2.ajax.reload();
             data_3.ajax.reload();
         });
-        // ////////////////////////////
+        ////////////////////////////////
         var data_2 = $("#data_2").DataTable({
             ajax: {
                 url: '{{url_for("single_items.api_serial")}}',

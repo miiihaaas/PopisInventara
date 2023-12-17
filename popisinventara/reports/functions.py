@@ -26,7 +26,9 @@ def write_off_until_current_year(single_item):
     elif write_off < 0:
         write_off = 0
     # print(f'{depreciation_per_year=}')
-    if depreciation_per_year > current_price:
+    if current_year == purchase_date.year:
+        depreciation_per_year = first_year_depreciation
+    elif depreciation_per_year > current_price:
         depreciation_per_year = current_price
     if price_at_end_of_year < 0:
         price_at_end_of_year = 0

@@ -18,6 +18,7 @@ class School(db.Model):
     country = db.Column(db.String(20), nullable=False)
     mb = db.Column(db.String(20), nullable=False)
     jbkjs = db.Column(db.String(20), nullable=False)
+    settings_show_quantity = db.Column(db.Boolean, nullable=False, default=False)
     
     users = db.relationship('User', backref='user_school', lazy='dynamic')
     buildings = db.relationship('Building', backref='building_school', lazy='dynamic')

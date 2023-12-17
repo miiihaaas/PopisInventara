@@ -1,7 +1,7 @@
 from datetime import datetime
 import os
 from fpdf import FPDF
-from popisinventara.models import Room
+from popisinventara.models import Room, Inventory
 
 current_file_path = os.path.abspath(__file__)
 project_folder = os.path.dirname(os.path.dirname((current_file_path)))
@@ -13,6 +13,7 @@ def popisna_lista_gen(inventory_item_list_data, room, inventory_id):
     print(f'pokrenuta je funkcija popisna_lista_gen: {inventory_item_list_data=}')
     room_name = f'{Room.query.get_or_404(room.id).room_building.name} - ({Room.query.get_or_404(room.id).name}) {Room.query.get_or_404(room.id).dynamic_name}'
     room_id = room.id
+    inventory = Inventory.query.get_or_404(inventory_id)
     i = 0
     while i < 2:
         class PDF(FPDF): #! sa količinam
@@ -57,7 +58,11 @@ def popisna_lista_gen(inventory_item_list_data, room, inventory_id):
             pdf.cell(40, 5, f"{item['name']}", new_y='LAST', align='L', border=1, fill=True)
             if i == 0:
                 pdf.cell(15, 5, f"{item['quantity']}", new_y='LAST', align='C', border=1, fill=True)
-            pdf.cell(15, 5, f"{item['quantity_input']}", new_y='LAST', align='C', border=1, fill=True)
+                
+            if inventory.status == 'active':
+                pdf.cell(15, 5, f"", new_y='LAST', align='C', border=1, fill=True)
+            else:
+                pdf.cell(15, 5, f"{item['quantity_input']}", new_y='LAST', align='C', border=1, fill=True)
             pdf.cell(60, 5, f"{item['comment']}", new_y='NEXT', new_x='LMARGIN', align='L', border=1, fill=True)
         
         path = f"{project_folder}/static/inventory_lists/"
