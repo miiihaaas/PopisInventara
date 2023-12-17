@@ -5,7 +5,7 @@ from flask import  render_template, flash, redirect, url_for
 from flask_login import current_user
 from flask import request
 from popisinventara import db
-from popisinventara.models import Inventory, Room, SingleItem, Item, User
+from popisinventara.models import Inventory, Room, School, SingleItem, Item, User
 from popisinventara.inventory.functions import popisna_lista_gen, popisne_liste_gen
 from popisinventara.reports.functions import write_off_until_current_year
 
@@ -158,11 +158,32 @@ def edit_inventory_list(inventory_id):
     # print(f'{inventory_list_data=}')
     #! generiši filtrirane popisne liste za prostorije korisnika, tj sve popisne liste za admina
     room_buttons = []
+    # if current_user.authorization == 'admin':
+    #     for room_data in inventory_list_data['inventory']:
+    #         room = Room.query.get_or_404(room_data['room_id'])
+    #         new_room = {
+    #             'room_id': room_data['room_id'],
+    #             'name': room.name,
+    #             'dynamic_name': room.dynamic_name,
+    #             'building_name': room.room_building.name,
+    #         }
+    #         room_buttons.append(new_room)
+    # else:
+    #     for room_data in inventory_list_data['inventory']:
+    #         if room_data['user_id'] == current_user.id:
+    #             room = Room.query.get_or_404(room_data['room_id'])
+    #             new_room = {
+    #                 'room_id': room_data['room_id'],
+    #                 'name': room.name,
+    #                 'dynamic_name': room.dynamic_name,
+    #                 'building_name': room.room_building.name,
+    #             }
+    #             room_buttons.append(new_room)
+    all_rooms = Room.query.filter(Room.id > 2).all()
     if current_user.authorization == 'admin':
-        for room_data in inventory_list_data['inventory']:
-            room = Room.query.get_or_404(room_data['room_id'])
+        for room in all_rooms:
             new_room = {
-                'room_id': room_data['room_id'],
+                'room_id': room.id,
                 'name': room.name,
                 'dynamic_name': room.dynamic_name,
                 'building_name': room.room_building.name,
@@ -180,7 +201,7 @@ def edit_inventory_list(inventory_id):
                 }
                 room_buttons.append(new_room)
     # Sortiranje po 'building_name'
-    sorted_room_buttons = sorted(room_buttons, key=lambda x: (x['building_name'], x['dynamic_name']))
+    sorted_room_buttons = sorted(room_buttons, key=lambda x: (x['building_name'], x['name']))
     room_buttons = sorted_room_buttons
     print(f'{room_buttons=}')
     unique_building_names = sorted({room['building_name'] for room in room_buttons})
@@ -200,12 +221,15 @@ def edit_inventory_room_list(inventory_id, room_id):
         flash('Da biste pristupili ovoj stranici treba da budete ulogovani.', 'success')
         return redirect(url_for('users.login'))
     inventory = Inventory.query.get_or_404(inventory_id)
+    school = School.query.get_or_404(1)
     # print(f'ovo tražim: {json.loads(inventory.working_data)=}')
     inventory_list_data = json.loads(inventory.working_data)['inventory']
     for entry in inventory_list_data:
         if entry['room_id'] == room_id:
             user_id = entry['user_id']
             break
+        else:
+            user_id = None
     print(f'test user_id za selektovani room_id: {room_id=}; {user_id=}')
     if current_user.authorization != 'admin' and current_user.id != int(user_id):
         flash('Nemate dozvolu za da pristupite ovoj stranici.', 'danger')
@@ -280,6 +304,7 @@ def edit_inventory_room_list(inventory_id, room_id):
         all_serials_items_list = sorted_list
         print(f'list: {all_serials_items_list=}')
         print(f'{working_inventory_list_data=}')
+        inventory_item_list_data = []
         for room in working_inventory_list_data:
             print(f'{room=}')
             if room['room_id'] == room_id:
@@ -300,8 +325,11 @@ def edit_inventory_room_list(inventory_id, room_id):
                                     item_data['comment'] = item['comment']
                                     break  # Ovdje prekidamo petlju jer smo pronašli traženi element
                             break  # Ovdje prekidamo petlju jer smo pronašli traženu sobu
-        sorted_inventory = sorted(inventory_item_list_data, key=lambda x: (x['item_id'], x['serial']))
-        inventory_item_list_data = sorted_inventory
+        if len(inventory_item_list_data) == 0:
+            inventory_item_list_data = []
+        else:
+            sorted_inventory = sorted(inventory_item_list_data, key=lambda x: (x['item_id'], x['serial']))
+            inventory_item_list_data = sorted_inventory
         print(f'test: {inventory_item_list_data=}')
         room = Room.query.get_or_404(room_id)
         room_name = f'{Room.query.get_or_404(room.id).room_building.name} - ({Room.query.get_or_404(room.id).name}) {Room.query.get_or_404(room.id).dynamic_name}'
@@ -310,7 +338,8 @@ def edit_inventory_room_list(inventory_id, room_id):
         title = f"Pregled popisne liste: {room_id}"
     else:
         title = f"Izmena popisne liste: {room_id}"
-    return render_template('edit_inventory_room_list.html', 
+    return render_template('edit_inventory_room_list.html',
+                            school=school,
                             title=title,
                             inventory_item_list_data=inventory_item_list_data,
                             inventory=inventory,
@@ -430,6 +459,12 @@ def add_single_item_to_room():
         if room_data['room_id'] == room_id:
             desired_room_data = room_data
             break
+    if desired_room_data is None:
+        desired_room_data = {
+            "room_id": room_id,
+            "user_id": current_user.id, #! ovo može da bude problem, treba da se dodeli id predsednika komisije
+            "items": []
+        }
     for item in desired_room_data['items']:
         if item['serial'] == single_item_serial:
             flash('Izabrana serija već postoji stavka u popisnoj listi.', 'danger')
@@ -456,12 +491,22 @@ def add_single_item_to_room():
             }
     
     print(f'{item_working_data=}')
+    # if room_id not in [room_dict['room_id'] for room_dict in working_data['inventory']]:
+    #     flash('Izabrana prostorija ne postoji u inicijalnoj popisnoj listi. dodaj kod za to', 'danger')
+    #     new_room_dict = desired_room_data['items'].append(item_initial_data)
+    #     working_data['inventory'].append(new_room_dict)
+    # else:
     for room_dict in working_data['inventory']:
         if room_dict['room_id'] == room_id:
             room_dict['items'].append(item_working_data)
             break
     print(f'posle dodatka novog reda: {working_data["inventory"]=}')
     
+    # if room_id not in [room_dict['room_id'] for room_dict in initial_data['inventory']]:
+    #     flash('Izabrana prostorija ne postoji u inicijalnoj popisnoj listi. dodaj kod za to', 'danger')
+    #     new_room_dict = desired_room_data['items'].append(item_initial_data)
+    #     initial_data['inventory'].append(new_room_dict)
+    # else:
     for room_dict in initial_data['inventory']:
         if room_dict['room_id'] == room_id:
             room_dict['items'].append(item_initial_data)

@@ -896,6 +896,7 @@ def edit_single_item():
 @single_items.route('/single_item_rooms/<int:item_id>', methods=['GET', 'POST'])
 def single_item_rooms(item_id):
     item = Item.query.filter_by(id=item_id).first()
+    inventory = Inventory.query.filter_by(status='active').first()
     single_item_list = SingleItem.query.filter_by(item_id=item_id).all()
     data_list = []
     for single_item in single_item_list:
@@ -924,6 +925,7 @@ def single_item_rooms(item_id):
     return render_template('single_item_rooms.html', title="Pregled predmeta po prostorijama",
                             single_item_list=single_item_list,
                             item=item,
+                            inventory=inventory,
                             data_list=data_list)
 
 

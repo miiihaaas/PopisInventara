@@ -63,6 +63,27 @@ def school(school_id):
                             active_inventory_list=active_inventory_list)
 
 
+@schools.route('/edit_settings', methods=['GET', 'POST'])
+def edit_settings():
+    if not current_user.is_authenticated:
+        flash('Da biste pristupili ovoj stranici treba da budete ulogovani.', 'danger')
+        return redirect(url_for('users.login'))
+    if current_user.authorization != 'admin':
+        flash('Nemate dozvolu za pristum ovoj stranici.', 'danger')
+        return redirect(url_for('main.home'))
+    school = School.query.get_or_404(1)
+    settings_show_quantity = request.form.get('show_quantity')
+    print(f'{settings_show_quantity=}')
+    if settings_show_quantity == 'on':
+        school.settings_show_quantity = True
+    else:
+        school.settings_show_quantity = False
+    print(f'{school.settings_show_quantity=}')
+    db.session.commit()
+    flash('Uspešno ste izmenili podešavanja aplikacije.', 'success')
+    return redirect(url_for('schools.school', school_id=1))
+
+
 @schools.route('/buildings_rooms', methods=['GET', 'POST'])
 def buildings_rooms():
     if not current_user.is_authenticated:

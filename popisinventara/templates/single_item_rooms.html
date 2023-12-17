@@ -4,8 +4,10 @@
 <div class="form-group mb-4">
     <div class="row">
         <div class="col-md-4">
-            <a class="btn btn-secondary sec-nazad" href="javascript:history.back()">Nazad</a>
+            <a class="btn btn-secondary" href="javascript:history.back()">Nazad</a>  <!-- ovde je u klasi bilo " sec-nazad" -->
+            {% if not inventory %}
             <a class="btn btn-primary mb-4" href="{{url_for('single_items.move_select_item')}}">Premeštaj</a>
+            {% endif %}
         </div>
         <div class="col-md-4">
             <label for="item_id">ID predmeta</label>
@@ -25,15 +27,25 @@
             <td>Prostorija</td>
             <td>Serija</td>
             <td>Količina</td>
+            <td></td>
         </tr>
     </thead>
     <tbody>
         {% for data in data_list %}
         <tr>
             <td>{{ data.building }}</td>
-            <td><a href="{{url_for('single_items.room_single_items', room_id=data['room_id'])}}" class="btn btn-primary">{{ data.room }}</a></td>
+            <td>{{ data.room }}</td>
             <td>{{ data.serial }}</td>
             <td>{{ data.quantity }}</td>
+            <td>
+                {% if inventory %}
+                    {% if data['room_id'] not in [1, 2] %}
+                    <a href="{{url_for('inventory.edit_inventory_room_list', inventory_id=inventory.id, room_id=data['room_id'])}}" class="btn-x btn-primary-x"title="Pregled predmeta po popisnoj listi"><i class="fa fa-door-open awesomeedit" aria-hidden="true"></i></a>
+                    {% endif %}
+                {% else %}
+                <a href="{{url_for('single_items.room_single_items', room_id=data['room_id'])}}" class="btn-x btn-primary-x"title="Pregled predmeta po prostorijama"><i class="fa fa-door-closed awesomeedit" aria-hidden="true"></i></a>
+                {% endif %}
+            </td>
         </tr>
         {% endfor %}
     </tbody>

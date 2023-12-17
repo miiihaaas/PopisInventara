@@ -6,10 +6,13 @@
 </div>
 <div class="form-group mb-4">
     <a class="btn btn-secondary" href="javascript:history.back()">Nazad</a>
+    {% if current_user.authorization == "admin" %}
     <a class="btn btn-primary" href="{{ url_for('static', filename='inventory_lists/inventory_room_list_no_quantity.pdf') }}" target="_blank">Print bez količina</a>
     <a class="btn btn-primary" href="{{ url_for('static', filename='inventory_lists/inventory_room_list.pdf') }}" target="_blank">Print sa količinama</a>
+    {% endif %}
 </div>
 <form action="" method="POST">
+    {{ school.settings_show_quantity }}
     <table id="data_1" border="1" class="table table-striped userlist">
         <thead>
             <tr>
@@ -17,7 +20,7 @@
                 <th>Serija</th>
                 <th>Naziv tipa predmeta</th>
                 <th>Naziv predmeta</th>
-                {% if current_user.authorization == "admin" %}
+                {% if school.settings_show_quantity or current_user.authorization == 'admin' %}
                 <th>Količina</th>
                 {% endif %}
                 <th>Popisana količina</th>
@@ -31,7 +34,7 @@
                 <td name="serial_{{ item.serial }}">{{ item.serial }}</td>
                 <td>{{ item.item_name }}</td>
                 <td>{{ item.name }}</td>
-                {% if current_user.authorization == "admin" %}
+                {% if school.settings_show_quantity or current_user.authorization == 'admin' %}
                 <td>{{ item.quantity }}</td>
                 {% endif %}
                 {%if inventory.status == 'finished' %}
