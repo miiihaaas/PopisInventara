@@ -15,7 +15,7 @@
         <div class="button-container" id="button-container-{{ loop.index }}">
             {% for button in room_buttons %}
             {% if button.building_name == building_name %}
-            <a class="btn btn-primary mb-4" href="{{ inventory_id }}/{{ button.room_id }}">({{ button.name }}) {{ button.dynamic_name }}</a>
+            <a class="btn btn-primary mb-4" href="{{ inventory_id }}/{{ button.room_id }}" style="width: 350px;">({{ button.name }}) {{ button.dynamic_name }}</a>
             {% endif %}
             {% endfor %}
         </div>
