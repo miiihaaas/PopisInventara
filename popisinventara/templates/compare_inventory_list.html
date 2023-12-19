@@ -7,7 +7,7 @@
 <table id="data_1" border="1" class="table table-striped userlist">
     <thead>
         <tr>
-            <th>ID</th>
+            <th>ID tipa predmeta</th>
             <th>Serija</th>
             <th>Tip predmeta</th>
             <th>Naziv predmeta</th>
@@ -22,7 +22,8 @@
         {% for item in compare_items_list %}
         <tr>
             <td>{{ item.item_id }}</td>
-            <td name="serial_{{ item.serial }}">{{ item.serial }}</td>
+            <!-- <td name="serial_{{ item.serial }}">{{ item.serial }}</td> -->
+            <td name="serial_{{ item.serial }}">{{ '{0:05d}'.format(item.serial) }}</td>
             <td>{{ item.item_name }}</td>
             <td>{{ item.name }}</td>
             <td>{{ item.quantity }}</td>
