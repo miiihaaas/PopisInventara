@@ -356,7 +356,7 @@
                     <th>Naziv</th>
                     <th>Nabavna vrednost</th>
                     <th>Otpis do tekuće godine</th>
-                    <th>Vrednost na kraju godine</th>
+                    <!-- <th>Vrednost na kraju godine</th> -->
                     <th>Prostorija</th>
                     <th>Datum nabavke</th>
                     <th>Dobavljač</th>
@@ -378,7 +378,7 @@
                     <th>Količina</th>
                     <th>Nabavna vrednost</th>
                     <th>Otpis do tekuće godine</th>
-                    <th>Vrednost na kraju godine</th>
+                    <!-- <th>Vrednost na kraju godine</th> -->
                     <th>Datum nabavke</th>
                     <th>Dobavljač</th>
                     <th>Broj fakture</th>
@@ -398,7 +398,7 @@
                     <th>Količina</th>
                     <th>Nabavna vrednost</th>
                     <th>Otpis do tekuće godine</th>
-                    <th>Vrednost na kraju godine</th>
+                    <!-- <th>Vrednost na kraju godine</th> -->
                     <th></th>
                 </tr>
             </thead>
@@ -516,21 +516,21 @@
                         return data;
                     }
                 },
-                { 
-                    data: 'current_price',
-                    render: function (data, type, row) {
-                        // Ako je tip prikaza podataka ili tip sortiranja, vraćamo zaokruženu vrednost
-                        if (type === 'display' || type === 'type') {
-                            f = new Intl.NumberFormat('sr-RS', { 
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 2
-                            })
-                            return f.format(parseFloat(data).toFixed(2));
-                        }
-                        // Inače, vraćamo nenumeroisanu vrednost za druge tipove
-                        return data;
-                    }
-                },
+                // { 
+                //     data: 'current_price',
+                //     render: function (data, type, row) {
+                //         // Ako je tip prikaza podataka ili tip sortiranja, vraćamo zaokruženu vrednost
+                //         if (type === 'display' || type === 'type') {
+                //             f = new Intl.NumberFormat('sr-RS', { 
+                //                 minimumFractionDigits: 2,
+                //                 maximumFractionDigits: 2
+                //             })
+                //             return f.format(parseFloat(data).toFixed(2));
+                //         }
+                //         // Inače, vraćamo nenumeroisanu vrednost za druge tipove
+                //         return data;
+                //     }
+                // },
                 {data: 'button_name'},
                 {
                     data: 'purchase_date',
@@ -657,21 +657,21 @@
                         return data;
                     }
                 },
-                { 
-                    data: 'current_price',
-                    render: function (data, type, row) {
-                        // Ako je tip prikaza podataka ili tip sortiranja, vraćamo zaokruženu vrednost
-                        if (type === 'display' || type === 'type') {
-                            f = new Intl.NumberFormat('sr-RS', { 
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 2
-                            })
-                            return f.format(parseFloat(data).toFixed(2));
-                        }
-                        // Inače, vraćamo nenumeroisanu vrednost za druge tipove
-                        return data;
-                    }
-                },
+                // { 
+                //     data: 'current_price',
+                //     render: function (data, type, row) {
+                //         // Ako je tip prikaza podataka ili tip sortiranja, vraćamo zaokruženu vrednost
+                //         if (type === 'display' || type === 'type') {
+                //             f = new Intl.NumberFormat('sr-RS', { 
+                //                 minimumFractionDigits: 2,
+                //                 maximumFractionDigits: 2
+                //             })
+                //             return f.format(parseFloat(data).toFixed(2));
+                //         }
+                //         // Inače, vraćamo nenumeroisanu vrednost za druge tipove
+                //         return data;
+                //     }
+                // },
                 {
                     data: 'purchase_date',
                     render: function (data, type, row) {
@@ -761,21 +761,21 @@
                         return data;
                     }
                 },
-                { 
-                    data: 'current_price',
-                    render: function (data, type, row) {
-                        // Ako je tip prikaza podataka ili tip sortiranja, vraćamo zaokruženu vrednost
-                        if (type === 'display' || type === 'type') {
-                            f = new Intl.NumberFormat('sr-RS', { 
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 2
-                            })
-                            return f.format(parseFloat(data).toFixed(2));
-                        }
-                        // Inače, vraćamo nenumeroisanu vrednost za druge tipove
-                        return data;
-                    }
-                },
+                // { 
+                //     data: 'current_price',
+                //     render: function (data, type, row) {
+                //         // Ako je tip prikaza podataka ili tip sortiranja, vraćamo zaokruženu vrednost
+                //         if (type === 'display' || type === 'type') {
+                //             f = new Intl.NumberFormat('sr-RS', { 
+                //                 minimumFractionDigits: 2,
+                //                 maximumFractionDigits: 2
+                //             })
+                //             return f.format(parseFloat(data).toFixed(2));
+                //         }
+                //         // Inače, vraćamo nenumeroisanu vrednost za druge tipove
+                //         return data;
+                //     }
+                // },
                 {
                     data: null,
                     render: function (data, type, row) {

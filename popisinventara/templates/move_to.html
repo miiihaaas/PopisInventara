@@ -3,6 +3,9 @@
 <div class="h1">{{ title }}</div>
 <div class="row">
     <div class="form-group mb-4 col">
+        <a class="btn btn-secondary" href="javascript:history.back()">Nazad</a>
+    </div>
+    <div class="form-group mb-4 col">
         <legend class="form-control-label" for="item_id_to_move">ID tipa predmeta</legend>
         <input class="form-control" name="item_id_to_move" id="item_id_to_move" value="{{item.id}}" readonly>
     </div>
@@ -11,7 +14,7 @@
         <input class="form-control" name="item_id_to_move" id="item_id_to_move" value="{{item.name}}" readonly>
     </div>
     <div class="form-group mb-4 col">
-        <legend class="form-control-label" for="room_id_to_move">Prostorija</legend>
+        <legend class="form-control-label" for="room_id_to_move">Prostorija u koju se premešta</legend>
         <input class="form-control" name="room_id_to_move" id="room_id_to_move" value="({{room.name}}) {{room.dynamic_name}}" readonly>
     </div>
 </div>
@@ -22,7 +25,7 @@
             <tr>
                 <th>ID prostorije</th>
                 <th>Zgrada</th>
-                <th>Prostorija</th>
+                <th>Prostorija iz koje se premešta</th>
                 <th>Serija</th>
                 <th>Količina</th>
                 <th>Naziv predmeta iz serije</th>

@@ -145,6 +145,7 @@
     </thead>
     <tbody>
         {% for user in users %}
+        {% if user.id > 0 %}
         <tr>
             <td>{{ user.id }}</td>
             <td>{{ user.name }}</td>
@@ -169,6 +170,7 @@
                 {% endif %}
             </td>
         </tr>
+        {% endif %}
         {% endfor %}
     </tbody>
 </table>
