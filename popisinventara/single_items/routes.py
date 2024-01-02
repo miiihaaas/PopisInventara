@@ -36,11 +36,18 @@ def single_item_list_without_expeditured_items():
 
 @single_items.route('/single_item_list')
 def single_item_list():
+    inventory_years = [inventory.date for inventory in Inventory.query.all()]
+    print(f'{inventory_years=}')
+    
+    correction = 0
+    if date((date.today().year -1), 12, 31) not in inventory_years:
+        print(f'NIJE urađen je popis na kraju prošle godine')
+        correction = 1
     active_inventory_list = Inventory.query.filter_by(status='active').first()
     single_item_list = single_item_list_without_expeditured_items().all()
     item_list = Item.query.all()
     all_room_list = Room.query.all()
-    room_list = [room for room in all_room_list if room.id not in [2, 3]] #! sve sobe osim magacina za rashod (id=2) i magacina za revers (id=)
+    room_list = [room for room in all_room_list if room.id not in [2]] #! sve sobe osim magacina za rashod (id=2), magacina za revers (id=3) i magacina za manjkove (id=4)
     
     cumulatively_per_series = []
     for item in single_item_list:
@@ -116,6 +123,7 @@ def single_item_list():
     
     
     return render_template('single_items.html', title="Pregled predmeta",
+                            correction=correction,
                             active_inventory_list=active_inventory_list,
                             single_item_list=single_item_list,
                             item_list=item_list,
@@ -803,6 +811,18 @@ def edit_single_item():
     if active_inventory_list:
         flash(f'Nije moguće vršiti izmene podataka predmeta dok je aktivan popis.', 'danger')
         return redirect(url_for('main.home'))
+    inventory_years = [inventory.date for inventory in Inventory.query.all()]
+    print(f'{inventory_years=}')
+    
+    correction = 0
+    if date((date.today().year -1), 12, 31) not in inventory_years:
+        print(f'NIJE urađen je popis na kraju prošle godine')
+        correction = 1
+
+    purchase_date = datetime.strptime(request.form.get('edit_single_item_date'), '%Y-%m-%d').date()
+    if purchase_date.year + correction < date.today().year:
+        flash('Ne može se menjati serija predmeta iz predhodnih godina.', 'danger')
+        return redirect(url_for('single_items.single_item_list'))
     serial = int(request.form.get('edit_single_item_serial'))
     item_id = request.form.get('edit_single_item_item_id')
     name = request.form.get('edit_single_item_name')
@@ -889,7 +909,7 @@ def edit_single_item():
             db.session.add(new_single_item)
     db.session.commit()
     update_price()
-    flash(f'Uspešno ste izmenili seriju predmeta {serial}.', 'success')
+    flash(f'Uspešno ste izmenili predmete sa serijom: {str(serial).zfill(5)}.', 'success')
     return redirect(url_for('single_items.single_item_list'))
 
 
@@ -986,8 +1006,8 @@ def move_select_item():
             return redirect(url_for('single_items.move_from', item_id=item_id, room_id=room_id))
     item_list = Item.query.all()
     all_room_list = Room.query.all()
-    room_list_to = [room for room in all_room_list if room.id not in [2, 3]] #! 2 - magacin rashoda, 3 - magacin reversa -> ne može se na ovaj način premestiti u taj magacin
-    room_list_from = [room for room in all_room_list if room.id not in [2, 3]] #! 2 - magacin rashoda, 3 - magacin reversa -> ne može se na ovaj način premestiti u taj magacinv !!!! ne treba listati prostorije koje nemaju ovaj predmet za tip kretnje iz prostorije u druge prostorije
+    room_list_to = [room for room in all_room_list if room.id not in [2, 3, 4]] #! 2 - magacin rashoda, 3 - magacin reversa, 4 magacin manjkova -> ne može se na ovaj način premestiti u taj magacin
+    room_list_from = [room for room in all_room_list if room.id not in [2, 3, 4]] #! 2 - magacin rashoda, 3 - magacin reversa, 4 magacin manjkova -> ne može se na ovaj način premestiti u taj magacinv !!!! ne treba listati prostorije koje nemaju ovaj predmet za tip kretnje iz prostorije u druge prostorije
     print(f'{item_list=}')
     return render_template('move_select.html', title='Izbor predmeta za premeštanje',
                             item_list=item_list,
@@ -1015,7 +1035,7 @@ def move_from(item_id, room_id):
     data_list = [] #! svi predmeti izabranog tipa u svim prostorijama
     
     for room in room_list:
-        if room.id not in [2,3]:
+        if room.id not in [2, 3, 4]:
             single_item_list = SingleItem.query.filter_by(item_id=item_id, room_id=room.id).all()
             total_quantity = len(single_item_list)
 
@@ -1063,6 +1083,9 @@ def move_from(item_id, room_id):
         get_move_list = json.loads(request.form['data_to_move_from'])
         move_list = [data for data in get_move_list if data['quantity_to_move_from'] != '']
         print(f'{move_list=}')
+        if len(move_list) == 0:
+            flash('Niste izabrali nijedan predmet za premeštanje.', 'danger')
+            return redirect(url_for('single_items.move_from', item_id=item_id, room_id=room_id))
         
         if not db.session.is_active:
             db.session.begin()
@@ -1074,12 +1097,11 @@ def move_from(item_id, room_id):
                 if not single_item_in_room_list:
                     flash(f'Premešteni su svi predmeti iz izabrane prostorije, nema predmeta koji mogu da se premeste u prostoriju: {room_id_to_move}.', 'danger')
                     break #! Ako su svi predmeti iz te prostorije već premješteni, izađite iz petlje
-                
                 single_item_to_move_from = single_item_in_room_list[0]
                 single_item_to_move_from.room_id = room_id_to_move
                 single_item_in_room_list.remove(single_item_to_move_from)
         db.session.commit()
-        room_to_move = Room.query.get_or_404(room_id_to_move)
+        # room_to_move = Room.query.get_or_404(room_id_to_move)
         flash(f'Premešteni su predmeti iz izabrane prostorije:  ({room_from.name}) {room_from.dynamic_name}.', 'success')
         return redirect(url_for('single_items.single_item_rooms', item_id=item_id))
     
@@ -1134,6 +1156,9 @@ def move_to(item_id, room_id):
         get_move_list = json.loads(request.form['data_to_move_to'])
         move_list = [data for data in get_move_list if data['quantity_to_move_to'] != '']
         print(f'{move_list=}')
+        if len(move_list) == 0:
+            flash('Niste izabrali nijedan predmet za premeštanje.', 'danger')
+            return redirect(url_for('single_items.move_to', item_id=item_id, room_id=room_id))
         try:
             if not db.session.is_active:
                 db.session.begin()

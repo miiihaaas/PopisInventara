@@ -4,51 +4,128 @@
 <div class="form-group mb-4">
     <a class="btn btn-secondary" href="javascript:history.back()">Nazad</a>
 </div>
-<form action="" method="post">
-    <legend class="form-control-legend" for="description">Opis popisne liste</legend>
-    <textarea class="form-control mb-4" name="description" id="description" cols="100" rows="3"></textarea>
-    <div class="form-group">
-        <legend class="form-control-legend" for="data">Dodeljivanje prostorija popisnim komisijama</legend>
-        <table id="data" border="1" class="table table-striped userlist">
-            <thead>
-                <tr>
-                    <th>ID prostorije</th>
-                    <th>Zgrada</th>
-                    <th>Prostorija</th>
-                    <th>Predsednik popisne komisija</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for room in rooms %}
-                <tr>
-                    <td>
-                        <input class="form-control" type="text" value="{{room.id}}" name="room_id[]" readonly>
-                    </td>
-                    <td>
-                        <input class="form-control" type="text" value="{{room.room_building.name}}" disabled>
-                    </td>
-                    <td>
-                        <input class="form-control" type="text" value="{{room.dynamic_name}}" disabled>
-                    </td>
-                    <td>
-                        <select class="form-select" id="" name="user_id[]">
-                            <option value=""></option>
-                            {% for user in users %}
-                            <option value="{{user.id}}">{{ user.name }} {{ user.surname }}</option>
-                            {% endfor %}
-                        </select>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+<form action="" method="post" onsubmit="return validateForm()">
+    <div class="form-check">
+        {% if not inventory_at_the_end_of_last_year %}
+        <input class="form-check-input" type="radio" name="inventry_types" id="inventory_type_1" value="{{ years[0] }}" onchange="showHiddenElements()">
+        {% else %}
+        <input class="form-check-input" type="radio" name="inventry_types" id="inventory_type_1" value="{{ years[0] }}" onchange="showHiddenElements()" disabled>
+        {% endif %}
+        <label class="form-check-label" for="inventory_type_1">
+            Redovan popis na kraju {{ years[0] }} godine.
+        </label>
     </div>
-    <button type="submit" class="btn btn-primary" id="createButton" disabled>Kreirajte</button>
+    <div class="form-check">
+        {% if not inventory_at_the_end_of_current_year %}
+        <input class="form-check-input" type="radio" name="inventry_types" id="inventory_type_2" value="{{ years[1] }}" onchange="showHiddenElements()">
+        {% else %}
+        <input class="form-check-input" type="radio" name="inventry_types" id="inventory_type_2" value="{{ years[1] }}" onchange="showHiddenElements()" disabled>
+        {% endif %}
+        <label class="form-check-label" for="inventory_type_2">
+            Redovan popis na kraju {{ years[1] }} godine.
+        </label>
+    </div>
+    <div class="form-check">
+        <input class="form-check-input" type="radio" name="inventry_types" id="inventory_type_3" value="" onchange="showHiddenElements()">
+        <label class="form-check-label" for="inventory_type_3">
+            Vanredan popis na današnji dan.
+        </label>
+    </div>
+
+    <div id="hidden_elements" style="display: none;">
+        <hr>
+        <legend class="form-control-legend" for="description">Opis popisne liste</legend>
+        <textarea class="form-control mb-4" name="description" id="description" cols="100" rows="3"></textarea>
+        <div class="form-group">
+            <legend class="form-control-legend" for="data">Dodeljivanje prostorija popisnim komisijama</legend>
+            <table id="data" border="1" class="table table-striped userlist">
+                <thead>
+                    <tr>
+                        <th>ID prostorije</th>
+                        <th>Zgrada</th>
+                        <th>Prostorija</th>
+                        <th>Predsednik popisne komisija</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for room in rooms %}
+                    <tr>
+                        <td>
+                            <input class="form-control" type="text" value="{{room.id}}" name="room_id[]" readonly>
+                        </td>
+                        <td>
+                            <input class="form-control" type="text" value="{{room.room_building.name}}" disabled>
+                        </td>
+                        <td>
+                            <input class="form-control" type="text" value="{{room.dynamic_name}}" disabled>
+                        </td>
+                        <td>
+                            <select class="form-select" id="" name="user_id[]">
+                                <option value=""></option>
+                                {% for user in users %}
+                                <option value="{{user.id}}">{{ user.name }} {{ user.surname }}</option>
+                                {% endfor %}
+                            </select>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <button type="submit" class="btn btn-primary" id="createButton" disabled>Kreirajte</button>
+    </div>
 </form>
 {% endblock content%}
 
 {% block scripts %}
 <script>
+    function showHiddenElements() {
+            // Dobijanje referenci na radio dugmad
+            var radioButtons = document.getElementsByName('inventry_types');
+
+            // Dobijanje reference na div element koji treba sakriti/prikazati
+            var hiddenElementsDiv = document.getElementById('hidden_elements');
+
+            // Provera koji radio dugme je selektovano
+            for (var i = 0; i < radioButtons.length; i++) {
+                if (radioButtons[i].checked) {
+                    // Ako je selektovano bilo koje dugme, prikaži div
+                    hiddenElementsDiv.style.display = 'block';
+                    return;
+                }
+            }
+
+            // Ako nijedno dugme nije selektovano, sakrij div
+            hiddenElementsDiv.style.display = 'none';
+        }
+    function validateForm() {
+        var inventoryTypeCheckbox = document.getElementById("inventory_type");
+        var yearSelect = document.getElementById("year");
+        var createButton = document.getElementById("createButton");
+
+        // Ako je prekidač aktivan, proveri da li je polje za godinu izabrano
+        if (inventoryTypeCheckbox.checked && yearSelect.value === "") {
+            // Skrolovanje stranice na vrh
+            document.body.scrollTop = 0; // Za neke pregledače
+            document.documentElement.scrollTop = 0; // Za ostale pregledače
+            alert("Morate izabrati godinu u kojoj želite da izvršite redovan popis.");
+            return false; // Spriječava submit forme
+        }
+
+        // Dodatne provere možete dodati prema potrebi
+
+        return true; // Dozvoljava submit forme ako su sve provere prošle
+    }
+    function toggleSelectVisibility() {
+        var switchElement = document.getElementById("inventory_type");
+        var selectElement = document.getElementById("year");
+
+        if (switchElement.checked) {
+            selectElement.style.display = "block";
+        } else {
+            selectElement.style.display = "none";
+        }
+    }
     $(document).ready(function () {
         $("#data").DataTable({
             order: [[1, "asc"]],
@@ -59,14 +136,14 @@
             // lengthMenu: [100, 200, 400], // Postavljanje podrazumevanih vrednosti za prikazivanje
             paging: false, // Isključivanje paginacije
         });
-        $('#add_item_rate, #add_item_category').select2({
-            dropdownParent: $('#newItem'),
-            placeholder: 'Izaberite opciju',
-            allowClear: true,
-            width: '100%',
-            tags: false,
-            closeOnSelect: true,
-        });
+        // $('#add_item_rate, #add_item_category').select2({
+        //     dropdownParent: $('#newItem'),
+        //     placeholder: 'Izaberite opciju',
+        //     allowClear: true,
+        //     width: '100%',
+        //     tags: false,
+        //     closeOnSelect: true,
+        // });
         // Dodajte promenu događaja (change event) na sve select elemente sa klasom "form-select"
         $('.form-select').on('change', function () {
             // Proverite sve select elemente

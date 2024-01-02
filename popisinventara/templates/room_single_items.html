@@ -37,7 +37,7 @@
             <td>{{ data.serial }}</td>
             <td>{{ data.quantity }}</td>
             {% if not active_inventory_list %}
-                {% if room.id in [2, 3] %}
+                {% if room.id in [2, 3, 4] %}
                     <td>
                         <a href="{{url_for('single_items.single_item_rooms', item_id=data.id)}}" class="btn-x btn-primary-x" title="Pregled predmeta po prostorijama"><i class="fa fa-door-closed awesomeedit" aria-hidden="true"></i></a>
                     </td>
