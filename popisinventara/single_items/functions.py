@@ -6,10 +6,14 @@ from popisinventara.models import SingleItem
 from popisinventara import db
 
 
-def current_price_calculation(initial_price, rate, purchase_date, expediture_date=None):
+def current_price_calculation(initial_price, rate, purchase_date, expediture_date=None, year=None):
     if expediture_date:
         print(f'{expediture_date=}')
         today = expediture_date
+    elif year:
+        today = date(int(year), 12, 31)
+        print(f'{today=}')
+        print(f'danas: {date.today()=}')
     else:
         today = date.today()
     if rate == 100:

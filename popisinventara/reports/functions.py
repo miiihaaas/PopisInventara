@@ -2,9 +2,12 @@
 from datetime import date
 
 
-def write_off_until_current_year(single_item):
+def write_off_until_current_year(single_item, year=None):
     ''' funkcija otpis do tekuće godine '''
-    current_year = date.today().year
+    if not year:
+        current_year = date.today().year
+    else:
+        current_year = int(year)
     purchase_date = single_item.purchase_date
     initial_price = single_item.initial_price
     current_price = single_item.current_price

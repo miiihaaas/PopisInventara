@@ -1,6 +1,7 @@
 {% extends "layout.html" %}
 {% block content %}
 <div class="h1">Pregled svih predmeta</div>
+<h1>korekcija: {{ correction }}</h1>
 <div class="form-group mb-4">
     <a class="btn btn-secondary" href="javascript:history.back()">Nazad</a>
     {% if current_user.authorization == 'admin' %}
@@ -83,7 +84,7 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Otkažite</button>
-                        <button type="submit" class="btn btn-primary">Sačuvajte</button>
+                        <button type="submit" class="btn btn-primary" id="add_single_item_submit_button">Sačuvajte</button>
                     </div>
                 </div>
             </form>
@@ -140,7 +141,7 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Otkažite</button>
-                        <button type="submit" class="btn btn-primary">Sačuvajte</button>
+                        <button type="submit" class="btn btn-primary" id="edit_single_item_submit_button">Sačuvajte</button>
                     </div>
                 </div>
             </form>
@@ -356,7 +357,7 @@
                     <th>Naziv</th>
                     <th>Nabavna vrednost</th>
                     <th>Otpis do tekuće godine</th>
-                    <!-- <th>Vrednost na kraju godine</th> -->
+                    <th>Vrednost na kraju godine</th>
                     <th>Prostorija</th>
                     <th>Datum nabavke</th>
                     <th>Dobavljač</th>
@@ -462,6 +463,29 @@
         document.getElementById("edit_single_item_date").value = formattedDate
         document.getElementById("edit_single_item_supplier").value = singleItemSupplier
         document.getElementById("edit_single_item_invoice_number").value = singleItemInvoiceNumber
+        var correction = parseInt("{{ correction }}", 10)
+        console.log('vrednost korekcije: ', correction)
+        if (year + correction < new Date().getFullYear()) { 
+            console.log('datum nabavke je baš davno')
+            document.getElementById("edit_single_item_item_id").disabled = true;
+            document.getElementById("edit_single_item_name").disabled = true;
+            document.getElementById("edit_single_item_quantity").disabled = true;
+            document.getElementById("edit_single_item_initial_price").disabled = true;
+            document.getElementById("edit_single_item_date").disabled = true;
+            document.getElementById("edit_single_item_supplier").disabled = true;
+            document.getElementById("edit_single_item_invoice_number").disabled = true;
+            document.getElementById("edit_single_item_submit_button").hidden = true;
+        } else {
+            console.log('može da se menja...')
+            document.getElementById("edit_single_item_item_id").disabled = false;
+            document.getElementById("edit_single_item_name").disabled = false;
+            document.getElementById("edit_single_item_quantity").disabled = false;
+            document.getElementById("edit_single_item_initial_price").disabled = false;
+            document.getElementById("edit_single_item_date").disabled = false;
+            document.getElementById("edit_single_item_supplier").disabled = false;
+            document.getElementById("edit_single_item_invoice_number").disabled = false;
+            document.getElementById("edit_single_item_submit_button").hidden = false;
+        }
     }
     $(document).ready(function () {
         $('#room_select').select2({
@@ -516,21 +540,21 @@
                         return data;
                     }
                 },
-                // { 
-                //     data: 'current_price',
-                //     render: function (data, type, row) {
-                //         // Ako je tip prikaza podataka ili tip sortiranja, vraćamo zaokruženu vrednost
-                //         if (type === 'display' || type === 'type') {
-                //             f = new Intl.NumberFormat('sr-RS', { 
-                //                 minimumFractionDigits: 2,
-                //                 maximumFractionDigits: 2
-                //             })
-                //             return f.format(parseFloat(data).toFixed(2));
-                //         }
-                //         // Inače, vraćamo nenumeroisanu vrednost za druge tipove
-                //         return data;
-                //     }
-                // },
+                { 
+                    data: 'current_price',
+                    render: function (data, type, row) {
+                        // Ako je tip prikaza podataka ili tip sortiranja, vraćamo zaokruženu vrednost
+                        if (type === 'display' || type === 'type') {
+                            f = new Intl.NumberFormat('sr-RS', { 
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            })
+                            return f.format(parseFloat(data).toFixed(2));
+                        }
+                        // Inače, vraćamo nenumeroisanu vrednost za druge tipove
+                        return data;
+                    }
+                },
                 {data: 'button_name'},
                 {
                     data: 'purchase_date',

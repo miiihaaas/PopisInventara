@@ -8,6 +8,7 @@ from popisinventara import db
 from popisinventara.models import Inventory, Room, School, SingleItem, Item, User
 from popisinventara.inventory.functions import popisna_lista_gen, popisne_liste_gen
 from popisinventara.reports.functions import write_off_until_current_year
+from popisinventara.single_items.functions import current_price_calculation
 
 
 inventory = Blueprint('inventory', __name__)
@@ -31,56 +32,121 @@ def create_inventory_list():
         flash(f'Da bi ste kreirali novu popisnu listu, morate prvo završiti aktivnu popisnu listu koja je započeta: {active_inventory_list.date}.', 'danger')
         return redirect(url_for('main.home'))
     all_room_list = Room.query.all()
-    rooms = [room for room in all_room_list if room.id not in [1, 2]] #! 1 - virtuelni magacin se ne popisuje; 2 - magacin rashodovanih predmeta se ne popisuje
+    rooms = [room for room in all_room_list if room.id not in [1, 2, 4]] #! 1 - virtuelni magacin se ne popisuje; 2 - magacin rashodovanih predmeta se ne popisuje; 4 - magacin manjkova se ne popisuje
+    # debug_room_ids = [room.id for room in rooms]
+    # # return f"{debug_room_ids=}"
     users = User.query.filter_by(authorization='user').all()
+    this_year = date.today().year
+    years = [this_year - 1, this_year]
+    
+    inventory_years = [inventory.date for inventory in Inventory.query.all()]
+    print(f'{inventory_years=}')
+    inventory_at_the_end_of_current_year = False
+    inventory_at_the_end_of_last_year = False
+    if date((date.today().year -1), 12, 31) in inventory_years:
+        inventory_at_the_end_of_last_year = True
+    if date((date.today().year), 12, 31) in inventory_years:
+        inventory_at_the_end_of_current_year = True
+    
     if request.method == 'POST':
         description = request.form.get('description')
         single_items = SingleItem.query.all()
+        
+        
+        year = request.form.get('inventry_types')
+        if year != '':
+            datum = date(int(year), 12, 31)
+        else:
+            year = None #! zato što mi ne treba godina koja je opcioni input u funkciji write_off_until_current_year()
+            datum = date.today()
+        
+        for single_item in single_items:
+            if single_item.expediture_date is None:
+                print(f'start -- pre izmene: {single_item.current_price=}')
+                single_item.current_price, _ = current_price_calculation(single_item.initial_price, single_item.single_item_item.item_depreciation_rate.rate, single_item.purchase_date, single_item.expediture_date, year)
+                print(f'posle izmene: {single_item.current_price=}')
+                print('------------------------------------------------------')
+        db.session.commit()
+        
         room_ids = request.form.getlist('room_id[]')
         user_ids = request.form.getlist('user_id[]')
         if any(item == '' for item in user_ids):
-            flash('Morate dodeliti predsednika popisne komisije za svaku prostoriju.', 'danger')
+            flash('Morate dodeliti predsednika popisne komisije za svaku prostoriju. Kliknite na dugme NAZAD da povratite podatke', 'danger')
             return redirect(url_for('inventory.create_inventory_list'))
         room_user_ids = list(zip(room_ids, user_ids))
         print(f'{room_ids=}; {user_ids=}')
         print(f'{room_user_ids=}')
         inventory_initial_data = []
-        for single_item in single_items:
-            if str(single_item.room_id) not in room_ids:
-                continue
-            new_data = {
-                'room_id': single_item.room_id,
-                'user_id': [int(user_id) for (room_id, user_id) in room_user_ids if room_id == str(single_item.room_id)][0],
-                'items': [
-                    {
-                        # 'item_id': single_item.item_id,
+        
+        for room in rooms:
+            room_id = room.id
+            user_id = [int(u_id) for (r_id, u_id) in room_user_ids if r_id == str(room_id)][0]
+            single_items_in_room = SingleItem.query.filter_by(room_id=room_id).all()
+            items = []
+            for single_item in single_items_in_room:
+                item = {
                         'serial': int(single_item.inventory_number.split('-')[1]),
-                        'quantity': 1, 
+                        'quantity': 1,
                         'quantity_input': 0,
                         'current_price': single_item.current_price,
                         'total_value': single_item.current_price,
                     }
-                ]
-            }
-            if not inventory_initial_data:
-                inventory_initial_data.append(new_data)
-            else:
-                found = False
-                for existing_data in inventory_initial_data:
-                    if existing_data['room_id'] == new_data['room_id']:
-                        for item in existing_data['items']:
-                            if item['serial'] == new_data['items'][0]['serial']:
-                                item['quantity'] += 1
-                                item['total_value'] += new_data['items'][0]['current_price']
-                                found = True
-                                break
-                        if not found:
-                            existing_data['items'].append(new_data['items'][0])
+                if not items:
+                    items.append(item)
+                else:
+                    found = False
+                    for existing_item in items:
+                        if existing_item['serial'] == item['serial']:
+                            existing_item['quantity'] += 1
+                            existing_item['total_value'] += item['current_price']
                             found = True
-                        break
-                if not found:
-                    inventory_initial_data.append(new_data)
-        # print(f'{inventory_initial_data=}')
+                            break
+                    if not found:
+                        items.append(item)
+                        found = True
+            new_data = {
+                'room_id': room_id,
+                'user_id': user_id,
+                'items': items
+            }
+            inventory_initial_data.append(new_data)
+        
+        # for single_item in single_items:
+        #     if str(single_item.room_id) not in room_ids:
+        #         continue
+        #     new_data = {
+        #         'room_id': single_item.room_id,
+        #         'user_id': [int(user_id) for (room_id, user_id) in room_user_ids if room_id == str(single_item.room_id)][0],
+        #         'items': [
+        #             {
+        #                 # 'item_id': single_item.item_id,
+        #                 'serial': int(single_item.inventory_number.split('-')[1]),
+        #                 'quantity': 1, 
+        #                 'quantity_input': 0,
+        #                 'current_price': single_item.current_price,
+        #                 'total_value': single_item.current_price,
+        #             }
+        #         ]
+        #     }
+        #     if not inventory_initial_data:
+        #         inventory_initial_data.append(new_data)
+        #     else:
+        #         found = False
+        #         for existing_data in inventory_initial_data:
+        #             if existing_data['room_id'] == new_data['room_id']:
+        #                 for item in existing_data['items']:
+        #                     if item['serial'] == new_data['items'][0]['serial']:
+        #                         item['quantity'] += 1
+        #                         item['total_value'] += new_data['items'][0]['current_price']
+        #                         found = True
+        #                         break
+        #                 if not found:
+        #                     existing_data['items'].append(new_data['items'][0])
+        #                     found = True
+        #                 break
+        #         if not found:
+        #             inventory_initial_data.append(new_data)
+        # # print(f'{inventory_initial_data=}')
         inventory_working_data = []
 
         for room in inventory_initial_data:
@@ -92,9 +158,12 @@ def create_inventory_list():
 
         # print(f'{inventory_working_data=}')
         
+
+        
+        
         single_items_list = []
         for single_item in single_items:
-            write_off_til_current_year, price_at_end_of_year, depreciation_per_year = write_off_until_current_year(single_item)
+            write_off_til_current_year, price_at_end_of_year, depreciation_per_year = write_off_until_current_year(single_item, year) #! proveri ovu funkcionalnost (year)
             new_single_item = {
                 'id': single_item.id,
                 'serial': single_item.serial,
@@ -117,6 +186,7 @@ def create_inventory_list():
                 'write_off_until_current_year': write_off_til_current_year,
                 'price_at_end_of_year': price_at_end_of_year if price_at_end_of_year > 0 else 0,
             }
+            print(f'new_single_item: {new_single_item["current_price"]=}')
             single_items_list.append(new_single_item)
         
         
@@ -135,17 +205,21 @@ def create_inventory_list():
             if isinstance(obj, (date, datetime)):
                 return obj.isoformat()
         new_inventory_list = Inventory(description=description,
-                                        date=date.today(),
+                                        date=datum,
                                         initial_data=json.dumps(initial_data, default=serialize_date),
                                         working_data=json.dumps(working_data, default=serialize_date),
                                         status='active')
         db.session.add(new_inventory_list)
         db.session.commit()
+        flash('Popis inventara je uspešno kreiran.', 'success')
         return redirect(url_for('main.home'))
     return render_template('create_inventory_list.html', 
                             title="Kreiranje popisne liste",
                             rooms=rooms,
-                            users=users)
+                            users=users,
+                            years=years,
+                            inventory_at_the_end_of_last_year=inventory_at_the_end_of_last_year,
+                            inventory_at_the_end_of_current_year=inventory_at_the_end_of_current_year,)
 
 
 @inventory.route('/edit_inventory_list/<int:inventory_id>', methods=['GET', 'POST'])
@@ -179,7 +253,7 @@ def edit_inventory_list(inventory_id):
     #                 'building_name': room.room_building.name,
     #             }
     #             room_buttons.append(new_room)
-    all_rooms = Room.query.filter(Room.id > 2).all()
+    all_rooms = Room.query.filter(~Room.id.in_([1, 2, 4])).all() #! ~Room.id.in_([1, 2, 4]) znači da nije u listi
     if current_user.authorization == 'admin':
         for room in all_rooms:
             new_room = {
@@ -356,8 +430,35 @@ def compare_inventory_list(inventory_id):
         return redirect(url_for('users.login'))
     inventory = Inventory.query.get_or_404(inventory_id)
     if request.method == 'POST':
+        single_items = SingleItem.query.all()
+        single_items_from_inventory = json.loads(inventory.initial_data)['single_items']
+        working_inventory_list_data = json.loads(inventory.working_data)['inventory']
+        #! prebaci sve predmete u magacin viškova (room_id=4)
+        for single_item in single_items:
+            single_item.room_id = 4
+            db.session.commit()
+        #! izlista sve prostorije, definiše room_id
+        for room in working_inventory_list_data:
+            room_id = int(room['room_id'])
+            #! za svaki predmet u prostoriji
+            for item in room['items']:
+                serial = int(item['serial'])
+                quantity_input = int(item['quantity_input'])
+                #! premesti onoliko predmeta koliki je quantity_input (iz magacina manjka u određenu prostoriju)
+                for i in range(quantity_input):
+                    single_item = SingleItem.query.filter_by(room_id=4).filter_by(serial=serial).first()
+                    if single_item:
+                        single_item.room_id = room_id
+                        db.session.commit()
+                    else: 
+                        print(f'Nema predmeta sa serijom {serial} u magacinu manjkova.')
+        # print(f'{single_items_from_inventory=}')
+        # print(f'{single_items=}')
         inventory.status = 'finished'
         db.session.commit()
+        for single_item in single_items:
+            single_item.current_price, _ = current_price_calculation(single_item.initial_price, single_item.single_item_item.item_depreciation_rate.rate, single_item.purchase_date, single_item.expediture_date)
+            db.session.commit()
         flash(f'Popis "{inventory.description}" je završen.', 'success')
         return redirect(url_for('main.home'))
     initial_inventory_list_data = json.loads(inventory.initial_data)
