@@ -1,7 +1,6 @@
 {% extends "layout.html" %}
 {% block content %}
 <div class="h1">Pregled svih predmeta</div>
-<h1>korekcija: {{ correction }}</h1>
 <div class="form-group mb-4">
     <a class="btn btn-secondary" href="javascript:history.back()">Nazad</a>
     {% if current_user.authorization == 'admin' %}
@@ -394,7 +393,7 @@
         <table id="data_3" border="1" class="table table-striped userlist">
             <thead>
                 <tr>
-                    <th>ID predmeta</th>
+                    <th>ID tipa predmeta</th>
                     <th>Naziv tipa predmeta</th>
                     <th>Količina</th>
                     <th>Nabavna vrednost</th>

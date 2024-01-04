@@ -1,0 +1,156 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="h1">{{ title }}</div>
+<div class="form-group mb-4">
+    <a class="btn btn-secondary" href="javascript:history.back()">Nazad</a>
+    <div class="d-flex justify-content-between align-items-center">
+        <div class="form-group select2widthmax">
+            <label class="form-control-label" for="room_select">Filter po prostoriji</label>
+            <select class="form-select" name="room_select" id="room_select">
+                <option value="">Sve prostorije</option>
+                {% for room in room_list %}
+                <option value="{{room.id}}">({{room.name}}) {{room.dynamic_name}}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <!-- <div class="form-check form-switch">
+            <input type="checkbox" class="form-check-input" id="current_year_procurement" name="current_year_procurement">
+            <label class="form-check-label" for="current_year_procurement">Nabavke u tekućoj godini</label>
+        </div> -->
+    </div>
+</div>
+<ul class="nav nav-tabs justify-content-center mb-4" id="myTab" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="single_item-tab" data-bs-toggle="tab" data-bs-target="#single_item" type="button" role="tab" aria-controls="single_item" aria-selected="false">Pojedinačni predmeti</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="serial-tab" data-bs-toggle="tab" data-bs-target="#serial" type="button" role="tab" aria-controls="serial" aria-selected="true">Kumulativno po seriji</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="item-tab" data-bs-toggle="tab" data-bs-target="#item" type="button" role="tab" aria-controls="item" aria-selected="false">Kumulativno po tipu predmeta</button>
+    </li>
+</ul>
+<div class="tab-content" id="myTabContent">
+    <div class="tab-pane fade show" id="single_item" role="tabpanel" aria-labelledby="single_item-tab">
+        <table id="data_1" border="1" class="table table-striped userlist">
+            <div class="form-group">
+            </div>
+            <thead>
+                <tr>
+                    <th>ID pojedinačnog predmeta</th>
+                    <th>Inventarski broj</th>
+                    <th>Naziv</th>
+                    <th>Nabavna vrednost</th>
+                    <th>Otpis do tekuće godine</th>
+                    <th>Vrednost na kraju godine</th>
+                    <th>Prostorija</th>
+                    <th>Datum nabavke</th>
+                    <th>Dobavljač</th>
+                    <th>Broj fakture</th>
+                    <!-- <th></th> -->
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in inventory_single_items_working %}
+                <tr>
+                    <td>{{ item['id'] }}</td>
+                    <td>{{ item['inventory_number'] }}</td>
+                    <td>{{ item['name'] }}</td>
+                    <td>{{ item['initial_price'] }}</td>
+                    <td>{{ item['write_off_until_current_year'] }}</td>
+                    <td>{{ item['current_price'] }}</td>
+                    <td>{{ item['room_id'] }}</td>
+                    <td>{{ item['purchase_date'] }}</td>
+                    <td>{{ item['supplier'] }}</td>
+                    <td>{{ item['invoice_number'] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="tab-pane fade show active" id="serial" role="tabpanel" aria-labelledby="serial-tab">
+        <table id="data_2" border="1" class="table table-striped userlist">
+            <thead>
+                <tr>
+                    <th>ID tipa predmeta</th>
+                    <th>Serija predmeta</th>
+                    <th>Naziv</th>
+                    <th>Količina</th>
+                    <th>Nabavna vrednost</th>
+                    <th>Otpis do tekuće godine</th>
+                    <!-- <th>Vrednost na kraju godine</th> -->
+                    <th>Datum nabavke</th>
+                    <th>Dobavljač</th>
+                    <th>Broj fakture</th>
+                    <!-- <th></th> -->
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in inventory_cumulatively_per_series_working %}
+                <tr>
+                    <td>{{ item['item_id'] }}</td>
+                    <td>{{ item['serial'] }}</td>
+                    <td>{{ item['name'] }}</td>
+                    <td>{{ item['quantity'] }}</td>
+                    <td>{{ item['initial_price'] }}</td>
+                    <td></td>
+                    <td>{{ item['purchase_date'] }}</td>
+                    <td>{{ item['supplier'] }}</td>
+                    <td>{{ item['invoice_number'] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="tab-pane fade" id="item" role="tabpanel" aria-labelledby="item-tab">
+        <table id="data_3" border="1" class="table table-striped userlist">
+            <thead>
+                <tr>
+                    <th>ID tipa predmeta</th>
+                    <th>Naziv tipa predmeta</th>
+                    <th>Količina</th>
+                    <th>Nabavna vrednost</th>
+                    <th>Otpis do tekuće godine</th>
+                    <!-- <th>Vrednost na kraju godine</th> -->
+                    <!-- <th></th> -->
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in inventory_cumulatively_per_item_working %}
+                <tr>
+                    <td>{{ item['item_id'] }}</td>
+                    <td>{{ item['name'] }}</td>
+                    <td>{{ item['quantity'] }}</td>
+                    <td>{{ item['initial_price'] }}</td>
+                    <td></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+
+{% endblock content%}
+{% block scripts %}
+<script>
+    $(document).ready(function () {
+        var data_1 = $("#data_1").DataTable({
+            language: {
+                url: "//cdn.datatables.net/plug-ins/1.12.1/i18n/sr-SP.json",
+            },
+        })
+        var data_2 = $("#data_2").DataTable({
+            language: {
+                url: "//cdn.datatables.net/plug-ins/1.12.1/i18n/sr-SP.json",
+            },
+        })
+        var data_3 = $("#data_3").DataTable({
+            language: {
+                url: "//cdn.datatables.net/plug-ins/1.12.1/i18n/sr-SP.json",
+            },
+        })
+    })
+</script>
+{% endblock %}

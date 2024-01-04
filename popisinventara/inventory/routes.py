@@ -601,7 +601,7 @@ def add_single_item_to_room():
         if room_dict['room_id'] == room_id:
             room_dict['items'].append(item_working_data)
             break
-    print(f'posle dodatka novog reda: {working_data["inventory"]=}')
+    print(f'posle dodatka nosvog reda: {working_data["inventory"]=}')
     
     # if room_id not in [room_dict['room_id'] for room_dict in initial_data['inventory']]:
     #     flash('Izabrana prostorija ne postoji u inicijalnoj popisnoj listi. dodaj kod za to', 'danger')

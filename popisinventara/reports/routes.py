@@ -247,3 +247,48 @@ def category_reports_new_purchases_item(inventory_id):
                             inventory_id=inventory_id,
                             title=f'Rekapitulacija po kontima - nove nabavke po predmetima',
                             legend=f'Rekapitulacija po kontima - nove nabavke po predmetima: popis {inventory.date}')
+
+
+@reports.route('/single_item_working/<int:inventory_id>', methods=['GET', 'POST'])
+def single_item_working(inventory_id):
+    
+    inventory = Inventory.query.get_or_404(inventory_id)
+    inventory_single_items_working = json.loads(inventory.working_data)['single_items']
+    print(f'{inventory_single_items_working=}')
+    all_room_list = Room.query.all()
+    room_list = [room for room in all_room_list if room.id not in [2]]
+    inventory_cumulatively_per_series_working = []
+    for single_item in inventory_single_items_working:
+        found = False
+        for item in inventory_cumulatively_per_series_working:
+            if item['serial'] == single_item['serial']:
+                item['quantity'] += 1
+                item['initial_price'] += single_item['initial_price']
+                item['current_price'] += single_item['current_price']
+                found = True
+                break
+        if not found:
+            single_item['quantity'] = 1
+            inventory_cumulatively_per_series_working.append(single_item)
+    print(f'{inventory_cumulatively_per_series_working=}')
+    inventory_cumulatively_per_item_working = []
+    for single_item in inventory_single_items_working:
+        found = False
+        for item in inventory_cumulatively_per_item_working:
+            if item['item_id'] == single_item['item_id']:
+                item['quantity'] += 1
+                item['initial_price'] += single_item['initial_price']
+                item['current_price'] += single_item['current_price']
+                found = True
+                break
+        if not found:
+            single_item['quantity'] = 1
+            inventory_cumulatively_per_item_working.append(single_item)
+    print(f'{inventory_cumulatively_per_item_working=}')
+    return render_template('single_items_working.html', 
+                            title=f"Popis inventara {inventory.date}",
+                            room_list=room_list,
+                            inventory_single_items_working=inventory_single_items_working,
+                            inventory_cumulatively_per_series_working=inventory_cumulatively_per_series_working,
+                            inventory_cumulatively_per_item_working=inventory_cumulatively_per_item_working,
+                            )

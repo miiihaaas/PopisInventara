@@ -37,6 +37,7 @@
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item" href="#">Obračun amortizacije osnovnih sredstava pregled po prostorijama i po predmetima </a></li>
                                 <li><a class="dropdown-item" href="#">Rekapitulacija obračuna amortizacije po prostorijama </a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('reports.single_item_working', inventory_id=list.id) }}">Predmeti #</a></li>
                                 <!-- <li><a class="dropdown-item" href="#">Knjiga osnovnih sredstava #</a></li> -->
                                 <li><a class="dropdown-item" href="{{ url_for('reports.category_reports_past', inventory_id=list.id) }}">Izveštaj po kontima</a></li>
                             </ul>
