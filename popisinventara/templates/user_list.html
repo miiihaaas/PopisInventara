@@ -161,7 +161,7 @@
             <td>
                 {% if not active_inventory_list %}
                     <a href="#" class="btn-x btn-primary-x" data-bs-toggle="modal" data-bs-target="#editUser" onclick="editUser('{{user.id}}', '{{user.name}}', '{{user.surname}}', '{{user.email}}', '{{user.authorization}}')" title="Izmenite korisnički profila: {{ user.name }} {{ user.surname }}"><i class="fa fa-edit awesomeedit" aria-hidden="true"></i></a>
-                    {% if user.authorization == 'admin' and number_of_admins > 1 %}
+                    {% if user.authorization == 'admin' and number_of_admins > 2 %}
                     <a href="" class="btn-x btn-primary-x" data-bs-toggle="modal" data-bs-target="#deleteUser" onclick="deleteUser('{{user.id}}', '{{user.name}}', '{{user.surname}}', '{{user.email}}')" title="Izbrišite korisnički profil: {{ user.name }} {{ user.surname }}"><i class="fa fa-user-slash awesomedelete" aria-hidden="true"></i></a>
                     {% elif user.authorization != 'admin' %}
                     <a href="" class="btn-x btn-primary-x" data-bs-toggle="modal" data-bs-target="#deleteUser" onclick="deleteUser('{{user.id}}', '{{user.name}}', '{{user.surname}}', '{{user.email}}')" title="Izbrišite korisnički profil: {{ user.name }} {{ user.surname }}"><i class="fa fa-user-slash awesomedelete" aria-hidden="true"></i></a>
