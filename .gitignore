@@ -9,10 +9,12 @@ popisinventara/__pycache__/
 popisinventara/schools/__pycache__/
 popisinventara/main/__pycache__/
 popisinventara/users/__pycache__/
+popisinventara/static/inventory_lists/
 __pycache__/
 venv/
-venvTest/
+venvTest/a
 popisinventara/tests
+.vscode/
 
 
 ### Python ###
