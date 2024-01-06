@@ -10,6 +10,7 @@ popisinventara/schools/__pycache__/
 popisinventara/main/__pycache__/
 popisinventara/users/__pycache__/
 popisinventara/static/inventory_lists/
+popisinventara/static/reverses/
 __pycache__/
 venv/
 venvTest/a
