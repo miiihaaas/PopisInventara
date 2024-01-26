@@ -1,4 +1,4 @@
-from popisinventara.popisinventara import app, db, login_manager
+from popisinventara import app, db, login_manager
 from flask_login import UserMixin
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 
