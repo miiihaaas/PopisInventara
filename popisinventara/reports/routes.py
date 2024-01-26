@@ -294,7 +294,7 @@ def single_item_working(inventory_id):
             inventory_cumulatively_per_item_working.append(new_item)
     print(f'{inventory_cumulatively_per_item_working=}')
     return render_template('single_items_working.html', 
-                            title=f"Popis inventara {inventory.date}",
+                            title=f"Stanje inventara na datum: {inventory.date}",
                             room_list=room_list,
                             inventory_single_items_working=inventory_single_items_working,
                             inventory_cumulatively_per_series_working=inventory_cumulatively_per_series_working,
