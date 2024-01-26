@@ -268,8 +268,12 @@ def single_item_working(inventory_id):
                 found = True
                 break
         if not found:
-            single_item['quantity'] = 1
-            inventory_cumulatively_per_series_working.append(single_item)
+            # single_item['quantity'] = 1
+            # inventory_cumulatively_per_series_working.append(single_item)
+            #! Ako serija nije pronađena, dodajte novu seriju u listu
+            new_item = single_item.copy()
+            new_item['quantity'] = 1
+            inventory_cumulatively_per_series_working.append(new_item)
     print(f'{inventory_cumulatively_per_series_working=}')
     inventory_cumulatively_per_item_working = []
     for single_item in inventory_single_items_working:
@@ -282,11 +286,15 @@ def single_item_working(inventory_id):
                 found = True
                 break
         if not found:
-            single_item['quantity'] = 1
-            inventory_cumulatively_per_item_working.append(single_item)
+            # single_item['quantity'] = 1
+            # inventory_cumulatively_per_item_working.append(single_item)
+            #! Ako item nije pronađen, dodajte novi item u listu
+            new_item = single_item.copy()
+            new_item['quantity'] = 1
+            inventory_cumulatively_per_item_working.append(new_item)
     print(f'{inventory_cumulatively_per_item_working=}')
     return render_template('single_items_working.html', 
-                            title=f"Popis inventara {inventory.date}",
+                            title=f"Stanje inventara na datum: {inventory.date}",
                             room_list=room_list,
                             inventory_single_items_working=inventory_single_items_working,
                             inventory_cumulatively_per_series_working=inventory_cumulatively_per_series_working,
