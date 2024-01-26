@@ -2,7 +2,7 @@ from flask import Blueprint
 from flask import  render_template, url_for, flash, redirect, request, abort
 from flask_login import login_user, login_required, logout_user, current_user
 from flask_mail import Message
-from popisinventara.popisinventara import bcrypt, db, mail
+from popisinventara import bcrypt, db, mail
 from popisinventara.users.forms import LoginForm, RequestResetForm, ResetPasswordForm
 from popisinventara.models import Inventory, User
 
