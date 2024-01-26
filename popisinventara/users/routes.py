@@ -1,10 +1,10 @@
 from flask import Blueprint
 from flask import  render_template, url_for, flash, redirect, request, abort
-from flask_login import login_user, login_required, logout_user, current_user
-from flask_mail import Message
 from popisinventara import bcrypt, db, mail
 from popisinventara.users.forms import LoginForm, RequestResetForm, ResetPasswordForm
 from popisinventara.models import Inventory, User
+from flask_login import login_user, login_required, logout_user, current_user
+from flask_mail import Message
 
 
 
@@ -161,7 +161,7 @@ def reset_token(token):
         form = ResetPasswordForm()
         if form.validate_on_submit():
             hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
-            user.user_password = hashed_password
+            user.password = hashed_password
             db.session.commit()
             flash(f'Vaša lozinka je ažurirana!', 'success')
             return redirect(url_for('users.login'))
