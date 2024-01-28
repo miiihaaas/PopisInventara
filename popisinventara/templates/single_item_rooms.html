@@ -40,10 +40,10 @@
             <td>
                 {% if inventory %}
                     {% if data['room_id'] not in [1, 2] %}
-                    <a href="{{url_for('inventory.edit_inventory_room_list', inventory_id=inventory.id, room_id=data['room_id'])}}" class="btn-x btn-primary-x"title="Pregled predmeta po popisnoj listi"><i class="fa fa-door-open awesomeedit" aria-hidden="true"></i></a>
+                    <a href="{{url_for('inventory.edit_inventory_room_list', inventory_id=inventory.id, room_id=data['room_id'])}}" class="btn-x btn-primary-x"title="Pregled predmeta u prostoriji listi"><i class="fa fa-door-open awesomeedit" aria-hidden="true"></i></a>
                     {% endif %}
                 {% else %}
-                <a href="{{url_for('single_items.room_single_items', room_id=data['room_id'])}}" class="btn-x btn-primary-x"title="Pregled predmeta po prostorijama"><i class="fa fa-door-closed awesomeedit" aria-hidden="true"></i></a>
+                <a href="{{url_for('single_items.room_single_items', room_id=data['room_id'])}}" class="btn-x btn-primary-x"title="Pregled predmeta u prostoriji"><i class="fa fa-door-closed awesomeedit" aria-hidden="true"></i></a>
                 {% endif %}
             </td>
         </tr>

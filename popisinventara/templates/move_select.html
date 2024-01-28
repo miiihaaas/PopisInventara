@@ -39,8 +39,8 @@
                         <label class="form-control-label" for="item_id_to_move_from">Tip predmeta</label>
                         <select class="form-select" name="item_id_to_move_from" id="item_id_to_move_from" required>
                             <option value=""></option>
-                            {% for item in item_list %}
-                            <option value="{{item.id}}">({{ item.id }}) {{ item.name }}</option>
+                            {% for single_item in single_item_list_from %}
+                            <option value="{{single_item.serial}}">({{ single_item.single_item_item.id }}) {{ single_item.single_item_item.name }} // ({{single_item.serial}}) {{single_item.name}}</option>
                             {% endfor %}
                         </select>
                     </div>

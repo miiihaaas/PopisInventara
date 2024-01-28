@@ -7,10 +7,18 @@
     </div>
     <div class="form-group mb-4 col">
         <legend class="form-control-label" for="item_id_to_move">ID tipa predmeta</legend>
-        <input class="form-control" name="item_id_to_move" id="item_id_to_move" value="{{item.id}}" readonly>
+        <input class="form-control" name="item_id_to_move" id="item_id_to_move" value="{{item.single_item_item.id}}" readonly>
     </div>
     <div class="form-group mb-4 col">
-        <legend class="form-control-label" for="item_id_to_move">Tip predmet</legend>
+        <legend class="form-control-label" for="item_id_to_move">Tip predmeta</legend>
+        <input class="form-control" name="item_id_to_move" id="item_id_to_move" value="{{item.single_item_item.name}}" readonly>
+    </div>
+    <div class="form-group mb-4 col">
+        <legend class="form-control-label" for="item_id_to_move">Serija</legend>
+        <input class="form-control" name="item_id_to_move" id="item_id_to_move" value="{{item.serial}}" readonly>
+    </div>
+    <div class="form-group mb-4 col">
+        <legend class="form-control-label" for="item_id_to_move">Naziv predmeta iz serije</legend>
         <input class="form-control" name="item_id_to_move" id="item_id_to_move" value="{{item.name}}" readonly>
     </div>
     <div class="form-group mb-4 col">

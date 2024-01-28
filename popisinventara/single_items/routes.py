@@ -932,7 +932,7 @@ def single_item_rooms(item_id):
         }
         found = False
         for existing_item in data_list:
-            if existing_item['building'] == new_dict['building'] and existing_item['room'] == new_dict['room']:
+            if existing_item['building'] == new_dict['building'] and existing_item['room'] == new_dict['room'] and existing_item['serial'] == new_dict['serial']:
                 existing_item['quantity'] += 1
                 found = True
                 break
@@ -959,7 +959,8 @@ def room_single_items(room_id):
     for single_item in single_item_list:
         new_dict = {
             'id': single_item.single_item_item.id,
-            'name': f'{single_item.single_item_item.name}',
+            'item_name': f'{single_item.single_item_item.name}',
+            'single_item_name': single_item.name,
             'serial': single_item.inventory_number.split('-')[1],
             'quantity': 1,
             'initial_price': single_item.initial_price,
@@ -969,7 +970,7 @@ def room_single_items(room_id):
         print(f'{new_dict=}')
         found = False
         for existing_item in data_list:
-            if existing_item['id'] == new_dict['id']:
+            if existing_item['serial'] == new_dict['serial']:
                 existing_item['quantity'] += 1
                 found = True
                 break
@@ -1003,20 +1004,35 @@ def move_select_item():
         elif 'submit_from' in request.form:
             item_id = request.form.get('item_id_to_move_from')
             room_id = request.form.get('room_id_to_move_from')
-            return redirect(url_for('single_items.move_from', item_id=item_id, room_id=room_id))
+            return redirect(url_for('single_items.move_from', serial=item_id, room_id=room_id))
     item_list = Item.query.all()
+    from sqlalchemy import distinct
+
+    single_item_list = SingleItem.query.all()
+    unique_series = set()  # Set za praćenje jedinstvenih serija
+    single_item_list_from = []
+
+    for single_item in sorted(single_item_list, key=lambda x: x.item_id):
+        if single_item.serial not in unique_series:
+            unique_series.add(single_item.serial)
+            single_item_list_from.append(single_item)
+
+    print(f'{single_item_list_from=}')
     all_room_list = Room.query.all()
     room_list_to = [room for room in all_room_list if room.id not in [2, 3, 4]] #! 2 - magacin rashoda, 3 - magacin reversa, 4 magacin manjkova -> ne može se na ovaj način premestiti u taj magacin
     room_list_from = [room for room in all_room_list if room.id not in [2, 3, 4]] #! 2 - magacin rashoda, 3 - magacin reversa, 4 magacin manjkova -> ne može se na ovaj način premestiti u taj magacinv !!!! ne treba listati prostorije koje nemaju ovaj predmet za tip kretnje iz prostorije u druge prostorije
     print(f'{item_list=}')
     return render_template('move_select.html', title='Izbor predmeta za premeštanje',
                             item_list=item_list,
+                            single_item_list_from=single_item_list_from,
                             room_list_to=room_list_to,
                             room_list_from=room_list_from)
 
 
-@single_items.route("/move_from/<int:item_id>/<int:room_id>", methods=['GET', 'POST'])
-def move_from(item_id, room_id):
+# @single_items.route("/move_from/<int:item_id>/<int:room_id>", methods=['GET', 'POST'])
+@single_items.route("/move_from/<int:serial>/<int:room_id>", methods=['GET', 'POST'])
+# def move_from(item_id, room_id):
+def move_from(serial, room_id):
     active_inventory_list = Inventory.query.filter_by(status='active').first()
     if active_inventory_list:
         flash(f'Nije moguće premeštati predmete dok je aktivan popis.', 'danger')
@@ -1027,37 +1043,22 @@ def move_from(item_id, room_id):
     if current_user.authorization != 'admin':
         flash('Nemate dozvolu za pristum ovoj stranici.', 'danger')
         return redirect(url_for('main.home'))
-    item = Item.query.filter_by(id=item_id).first()
+    single_item_ = SingleItem.query.filter_by(serial=serial).first() #!
     room_from = Room.query.filter_by(id=room_id).first()
     room_list = Room.query.all()
-    single_item_in_room_list = SingleItem.query.filter_by(item_id=item_id, room_id=room_id).all()
+    single_item_in_room_list = SingleItem.query.filter_by(serial=serial, room_id=room_id).all()
     print(f'{single_item_in_room_list=}')
     data_list = [] #! svi predmeti izabranog tipa u svim prostorijama
     
     for room in room_list:
         if room.id not in [2, 3, 4]:
-            single_item_list = SingleItem.query.filter_by(item_id=item_id, room_id=room.id).all()
-            total_quantity = len(single_item_list)
+            single_item_list = SingleItem.query.filter_by(serial=serial, room_id=room.id).all()
 
-            if single_item_list:
-                single_item = single_item_list[0]  # Uzmemo prvi predmet za osnovne podatke
-                new_dict = {
-                    'building': single_item.single_item_room.room_building.name,
-                    'room_id': room.id,
-                    'item_id': item_id,
-                    'room': f'({room.name}) {room.dynamic_name}',
-                    'serial': single_item.inventory_number.split('-')[1],
-                    'quantity': total_quantity,
-                    'single_item_name': f'{single_item.name}',
-                    'initial_price': single_item.initial_price,
-                    'current_price': single_item.current_price,
-                    'purchase_date': single_item.purchase_date,
-                }
-            else:
+            if not single_item_list:
                 new_dict = {
                     'building': room.room_building.name,
                     'room_id': room.id,
-                    'item_id': item_id,
+                    'item_id': single_item_.item_id,
                     'room': f'({room.name}) {room.dynamic_name}',
                     'serial': '',
                     'quantity': 0,
@@ -1066,15 +1067,36 @@ def move_from(item_id, room_id):
                     'current_price': 0,
                     'purchase_date': '',
                 }
-            data_list.append(new_dict)
-            
+                data_list.append(new_dict)
+            else:
+                for single_item in single_item_list:
+                    new_dict = {
+                        'building': single_item.single_item_room.room_building.name,
+                        'room_id': room.id,
+                        'item_id': single_item.item_id,
+                        'room': f'({room.name}) {room.dynamic_name}',
+                        'serial': single_item.inventory_number.split('-')[1],
+                        'quantity': 1,
+                        'single_item_name': f'{single_item.name}',
+                        'initial_price': single_item.initial_price,
+                        'current_price': single_item.current_price,
+                        'purchase_date': single_item.purchase_date,
+                    }
+                    found = False
+                    for existing_item in data_list:
+                        if existing_item['serial'] == new_dict['serial'] and existing_item['room_id'] == new_dict['room_id'] and existing_item['building'] == new_dict['building']:
+                            existing_item['quantity'] += 1
+                            found = True
+                            break
+                    if not found:
+                        data_list.append(new_dict)
     print(f'{data_list=}')
 
 
     
     quantity_of_single_items_in_room = 0
     for data in data_list:
-        if data['room_id'] == room_id and data['item_id'] == item_id:
+        if data['room_id'] == room_id and data['serial'] == str(serial).zfill(5):
             quantity_of_single_items_in_room += data['quantity']
             print(f'{quantity_of_single_items_in_room=}')
     
@@ -1085,7 +1107,7 @@ def move_from(item_id, room_id):
         print(f'{move_list=}')
         if len(move_list) == 0:
             flash('Niste izabrali nijedan predmet za premeštanje.', 'danger')
-            return redirect(url_for('single_items.move_from', item_id=item_id, room_id=room_id))
+            return redirect(url_for('single_items.move_from', serial=serial, room_id=room_id))
         
         if not db.session.is_active:
             db.session.begin()
@@ -1096,17 +1118,17 @@ def move_from(item_id, room_id):
             for i in range(quantity_to_move):
                 if not single_item_in_room_list:
                     flash(f'Premešteni su svi predmeti iz izabrane prostorije, nema predmeta koji mogu da se premeste u prostoriju: {room_id_to_move}.', 'danger')
-                    break #! Ako su svi predmeti iz te prostorije već premješteni, izađite iz petlje
+                    break #! Ako su svi predmeti iz te prostorije već premešteni, izađite iz petlje
                 single_item_to_move_from = single_item_in_room_list[0]
                 single_item_to_move_from.room_id = room_id_to_move
                 single_item_in_room_list.remove(single_item_to_move_from)
         db.session.commit()
         # room_to_move = Room.query.get_or_404(room_id_to_move)
         flash(f'Premešteni su predmeti iz izabrane prostorije:  ({room_from.name}) {room_from.dynamic_name}.', 'success')
-        return redirect(url_for('single_items.single_item_rooms', item_id=item_id))
+        return redirect(url_for('single_items.single_item_rooms', item_id=single_item_.item_id))
     
     return render_template('move_from.html', title='Premeštanje predmeta iz izabrane prostorije u više različitih prostorija',
-                            item=item,
+                            item=single_item_,
                             room_from=room_from,
                             single_item_list=single_item_list,
                             data_list=data_list,
