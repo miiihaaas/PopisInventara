@@ -66,11 +66,14 @@ def popisna_lista_gen(inventory_item_list_data, room, inventory_id):
             pdf.cell(60, 5, f"{item['comment']}", new_y='NEXT', new_x='LMARGIN', align='L', border=1, fill=True)
         
         path = f"{project_folder}/static/inventory_lists/"
+        path = os.path.join(project_folder, 'static', 'inventory_lists')
+        if not os.path.exists(path):
+            os.makedirs(path)
         if i == 0:
             file_name = f'inventory_room_list.pdf'
         else:
             file_name = f'inventory_room_list_no_quantity.pdf'
-        pdf.output(path + file_name)
+        pdf.output(os.path.join(path, file_name))
         i += 1
 
 

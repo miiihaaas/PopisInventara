@@ -95,6 +95,11 @@ def create_reverse_document(school, single_item):
     pdf.cell(100, 10, f'{single_item.reverse_person}', new_y='LAST', align='C', border=0)
     pdf.cell(100, 10, f'____________________', new_x='LMARGIN', new_y='NEXT', align='C', border=0)
     
-    path = f"{project_folder}/static/reverses/"
+    
+    # Proverite postojanje foldera, ako ne postoji, kreirajte ga
+    path = os.path.join(project_folder, 'static', 'reverses')
+    if not os.path.exists(path):
+        os.makedirs(path)
     file_name = f'revers.pdf'
-    pdf.output(path + file_name)
+    pdf.output(os.path.join(path, file_name))
+    

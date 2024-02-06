@@ -13,7 +13,7 @@ popisinventara/static/inventory_lists/
 popisinventara/static/reverses/
 __pycache__/
 venv/
-venvTest/a
+venvPopisInventara/
 popisinventara/tests
 .vscode/
 
