@@ -618,8 +618,8 @@ def add_single_item_to_room():
         if room_dict['room_id'] == room_id:
             room_dict['items'].append(item_initial_data)
             break
-    inventory.initial_data = json.dumps(initial_data)
-    inventory.working_data = json.dumps(working_data)
+    inventory.initial_data = json.dumps(initial_data, default=decimal_to_string)
+    inventory.working_data = json.dumps(working_data, default=decimal_to_string)
     db.session.commit()
     
     flash('Dodata je nova stavka u popisnu listu.', 'success')
