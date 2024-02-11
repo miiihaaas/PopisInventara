@@ -104,21 +104,21 @@ def category_reports_expediture(inventory_id):
                 category_list.append(category)
                 new_record = {
                     'category': category,
-                    'initial_price': single_item['initial_price'],
-                    'write_off_until_current_year': single_item['write_off_until_current_year'],
-                    'depreciation_per_year': single_item['depreciation_per_year'],
-                    'price_at_end_of_year': single_item['price_at_end_of_year'],
-                    'current_price': single_item['current_price'],
+                    'initial_price': Decimal(single_item['initial_price']),
+                    'write_off_until_current_year': Decimal(single_item['write_off_until_current_year']),
+                    'depreciation_per_year': Decimal(single_item['depreciation_per_year']),
+                    'price_at_end_of_year': Decimal(single_item['price_at_end_of_year']),
+                    'current_price': Decimal(single_item['current_price']),
                 }
                 data.append(new_record)
             else:
                 for record in data:
                     if record['category'] == category:
-                        record['initial_price'] += single_item['initial_price']
-                        record['current_price'] += single_item['current_price']
-                        record['write_off_until_current_year'] += single_item['write_off_until_current_year']
-                        record['depreciation_per_year'] += single_item['depreciation_per_year']
-                        record['price_at_end_of_year'] += single_item['price_at_end_of_year']
+                        record['initial_price'] += Decimal(single_item['initial_price'])
+                        record['current_price'] += Decimal(single_item['current_price'])
+                        record['write_off_until_current_year'] += Decimal(single_item['write_off_until_current_year'])
+                        record['depreciation_per_year'] += Decimal(single_item['depreciation_per_year'])
+                        record['price_at_end_of_year'] += Decimal(single_item['price_at_end_of_year'])
                         break
     print(f'{category_list=}')
     print(f'{data=}')
@@ -144,20 +144,20 @@ def category_reports_expediture_item(inventory_id):
                     'category': category,
                     'item': single_item['name'],
                     'quantity': 1,
-                    'initial_price': single_item['initial_price'],
-                    'write_off_until_current_year': single_item['write_off_until_current_year'],
-                    'depreciation_per_year': single_item['depreciation_per_year'],
-                    'price_at_end_of_year': single_item['price_at_end_of_year'],
+                    'initial_price': Decimal(single_item['initial_price']),
+                    'write_off_until_current_year': Decimal(single_item['write_off_until_current_year']),
+                    'depreciation_per_year': Decimal(single_item['depreciation_per_year']),
+                    'price_at_end_of_year': Decimal(single_item['price_at_end_of_year']),
                 }
                 data.append(new_record)
             else:
                 for record in data:
                     if record['category'] == category and record['item'] == item:
                         record['quantity'] += 1
-                        record['initial_price'] += single_item['initial_price']
-                        record['write_off_until_current_year'] += single_item['write_off_until_current_year']
-                        record['depreciation_per_year'] += single_item['depreciation_per_year']
-                        record['price_at_end_of_year'] += single_item['price_at_end_of_year']
+                        record['initial_price'] += Decimal(single_item['initial_price'])
+                        record['write_off_until_current_year'] += Decimal(single_item['write_off_until_current_year'])
+                        record['depreciation_per_year'] += Decimal(single_item['depreciation_per_year'])
+                        record['price_at_end_of_year'] += Decimal(single_item['price_at_end_of_year'])
                         break
     return render_template('category_reports_item.html',
                             data=data,
@@ -183,21 +183,21 @@ def category_reports_new_purchases_past(inventory_id):
                 category_list.append(category)
                 new_record = {
                     'category': category,
-                    'initial_price': single_item['initial_price'],
-                    'write_off_until_current_year': single_item['write_off_until_current_year'],
-                    'depreciation_per_year': single_item['depreciation_per_year'],
-                    'price_at_end_of_year': single_item['price_at_end_of_year'],
-                    'current_price': single_item['current_price'],
+                    'initial_price': Decimal(single_item['initial_price']),
+                    'write_off_until_current_year': Decimal(single_item['write_off_until_current_year']),
+                    'depreciation_per_year': Decimal(single_item['depreciation_per_year']),
+                    'price_at_end_of_year': Decimal(single_item['price_at_end_of_year']),
+                    'current_price': Decimal(single_item['current_price']),
                 }
                 data.append(new_record)
             else:
                 for record in data:
                     if record['category'] == category:
-                        record['initial_price'] += single_item['initial_price']
-                        record['current_price'] += single_item['current_price']
-                        record['write_off_until_current_year'] += single_item['write_off_until_current_year']
-                        record['depreciation_per_year'] += single_item['depreciation_per_year']
-                        record['price_at_end_of_year'] += single_item['price_at_end_of_year']
+                        record['initial_price'] += Decimal(single_item['initial_price'])
+                        record['current_price'] += Decimal(single_item['current_price'])
+                        record['write_off_until_current_year'] += Decimal(single_item['write_off_until_current_year'])
+                        record['depreciation_per_year'] += Decimal(single_item['depreciation_per_year'])
+                        record['price_at_end_of_year'] += Decimal(single_item['price_at_end_of_year'])
                         break
     print(f'{category_list=}')
     print(f'{data=}')
