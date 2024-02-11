@@ -226,20 +226,20 @@ def category_reports_new_purchases_item(inventory_id):
                     'item_id': item_id,
                     'item': single_item['name'],
                     'quantity': 1,
-                    'initial_price': single_item['initial_price'],
-                    'write_off_until_current_year': single_item['write_off_until_current_year'],
-                    'depreciation_per_year': single_item['depreciation_per_year'],
-                    'price_at_end_of_year': single_item['price_at_end_of_year'],
+                    'initial_price': Decimal(single_item['initial_price']),
+                    'write_off_until_current_year': Decimal(single_item['write_off_until_current_year']),
+                    'depreciation_per_year': Decimal(single_item['depreciation_per_year']),
+                    'price_at_end_of_year': Decimal(single_item['price_at_end_of_year']),
                 }
                 data.append(new_record)
             else:
                 for record in data:
                     if record['category'] == category and record['item_id'] == item_id:
                         record['quantity'] += 1
-                        record['initial_price'] += single_item['initial_price']
-                        record['write_off_until_current_year'] += single_item['write_off_until_current_year']
-                        record['depreciation_per_year'] += single_item['depreciation_per_year']
-                        record['price_at_end_of_year'] += single_item['price_at_end_of_year']
+                        record['initial_price'] += Decimal(single_item['initial_price'])
+                        record['write_off_until_current_year'] += Decimal(single_item['write_off_until_current_year'])
+                        record['depreciation_per_year'] += Decimal(single_item['depreciation_per_year'])
+                        record['price_at_end_of_year'] += Decimal(single_item['price_at_end_of_year'])
                         break
     print(f'{category_item_list=}')
     print(f'{data=}')
@@ -264,8 +264,8 @@ def single_item_working(inventory_id):
         for item in inventory_cumulatively_per_series_working:
             if item['serial'] == single_item['serial']:
                 item['quantity'] += 1
-                item['initial_price'] += single_item['initial_price']
-                item['current_price'] += single_item['current_price']
+                item['initial_price'] += Decimal(single_item['initial_price'])
+                item['current_price'] += Decimal(single_item['current_price'])
                 found = True
                 break
         if not found:
@@ -274,6 +274,8 @@ def single_item_working(inventory_id):
             #! Ako serija nije pronađena, dodajte novu seriju u listu
             new_item = single_item.copy()
             new_item['quantity'] = 1
+            new_item['initial_price'] = Decimal(new_item['initial_price'])
+            new_item['current_price'] = Decimal(new_item['current_price'])
             inventory_cumulatively_per_series_working.append(new_item)
     print(f'{inventory_cumulatively_per_series_working=}')
     inventory_cumulatively_per_item_working = []
@@ -282,8 +284,8 @@ def single_item_working(inventory_id):
         for item in inventory_cumulatively_per_item_working:
             if item['item_id'] == single_item['item_id']:
                 item['quantity'] += 1
-                item['initial_price'] += single_item['initial_price']
-                item['current_price'] += single_item['current_price']
+                item['initial_price'] += Decimal(single_item['initial_price'])
+                item['current_price'] += Decimal(single_item['current_price'])
                 found = True
                 break
         if not found:
@@ -292,6 +294,8 @@ def single_item_working(inventory_id):
             #! Ako item nije pronađen, dodajte novi item u listu
             new_item = single_item.copy()
             new_item['quantity'] = 1
+            new_item['initial_price'] = Decimal(new_item['initial_price'])
+            new_item['current_price'] = Decimal(new_item['current_price'])
             inventory_cumulatively_per_item_working.append(new_item)
     print(f'{inventory_cumulatively_per_item_working=}')
     return render_template('single_items_working.html', 
