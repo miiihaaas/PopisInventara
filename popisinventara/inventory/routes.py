@@ -1,4 +1,5 @@
 import json
+from decimal import Decimal
 from datetime import date, datetime
 from flask import Blueprint
 from flask import  render_template, flash, redirect, url_for
@@ -12,6 +13,11 @@ from popisinventara.single_items.functions import current_price_calculation
 
 
 inventory = Blueprint('inventory', __name__)
+
+def decimal_to_string(obj):
+    if isinstance(obj, Decimal):
+        return str(obj)
+    raise TypeError(f'Object of type {type(obj)} is not JSON serializable')
 
 
 @inventory.route('/create_inventory_list', methods=['GET', 'POST'])
@@ -63,7 +69,7 @@ def create_inventory_list():
         for single_item in single_items:
             if single_item.expediture_date is None:
                 print(f'start -- pre izmene: {single_item.current_price=}')
-                single_item.current_price, _ = current_price_calculation(single_item.initial_price, single_item.single_item_item.item_depreciation_rate.rate, single_item.purchase_date, single_item.expediture_date, year)
+                single_item.current_price, _ = current_price_calculation(single_item.initial_price, single_item.single_item_item.item_depreciation_rate.rate, single_item.purchase_date, single_item.expediture_date, year, single_item.input_in_app_date, single_item.deprecation_value)
                 print(f'posle izmene: {single_item.current_price=}')
                 print('------------------------------------------------------')
         db.session.commit()
@@ -355,7 +361,7 @@ def edit_inventory_room_list(inventory_id, room_id):
             'inventory': working_inventory_list_data,
             'single_items': json.loads(inventory.working_data)['single_items'],
         }
-        inventory.working_data = json.dumps(working_data)
+        inventory.working_data = json.dumps(working_data, default=decimal_to_string)
         db.session.commit()
         flash(f'Popisna lista {room_id} je sačuvana!', 'success')
         return redirect(url_for('inventory.edit_inventory_list', inventory_id=inventory_id))
@@ -457,7 +463,7 @@ def compare_inventory_list(inventory_id):
         inventory.status = 'finished'
         db.session.commit()
         for single_item in single_items:
-            single_item.current_price, _ = current_price_calculation(single_item.initial_price, single_item.single_item_item.item_depreciation_rate.rate, single_item.purchase_date, single_item.expediture_date)
+            single_item.current_price, _ = current_price_calculation(single_item.initial_price, single_item.single_item_item.item_depreciation_rate.rate, single_item.purchase_date, single_item.expediture_date, None, single_item.input_in_app_date, single_item.deprecation_value)
             db.session.commit()
         flash(f'Popis "{inventory.description}" je završen.', 'success')
         return redirect(url_for('main.home'))

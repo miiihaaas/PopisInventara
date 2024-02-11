@@ -93,9 +93,11 @@ class SingleItem(db.Model):
     name = db.Column(db.String(50), nullable=False)
     supplier = db.Column(db.String(50), nullable=True)
     invoice_number = db.Column(db.String(50), nullable=True)
-    initial_price = db.Column(db.Float(), nullable=False)
-    current_price = db.Column(db.Float(), nullable=False)
-    expediture_price = db.Column(db.Float(), nullable=True)
+    initial_price = db.Column(db.Numeric(precision=10, scale=2), nullable=False)
+    current_price = db.Column(db.Numeric(precision=10, scale=2), nullable=False)
+    expediture_price = db.Column(db.Numeric(precision=10, scale=2), nullable=True)
+    input_in_app_date = db.Column(db.Date(), nullable=True) #! datum unosa u aplikaciju
+    deprecation_value = db.Column(db.Numeric(precision=10, scale=2), nullable=True) #! vrednost otpisa koju je škola dala kao input
     purchase_date = db.Column(db.Date(), nullable=False)
     expediture_date = db.Column(db.Date(), nullable=True)
     reverse_person = db.Column(db.String(50), nullable=True)

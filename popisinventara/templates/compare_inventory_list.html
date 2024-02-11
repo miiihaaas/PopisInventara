@@ -29,7 +29,6 @@
             <td>{{ item.quantity }}</td>
             <td>{{ item.quantity_input }}</td>
             <td>{{ item.quantity_input - item.quantity }}</td>
-            <!-- <td>{{ item.value_input - item.value }}</td> -->
             <td><a href="{{url_for('single_items.single_item_rooms', item_id=item.item_id)}}" title="Pregled predmeta po prostorijama"><i class="fa fa-door-closed awesomeedit" aria-hidden="true"></i></a></td>
         </tr>
         {% endfor %}

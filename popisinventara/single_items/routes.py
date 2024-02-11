@@ -51,6 +51,7 @@ def single_item_list():
     
     cumulatively_per_series = []
     for item in single_item_list:
+        print(f'debug: {type(item.initial_price)=}')
         series = item.inventory_number.split('-')[1]
         
         new_dict = {
@@ -674,8 +675,10 @@ def expediture_single_item():
     initial_price = single_item.initial_price
     rate = single_item.single_item_item.item_depreciation_rate.rate
     purchase_date = single_item.purchase_date
+    input_in_app_date = single_item.input_in_app_date 
+    deprecation_value = single_item.deprecation_value
     
-    single_item.current_price, single_item.expediture_price = current_price_calculation(initial_price, rate, purchase_date, expediture_date)
+    single_item.current_price, single_item.expediture_price = current_price_calculation(initial_price, rate, purchase_date, expediture_date, None, input_in_app_date, deprecation_value)
     single_item.expediture_date = expediture_date
     single_item.room_id = 2 #! room_id = 2 je magacin rashoda
     db.session.commit()
@@ -1213,9 +1216,10 @@ def update_price():
     if current_user.authorization != 'admin':
         flash('Nemate dozvolu za pristum ovoj stranici.', 'danger')
     single_items = SingleItem.query.all()
-    for sigle_item in single_items:
-        if sigle_item.expediture_date is None:
-            sigle_item.current_price, _ = current_price_calculation(sigle_item.initial_price, sigle_item.single_item_item.item_depreciation_rate.rate, sigle_item.purchase_date)
+    for single_item in single_items:
+        if single_item.expediture_date is None:
+            single_item.current_price, _ = current_price_calculation(single_item.initial_price, single_item.single_item_item.item_depreciation_rate.rate, single_item.purchase_date, None, None, single_item.input_in_app_date, single_item.deprecation_value)
+            print(f'{single_item.inventory_number=}; {single_item.input_in_app_date=}: {single_item.current_price=}')
     flash('Cena na kraju tekuće godine kod svih nerashodovanih predmeta je izmenjena.', 'success')
     db.session.commit()
     return redirect(url_for('single_items.single_item_list'))

@@ -1,4 +1,5 @@
 from datetime import datetime, date
+from decimal import Decimal
 import os
 
 from fpdf import FPDF
@@ -6,40 +7,46 @@ from popisinventara.models import SingleItem
 from popisinventara import db
 
 
-def current_price_calculation(initial_price, rate, purchase_date, expediture_date=None, year=None):
+def current_price_calculation(initial_price, rate, purchase_date, expediture_date=None, year=None, input_in_app_date=None, deprecation_value=None):
     if expediture_date:
-        print(f'{expediture_date=}')
         today = expediture_date
     elif year:
         today = date(int(year), 12, 31)
-        print(f'{today=}')
-        print(f'danas: {date.today()=}')
     else:
         today = date.today()
+        
     if rate == 100:
-        #! (sitan inventar) ako je rate 100% onda su cena kupljenog predmeta na kraju godine i trenutna cena jednaka 0
-        price_at_end_of_current_year = 0
-        current_price = 0
+        #! (sitan inventar) ako je stopa 100%, cena kupljenog predmeta na kraju godine i trenutna cena su jednake 0
+        price_at_end_of_current_year = Decimal('0')
+        current_price = Decimal('0')
         return price_at_end_of_current_year, current_price
-    #! koliko je meseci ostalo u godini u kojoj je kupljen predmet
+    
+    #! Koliko meseci je ostalo u godini u kojoj je kupljen predmet
     first_year_months_remaining = 12 - purchase_date.month + 1
     last_year_months_passed = today.month
-    #! postavljanje vrednosti amortizacije za prvu i ostale godine
-    first_year_depreciation = float(initial_price) * (first_year_months_remaining / 12) * rate / 100
-    last_year_depreciation = float(initial_price) * (last_year_months_passed / 12) * rate / 100
-    depreciation_per_year = float(initial_price) * rate / 100
     
-    item_age_in_years = today.year - purchase_date.year
+    #! Postavljanje vrednosti amortizacije za prvu i ostale godine
+    first_year_depreciation = Decimal(initial_price) * (Decimal(first_year_months_remaining) / Decimal('12')) * Decimal(rate) / Decimal('100')
+    last_year_depreciation = Decimal(initial_price) * (Decimal(last_year_months_passed) / Decimal('12')) * Decimal(rate) / Decimal('100')
+    depreciation_per_year = Decimal(initial_price) * Decimal(rate) / Decimal('100')
     
-    price_at_end_of_current_year = float(initial_price) - first_year_depreciation - item_age_in_years * depreciation_per_year
-    if price_at_end_of_current_year < 0:
-        price_at_end_of_current_year = 0
-    current_price = float(initial_price) - first_year_depreciation - ((item_age_in_years - 1) * depreciation_per_year) - last_year_depreciation
-    if current_price < 0:
-        current_price = 0
+    if input_in_app_date:
+        item_age_in_years = today.year - input_in_app_date.year
+        first_year_depreciation = Decimal(deprecation_value) #! stavljam vrednost otpisa koju smo dobili kao input koji su škole dostavile
+    else:
+        item_age_in_years = today.year - purchase_date.year
+    
+    price_at_end_of_current_year = Decimal(initial_price) - first_year_depreciation - item_age_in_years * depreciation_per_year
+    if price_at_end_of_current_year < Decimal('0'):
+        price_at_end_of_current_year = Decimal('0')
+    
+    current_price = Decimal(initial_price) - first_year_depreciation - ((item_age_in_years - 1) * depreciation_per_year) - last_year_depreciation
+    if current_price < Decimal('0'):
+        current_price = Decimal('0')
     
     if expediture_date:
-        price_at_end_of_current_year = 0
+        price_at_end_of_current_year = Decimal('0')
+    
     return price_at_end_of_current_year, current_price
 
 
