@@ -1,4 +1,5 @@
 from datetime import datetime
+from decimal import Decimal
 import json
 from flask import Blueprint
 from popisinventara.models import Inventory, Room, SingleItem
@@ -62,21 +63,21 @@ def category_reports_past(inventory_id):
             category_list.append(category)
             new_record = {
                 'category': category,
-                'initial_price': single_item['initial_price'],
-                'current_price': single_item['current_price'],
-                'write_off_until_current_year': single_item['write_off_until_current_year'],
-                'depreciation_per_year': single_item['depreciation_per_year'],
-                'price_at_end_of_year': single_item['price_at_end_of_year']
+                'initial_price': Decimal(single_item['initial_price']),
+                'current_price': Decimal(single_item['current_price']),
+                'write_off_until_current_year': Decimal(single_item['write_off_until_current_year']),
+                'depreciation_per_year': Decimal(single_item['depreciation_per_year']),
+                'price_at_end_of_year': Decimal(single_item['price_at_end_of_year'])
             }
             data.append(new_record)
         else:
             for record in data:
                 if record['category'] == category:
-                    record['initial_price'] += single_item['initial_price']
-                    record['current_price'] += single_item['current_price']
-                    record['write_off_until_current_year'] += single_item['write_off_until_current_year']
-                    record['depreciation_per_year'] += single_item['depreciation_per_year']
-                    record['price_at_end_of_year'] += single_item['price_at_end_of_year']
+                    record['initial_price'] += Decimal(single_item['initial_price'])
+                    record['current_price'] += Decimal(single_item['current_price'])
+                    record['write_off_until_current_year'] += Decimal(single_item['write_off_until_current_year'])
+                    record['depreciation_per_year'] += Decimal(single_item['depreciation_per_year'])
+                    record['price_at_end_of_year'] += Decimal(single_item['price_at_end_of_year'])
                     break
     print(f'{category_list=}')
     print(f'{data=}')

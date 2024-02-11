@@ -14,10 +14,14 @@ from popisinventara.single_items.functions import current_price_calculation
 
 inventory = Blueprint('inventory', __name__)
 
-def decimal_to_string(obj):
-    if isinstance(obj, Decimal):
+
+def serialize_data(obj):
+    if isinstance(obj, (date, datetime)):
+        return obj.isoformat()
+    elif isinstance(obj, Decimal):
         return str(obj)
-    raise TypeError(f'Object of type {type(obj)} is not JSON serializable')
+    raise TypeError(f"Object of type {type(obj)} is not JSON serializable")
+
 
 
 @inventory.route('/create_inventory_list', methods=['GET', 'POST'])
@@ -207,13 +211,10 @@ def create_inventory_list():
         }
         # print(f'{initial_data=}')
         # print(f'{working_data=}')
-        def serialize_date(obj):
-            if isinstance(obj, (date, datetime)):
-                return obj.isoformat()
         new_inventory_list = Inventory(description=description,
                                         date=datum,
-                                        initial_data=json.dumps(initial_data, default=serialize_date),
-                                        working_data=json.dumps(working_data, default=serialize_date),
+                                        initial_data=json.dumps(initial_data, default=serialize_data),
+                                        working_data=json.dumps(working_data, default=serialize_data),
                                         status='active')
         db.session.add(new_inventory_list)
         db.session.commit()
@@ -361,7 +362,7 @@ def edit_inventory_room_list(inventory_id, room_id):
             'inventory': working_inventory_list_data,
             'single_items': json.loads(inventory.working_data)['single_items'],
         }
-        inventory.working_data = json.dumps(working_data, default=decimal_to_string)
+        inventory.working_data = json.dumps(working_data, default=serialize_data)
         db.session.commit()
         flash(f'Popisna lista {room_id} je sačuvana!', 'success')
         return redirect(url_for('inventory.edit_inventory_list', inventory_id=inventory_id))
@@ -519,7 +520,8 @@ def compare_inventory_list(inventory_id):
             print(f'{room["items"]=}')
             serial = item['serial']
             quantity_input = item['quantity_input']
-            value_input = item['current_price'] * quantity_input #! mora da se isravi dict room da ima kay value...
+            print(f'{quantity_input=}; {item=}; {single_item.current_price=}')
+            value_input = float(item['current_price']) * quantity_input #! mora da se isravi dict room da ima kay value...
             print(f'{quantity_input=}')
             found = False
             for existing_item in compare_items_list:
@@ -618,8 +620,8 @@ def add_single_item_to_room():
         if room_dict['room_id'] == room_id:
             room_dict['items'].append(item_initial_data)
             break
-    inventory.initial_data = json.dumps(initial_data, default=decimal_to_string)
-    inventory.working_data = json.dumps(working_data, default=decimal_to_string)
+    inventory.initial_data = json.dumps(initial_data, default=serialize_data)
+    inventory.working_data = json.dumps(working_data, default=serialize_data)
     db.session.commit()
     
     flash('Dodata je nova stavka u popisnu listu.', 'success')
