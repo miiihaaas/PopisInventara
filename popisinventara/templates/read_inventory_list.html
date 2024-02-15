@@ -29,11 +29,11 @@
                                 Izveštaji
                             </button>
                             <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="{{ url_for('reports.category_reports_expediture', inventory_id=list.id) }}">Rekapitulacija po kontu - rashod</a></li>
-                                <li><a class="dropdown-item" href="{{ url_for('reports.category_reports_expediture_item', inventory_id=list.id) }}">Rekapitulacija po kontu - rashod po predmetima</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('reports.category_reports_expediture', inventory_id=list.id) }}">Rekapitulacija rashoda po kontima</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('reports.category_reports_expediture_item', inventory_id=list.id) }}">Rekapitulacija rashodovanih predmeta po kontima</a></li>
                                 <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="{{ url_for('reports.category_reports_new_purchases_past', inventory_id=list.id) }}">Rekapitulacija po kontima - nove nabavke</a></li>
-                                <li><a class="dropdown-item" href="{{ url_for('reports.category_reports_new_purchases_item', inventory_id=list.id) }}">Rekapitulacija po kontima - nove nabavke po predmetima</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('reports.category_reports_new_purchases_past', inventory_id=list.id) }}">Rekapitulacija novih nabavki po kontima</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('reports.category_reports_new_purchases_item', inventory_id=list.id) }}">Rekapitulacija nabavljenih predmeta po kontima</a></li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item" href="#">Obračun amortizacije osnovnih sredstava pregled po prostorijama i po predmetima </a></li>
                                 <li><a class="dropdown-item" href="#">Rekapitulacija obračuna amortizacije po prostorijama </a></li>

@@ -8,6 +8,23 @@
     {% else %}
     <a class="btn btn-primary mb-4" href="{{ url_for('static', filename='reports/category_reports_new_purchases_item.pdf') }}" target="_blank">Izvoz izveštaja u PDF fajl</a>
     {% endif %}
+    <div class="btn-group mb-4">
+        <button type="button" class="btn btn-danger dropdown-toggle mb-4" data-bs-toggle="dropdown" aria-expanded="false">
+            Ostali izveštaji
+        </button>
+        <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="{{ url_for('reports.category_reports_expediture', inventory_id=inventory_id) }}">Rekapitulacija rashoda po kontima</a></li>
+            <li><a class="dropdown-item" href="{{ url_for('reports.category_reports_expediture_item', inventory_id=inventory_id) }}">Rekapitulacija rashodovanih predmeta po kontima</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="{{ url_for('reports.category_reports_new_purchases_past', inventory_id=inventory_id) }}">Rekapitulacija novih nabavki po kontima</a></li>
+            <li><a class="dropdown-item" href="{{ url_for('reports.category_reports_new_purchases_item', inventory_id=inventory_id) }}">Rekapitulacija nabavljenih predmeta po kontima</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="#">Obračun amortizacije osnovnih sredstava pregled po prostorijama i po predmetima</a></li>
+            <li><a class="dropdown-item" href="#">Rekapitulacija obračuna amortizacije po prostorijama</a></li>
+            <li><a class="dropdown-item" href="{{ url_for('reports.single_item_working', inventory_id=inventory_id) }}">Stanje inventara</a></li>
+            <li><a class="dropdown-item" href="{{ url_for('reports.category_reports_past', inventory_id=inventory_id) }}">Izveštaj po kontima</a></li>
+        </ul>
+    </div>
 </div>
 <hr>
 <table id="data" border="1" class="table table-striped userlist">

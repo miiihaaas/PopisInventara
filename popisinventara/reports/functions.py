@@ -82,7 +82,7 @@ def category_reports_past_pdf(data, inventory):
             self.cell(44, 6, f'Vrednost na kraju tekuće godine', new_x='LMARGIN', new_y='NEXT', align='C', border=1, fill=True)
     pdf = PDF()
     pdf.add_page()
-    totals = [0, 0, 0, 0]
+    totals = [Decimal(0), Decimal(0), Decimal(0), Decimal(0)]
     for row in data:
         totals[0] += row["initial_price"]
         totals[1] += row["write_off_until_current_year"]
@@ -138,7 +138,7 @@ def category_reports_expediture_pdf(data, inventory):
             self.cell(44, 6, f'Vrednost na kraju tekuće godine', new_x='LMARGIN', new_y='NEXT', align='C', border=1, fill=True)
     pdf = PDF()
     pdf.add_page()
-    totals = [0, 0, 0, 0]
+    totals = [Decimal(0), Decimal(0), Decimal(0), Decimal(0)]
     for row in data:
         totals[0] += row["initial_price"]
         totals[1] += row["write_off_until_current_year"]
@@ -191,7 +191,7 @@ def category_reports_new_purchases_pdf(data, inventory):
             self.cell(44, 6, f'Nabavna vrednost', new_x='LMARGIN', new_y='NEXT', align='C', border=1, fill=True)
     pdf = PDF()
     pdf.add_page()
-    totals = [0]
+    totals = [Decimal(0)]
     for row in data:
         totals[0] += row["initial_price"]
         initial_price = locale.format_string('%.2f', row["initial_price"].quantize(Decimal("0.01")), grouping=True)
@@ -241,7 +241,7 @@ def category_reports_item_pdf(data, inventory, report_type):
             self.cell(44, 6, f'Vrednost na kraju tekuće godine', new_x='LMARGIN', new_y='NEXT', align='C', border=1, fill=True)
     pdf = PDF(orientation='L')
     pdf.add_page()
-    totals = [0, 0, 0, 0, 0]
+    totals = [0, Decimal(0), Decimal(0), Decimal(0), Decimal(0)]
     for row in data:
         totals[0] += row["quantity"]
         totals[1] += row["initial_price"]

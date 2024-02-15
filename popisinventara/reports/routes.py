@@ -85,6 +85,7 @@ def category_reports_past(inventory_id):
     # return f'single_items: {single_items}'
     return render_template('category_reports.html', 
                             data=data,
+                            inventory_id=inventory_id,
                             title=f'Izveštaj po kontima',
                             legend=f'Izveštaj po kontima - popis {inventory.date}')
 
@@ -126,8 +127,9 @@ def category_reports_expediture(inventory_id):
     category_reports_expediture_pdf(data, inventory)
     return render_template('category_reports_expediture.html',
                             data=data,
-                            title=f'Rekapitulacija rashoda po kontu - datum popisa: {inventory.date}',
-                            legend=f'Rekapitulacija rashoda po kontu')
+                            inventory_id=inventory_id,
+                            title=f'Rekapitulacija rashoda po kontima - datum popisa: {inventory.date}',
+                            legend=f'Rekapitulacija rashoda po kontima')
 
 
 @reports.route('/category_reports_expediture_item/<int:inventory_id>') #! Izveštaj o rashodu (po kontima i predmetima) // Rashod za xxxx godinu
@@ -167,8 +169,8 @@ def category_reports_expediture_item(inventory_id):
                             data=data,
                             inventory_id=inventory_id,
                             report_type=report_type,
-                            title=f'Rekapitulacija rashodovanih predmeta po kontu',
-                            legend=f'Rekapitulacija rashodovanih predmeta po kontu - datum popisa: {inventory.date}')
+                            title=f'Rekapitulacija rashodovanih predmeta po kontima',
+                            legend=f'Rekapitulacija rashodovanih predmeta po kontima - datum popisa: {inventory.date}')
 
 
 @reports.route('/category_reports_new_purchases_past/<int:inventory_id>') #! izveštaji o novim nabavkama (po kontima zbirno) // rekapitulacija po kontima - nove nabavke 
@@ -210,8 +212,8 @@ def category_reports_new_purchases_past(inventory_id):
     return render_template('category_reports_new_purchases.html',
                             data=data,
                             inventory_id=inventory_id,
-                            title=f'Rekapitulacija novih nabavki po kontu',
-                            legend=f'Rekapitulacija novih nabavki po kontu - datum popisa: {inventory.date}')
+                            title=f'Rekapitulacija novih nabavki po kontima',
+                            legend=f'Rekapitulacija novih nabavki po kontima - datum popisa: {inventory.date}')
 
 
 @reports.route('/category_reports_new_purchases_item/<int:inventory_id>') #! izveštaji o novim nabavkama (po kontima i predmetima) // nambavka u toku xxxx godine
@@ -255,8 +257,8 @@ def category_reports_new_purchases_item(inventory_id):
                             data=data,
                             inventory_id=inventory_id,
                             report_type=report_type,
-                            title=f'Rekapitulacija nabavljenih predmeta po kontu',
-                            legend=f'Rekapitulacija nabavljenih predmeta po kontu - datum popisa: {inventory.date}')
+                            title=f'Rekapitulacija nabavljenih predmeta po kontima',
+                            legend=f'Rekapitulacija nabavljenih predmeta po kontima - datum popisa: {inventory.date}')
 
 
 @reports.route('/single_item_working/<int:inventory_id>', methods=['GET', 'POST'])
