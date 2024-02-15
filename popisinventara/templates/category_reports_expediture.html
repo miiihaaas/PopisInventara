@@ -3,6 +3,7 @@
 <div class="h1">{{ title }}</div>
 <div class="form-group">
     <a class="btn btn-secondary mb-4" href="javascript:history.back()">Nazad</a>
+    <a class="btn btn-primary mb-4" href="{{ url_for('static', filename='reports/category_reports_expediture.pdf') }}" target="_blank">Izvoz izveštaja u PDF fajl</a>
 </div>
 <hr>
 <table id="data" border="1" class="table table-striped userlist">
