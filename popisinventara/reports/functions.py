@@ -82,8 +82,12 @@ def category_reports_past_pdf(data, inventory):
             pdf.cell(45, 6, f'Vrednost na kraju tekuće godine', new_x='LMARGIN', new_y='NEXT', align='C', border=1, fill=True)
     pdf = PDF()
     pdf.add_page()
-    
+    totals = [0, 0, 0, 0]
     for row in data:
+        totals[0] += row["initial_price"]
+        totals[1] += row["write_off_until_current_year"]
+        totals[2] += row["depreciation_per_year"]
+        totals[3] += row["price_at_end_of_year"]
         initial_price = locale.format_string('%.2f', row["initial_price"].quantize(Decimal("0.01")), grouping=True)
         write_off_until_current_year = locale.format_string('%.2f', row["write_off_until_current_year"].quantize(Decimal("0.01")), grouping=True)
         depreciation_per_year = locale.format_string('%.2f', row["depreciation_per_year"].quantize(Decimal("0.01")), grouping=True)
@@ -93,7 +97,13 @@ def category_reports_past_pdf(data, inventory):
         pdf.cell(45, 6, f'{write_off_until_current_year}', new_y='LAST', align='R', border=1)
         pdf.cell(45, 6, f'{depreciation_per_year}', new_y='LAST', align='R', border=1)
         pdf.cell(45, 6, f'{price_at_end_of_year}', new_x='LMARGIN', new_y='NEXT', align='R', border=1)
-    
+        print(f'{totals=}')
+    pdf.set_fill_color(211, 211, 211)
+    pdf.cell(15, 6, f'Ukupno', new_y='LAST', align='L', border=1, fill=True)
+    pdf.cell(45, 6, f'{locale.format_string("%.2f", totals[0].quantize(Decimal("0.01")), grouping=True)}', new_y='LAST', align='R', border=1, fill=True)
+    pdf.cell(45, 6, f'{locale.format_string("%.2f", totals[1].quantize(Decimal("0.01")), grouping=True)}', new_y='LAST', align='R', border=1, fill=True)
+    pdf.cell(45, 6, f'{locale.format_string("%.2f", totals[2].quantize(Decimal("0.01")), grouping=True)}', new_y='LAST', align='R', border=1, fill=True)
+    pdf.cell(45, 6, f'{locale.format_string("%.2f", totals[3].quantize(Decimal("0.01")), grouping=True)}', new_x='LMARGIN', new_y='NEXT', align='R', border=1, fill=True)
     
     
     path = os.path.join(project_folder, 'static', 'reports')
