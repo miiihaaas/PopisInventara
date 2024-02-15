@@ -1,12 +1,12 @@
 {% extends "layout.html" %}
 {% block content %}
 <div class="h1">{{ legend }}</div>
-<div class="form-group">
+<div class="form-group" style="margin-bottom: 250px;">
     <a class="btn btn-secondary mb-4" href="javascript:history.back()">Nazad</a>
     {% if report_type == 'new_purchases_item' %}
-    <a class="btn btn-primary mb-4" href="{{ url_for('static', filename='reports/category_reports_expediture_item.pdf') }}" target="_blank">Izvoz izveštaja u PDF fajl</a>
-    {% else %}
     <a class="btn btn-primary mb-4" href="{{ url_for('static', filename='reports/category_reports_new_purchases_item.pdf') }}" target="_blank">Izvoz izveštaja u PDF fajl</a>
+    {% else %}
+    <a class="btn btn-primary mb-4" href="{{ url_for('static', filename='reports/category_reports_expediture_item.pdf') }}" target="_blank">Izvoz izveštaja u PDF fajl</a>
     {% endif %}
     <div class="btn-group mb-4">
         <button type="button" class="btn btn-danger dropdown-toggle mb-4" data-bs-toggle="dropdown" aria-expanded="false">
@@ -25,40 +25,49 @@
             <li><a class="dropdown-item" href="{{ url_for('reports.category_reports_past', inventory_id=inventory_id) }}">Izveštaj po kontima</a></li>
         </ul>
     </div>
+    <hr>
+    <table id="data" border="1" class="table table-striped userlist">
+        <thead>
+            <tr>
+                <th>Konto</th>
+                <th>Naziv inventara</th>
+                <th>Količina</th>
+                <th>Nabavna vrednost</th>
+                <th>Otpis do tekuće godine</th>
+                <th>Otpis u tekućoj godini</th>
+                <th>Ukupan otpis</th>
+                <th>Vrednost na kraju godine</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for record in data %}
+            <tr>
+                <td>{{ record['category'] }}</td>
+                <td>{{ record['item'] }}</td>
+                <td>{{ record['quantity'] }}</td>
+                <td>{{ '{:,.2f}'.format(record['initial_price']).replace(',', ':').replace('.', ',').replace(':','.') }}</td>
+                <td>{{ '{:,.2f}'.format(record['write_off_until_current_year']).replace(',', ':').replace('.', ',').replace(':','.') }}</td>
+                <td>{{ '{:,.2f}'.format(record['depreciation_per_year']).replace(',', ':').replace('.', ',').replace(':','.') }}</td>
+                <td>{{ '{:,.2f}'.format(record['depreciation_per_year'] + record['write_off_until_current_year']).replace(',', ':').replace('.', ',').replace(':','.') }}</td>
+                <td>{{ '{:,.2f}'.format(record['price_at_end_of_year']).replace(',', ':').replace('.', ',').replace(':','.') }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </div>
-<hr>
-<table id="data" border="1" class="table table-striped userlist">
-    <thead>
-        <tr>
-            <th>Konto</th>
-            <th>Naziv inventara</th>
-            <th>Količina</th>
-            <th>Nabavna vrednost</th>
-            <th>Otpis do tekuće godine</th>
-            <th>Otpis u tekućoj godini</th>
-            <th>Ukupan otpis</th>
-            <th>Vrednost na kraju godine</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for record in data %}
-        <tr>
-            <td>{{ record['category'] }}</td>
-            <td>{{ record['item'] }}</td>
-            <td>{{ record['quantity'] }}</td>
-            <td>{{ '{:,.2f}'.format(record['initial_price']).replace(',', ':').replace('.', ',').replace(':','.') }}</td>
-            <td>{{ '{:,.2f}'.format(record['write_off_until_current_year']).replace(',', ':').replace('.', ',').replace(':','.') }}</td>
-            <td>{{ '{:,.2f}'.format(record['depreciation_per_year']).replace(',', ':').replace('.', ',').replace(':','.') }}</td>
-            <td>{{ '{:,.2f}'.format(record['depreciation_per_year'] + record['write_off_until_current_year']).replace(',', ':').replace('.', ',').replace(':','.') }}</td>
-            <td>{{ '{:,.2f}'.format(record['price_at_end_of_year']).replace(',', ':').replace('.', ',').replace(':','.') }}</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
 
 {% endblock content%}
 
 {% block scripts %}
 <script>
+        $(document).ready(function () {
+        $("#data").DataTable({
+            order: [[0, "asc"]],
+            language: {
+                url: "//cdn.datatables.net/plug-ins/1.12.1/i18n/sr-SP.json",
+                stateSave: true
+            },
+        });
+    });
 </script>
 {% endblock %}
