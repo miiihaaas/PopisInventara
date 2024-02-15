@@ -11,6 +11,7 @@ popisinventara/main/__pycache__/
 popisinventara/users/__pycache__/
 popisinventara/static/inventory_lists/
 popisinventara/static/reverses/
+popisinventara/static/reports/
 __pycache__/
 venv/
 venvPopisInventara/

@@ -3,7 +3,7 @@ from decimal import Decimal
 import json
 from flask import Blueprint
 from popisinventara.models import Inventory, Room, SingleItem
-from popisinventara.reports.functions import write_off_until_current_year
+from popisinventara.reports.functions import write_off_until_current_year, category_reports_past_pdf
 from flask import render_template
 
 
@@ -81,6 +81,7 @@ def category_reports_past(inventory_id):
                     break
     print(f'{category_list=}')
     print(f'{data=}')
+    category_reports_past_pdf(data, inventory)
     # return f'single_items: {single_items}'
     return render_template('category_reports.html', 
                             data=data,

@@ -1,7 +1,12 @@
 
 from decimal import Decimal
 from datetime import date
+import os, locale
+from fpdf import FPDF
+from popisinventara.models import School
 
+
+locale.setlocale(locale.LC_ALL, '')
 
 def write_off_until_current_year(single_item, year=None):
     ''' funkcija otpis do tekuće godine '''
@@ -45,3 +50,54 @@ def write_off_until_current_year(single_item, year=None):
         price_at_end_of_year = Decimal(0)
         
     return write_off, price_at_end_of_year, depreciation_per_year
+
+current_file_path = os.path.abspath(__file__)
+project_folder = os.path.dirname(os.path.dirname((current_file_path)))
+font_path = os.path.join(project_folder, 'static', 'fonts', 'DejaVuSansCondensed.ttf')
+font_path_B = os.path.join(project_folder, 'static', 'fonts', 'DejaVuSansCondensed-Bold.ttf')
+
+
+def category_reports_past_pdf(data, inventory):
+    school = School.query.get_or_404(1)
+    class PDF(FPDF):
+        def __init__(self, **kwargs):
+            super(PDF, self).__init__(**kwargs)
+            self.add_font('DejaVuSansCondensed', '', font_path, uni=True)
+            self.add_font('DejaVuSansCondensed', 'B', font_path_B, uni=True)
+        def header(self):
+            self.set_font('DejaVuSansCondensed', '', 12)
+            self.cell(190/2, 7, school.schoolname, new_y='LAST', align='L', border=0)
+            self.cell(190/2, 7, f'Matični broj: {school.mb}', new_x='LMARGIN', new_y='NEXT', align='R', border=0)
+            self.cell(190/2, 7, school.address, new_y='LAST', align='L', border=0)
+            self.cell(190/2, 7, f'JBKJS: {school.jbkjs}', new_x='LMARGIN', new_y='NEXT', align='R', border=0)
+            self.cell(190/2, 7, f'{school.zip_code} {school.city}, {school.municipality}', new_x='LMARGIN', new_y='NEXT', align='L', border=0)
+            pdf.set_font('DejaVuSansCondensed', 'B', 14)
+            pdf.cell(0, 10, f'Izveštaj po kontima - popis: {inventory.date}', new_x='LMARGIN', new_y='NEXT', align='C', border=0)
+            pdf.set_font('DejaVuSansCondensed', '', 8)
+            pdf.set_fill_color(211, 211, 211)
+            pdf.cell(15, 6, f'Konto', new_y='LAST', align='C', border=1, fill=True)
+            pdf.cell(45, 6, f'Nabavna vrednost', new_y='LAST', align='C', border=1, fill=True)
+            pdf.cell(45, 6, f'Otpis do tekuće godine', new_y='LAST', align='C', border=1, fill=True)
+            pdf.cell(45, 6, f'Otpis u tekućoj godini', new_y='LAST', align='C', border=1, fill=True)
+            pdf.cell(45, 6, f'Vrednost na kraju tekuće godine', new_x='LMARGIN', new_y='NEXT', align='C', border=1, fill=True)
+    pdf = PDF()
+    pdf.add_page()
+    
+    for row in data:
+        initial_price = locale.format_string('%.2f', row["initial_price"].quantize(Decimal("0.01")), grouping=True)
+        write_off_until_current_year = locale.format_string('%.2f', row["write_off_until_current_year"].quantize(Decimal("0.01")), grouping=True)
+        depreciation_per_year = locale.format_string('%.2f', row["depreciation_per_year"].quantize(Decimal("0.01")), grouping=True)
+        price_at_end_of_year = locale.format_string('%.2f', row["price_at_end_of_year"].quantize(Decimal("0.01")), grouping=True)
+        pdf.cell(15, 6, f'{row["category"]}', new_y='LAST', align='L', border=1)
+        pdf.cell(45, 6, f'{initial_price}', new_y='LAST', align='R', border=1)
+        pdf.cell(45, 6, f'{write_off_until_current_year}', new_y='LAST', align='R', border=1)
+        pdf.cell(45, 6, f'{depreciation_per_year}', new_y='LAST', align='R', border=1)
+        pdf.cell(45, 6, f'{price_at_end_of_year}', new_x='LMARGIN', new_y='NEXT', align='R', border=1)
+    
+    
+    
+    path = os.path.join(project_folder, 'static', 'reports')
+    if not os.path.exists(path):
+        os.makedirs(path)
+    file_name = f'category_reports_past.pdf'
+    pdf.output(os.path.join(path, file_name))
