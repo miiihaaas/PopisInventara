@@ -704,6 +704,93 @@ def undo_expediture_single_item():
     return redirect(url_for('single_items.single_item_list'))
 
 
+@single_items.route('/add_single_items_to_app', methods=['GET', 'POST'])
+def add_single_items_to_app():
+    single_items_list = SingleItem.query.all()
+    if len(single_items_list) == 0:
+        max_serial_number = 1
+    else:
+        max_serial_number = max([int(single_item.inventory_number.split('-')[1]) for single_item in single_items_list])+1
+    
+    input_in_app_date = request.form.get('input_in_app_date')
+    deprecatin_value = request.form.get('deprecation_value')
+    
+    item_id = request.form.get('add_single_item_item_id')
+    rate = Item.query.filter_by(id=item_id).first().item_depreciation_rate.rate
+    item_name = request.form.get('add_single_item_name')
+    # if not item_name or not item_name.strip():
+    #     flash('Da bi ste dodali novi predmet, morate uneti naziv predmeta.', 'danger')
+    #     return redirect(url_for('single_items.single_item_list'))
+    item_room = request.form.get('add_single_item_room')
+    if not item_room or not item_room.strip():
+        item_room = 1 #! ako nije selektovana nijedna soba onda je room_id = 1 je virtuelni magacin
+    quantity = request.form.get('add_single_item_quantity')
+    # if not quantity or not quantity.strip():
+    #     flash('Da bi ste dodali novi predmet, morate uneti količinu predmeta.', 'danger')
+    #     return redirect(url_for('single_items.single_item_list'))
+    # Pokušaj konvertovati quantity u cijeli broj
+    try:
+        quantity = int(quantity)
+    except ValueError:
+        # Ako nije moguće konvertovati u cijeli broj
+        print(f'{type(quantity)=}')
+        flash('Količina predmeta mora biti ceo broj.', 'danger')
+        return redirect(url_for('single_items.single_item_list'))
+
+    # Provjeri da li je quantity sada cijeli broj
+    if not isinstance(quantity, int):
+        flash('Količina predmeta mora biti ceo broj.', 'danger')
+        return redirect(url_for('single_items.single_item_list'))
+    if int(quantity) < 1:
+        flash('Količina predmeta mora biti veća od 0.', 'danger')
+        return redirect(url_for('single_items.single_item_list'))
+    #! nastaviti (initial_price, quantity, purchase_date)
+    initial_price = float(request.form.get('add_single_item_initial_price')) / float(quantity)
+    if initial_price < 0:
+        flash('Cena predmeta mora biti veća od 0.', 'danger')
+        return redirect(url_for('single_items.single_item_list'))
+    purchase_date_str = request.form.get('add_single_item_date')
+
+    # Provjeri da li je purchase_date_str prazan ili sastoji se samo od praznina
+    if not purchase_date_str or not purchase_date_str.strip():
+        flash('Da bi ste dodali novi predmet, morate uneti datum kupovine predmeta.', 'danger')
+        return redirect(url_for('single_items.single_item_list'))
+
+    # Pokušaj parsirati purchase_date_str u datetime.date
+    try:
+        purchase_date = datetime.strptime(purchase_date_str, '%Y-%m-%d').date()
+    except ValueError:
+        flash('Neispravan format datuma. Molimo unesite datum u formatu YYYY-MM-DD.', 'danger')
+        return redirect(url_for('single_items.single_item_list'))
+
+    # Provjeri da li je purchase_date u prošlosti
+    if purchase_date > datetime.now().date():
+        flash('Datum kupovine ne može biti u budućnosti.', 'danger')
+        return redirect(url_for('single_items.single_item_list'))
+    supplier = request.form.get('add_single_item_supplier')
+    invoice_number = request.form.get('add_single_item_invoice_number')
+    current_price, _ = current_price_calculation(initial_price, rate, purchase_date)
+    print(f'{item_id=} {item_name=} {item_room=} {initial_price=} {purchase_date=} {quantity=}')
+    new_single_items = []
+    for i in range(1, int(quantity) + 1):
+        print(f'{type(item_id)=}, {type(max_serial_number)=}, {type(i)=}')
+        inventory_number = f'{int(item_id):04d}-{max_serial_number:05d}-{i:04d}'
+        new_single_item = SingleItem(item_id=item_id,
+                                        serial=max_serial_number,
+                                        name=item_name,
+                                        room_id=item_room,
+                                        initial_price=initial_price,
+                                        current_price=current_price,
+                                        purchase_date=purchase_date,
+                                        inventory_number=inventory_number,
+                                        supplier=supplier,
+                                        invoice_number=invoice_number,
+                                        input_in_app_date=input_in_app_date,
+                                        deprecation_value=deprecatin_value)
+        new_single_items.append(new_single_item)
+    db.session.add_all(new_single_items)
+    db.session.commit()
+
 @single_items.route('/add_single_item', methods=['GET', 'POST'])
 def add_single_item():
     if not current_user.is_authenticated:
