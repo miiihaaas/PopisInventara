@@ -790,6 +790,7 @@ def add_single_items_to_app():
         new_single_items.append(new_single_item)
     db.session.add_all(new_single_items)
     db.session.commit()
+    return redirect(url_for('single_items.single_item_list'))
 
 @single_items.route('/add_single_item', methods=['GET', 'POST'])
 def add_single_item():
