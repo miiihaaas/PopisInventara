@@ -712,9 +712,6 @@ def add_single_items_to_app():
     else:
         max_serial_number = max([int(single_item.inventory_number.split('-')[1]) for single_item in single_items_list])+1
     
-    input_in_app_date = request.form.get('input_in_app_date')
-    deprecatin_value = request.form.get('deprecation_value')
-    
     item_id = request.form.get('add_single_item_item_id')
     rate = Item.query.filter_by(id=item_id).first().item_depreciation_rate.rate
     item_name = request.form.get('add_single_item_name')
@@ -750,6 +747,9 @@ def add_single_items_to_app():
         flash('Cena predmeta mora biti veća od 0.', 'danger')
         return redirect(url_for('single_items.single_item_list'))
     purchase_date_str = request.form.get('add_single_item_date')
+    
+    input_in_app_date = request.form.get('input_in_app_date')
+    deprecatin_value = float(request.form.get('deprecation_value')) / float(quantity)
 
     # Provjeri da li je purchase_date_str prazan ili sastoji se samo od praznina
     if not purchase_date_str or not purchase_date_str.strip():
