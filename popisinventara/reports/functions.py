@@ -76,34 +76,39 @@ def category_reports_past_pdf(data, inventory):
             self.set_font('DejaVuSansCondensed', '', 8)
             self.set_fill_color(211, 211, 211)
             self.cell(12, 6, f'Konto', new_y='LAST', align='C', border=1, fill=True)
-            self.cell(44, 6, f'Nabavna vrednost', new_y='LAST', align='C', border=1, fill=True)
-            self.cell(44, 6, f'Otpis do tekuće godine', new_y='LAST', align='C', border=1, fill=True)
-            self.cell(44, 6, f'Otpis u tekućoj godini', new_y='LAST', align='C', border=1, fill=True)
-            self.cell(44, 6, f'Vrednost na kraju tekuće godine', new_x='LMARGIN', new_y='NEXT', align='C', border=1, fill=True)
+            self.cell(40, 6, f'Nabavna vrednost', new_y='LAST', align='C', border=1, fill=True)
+            self.cell(40, 6, f'Otpis do tekuće godine', new_y='LAST', align='C', border=1, fill=True)
+            self.cell(40, 6, f'Otpis u tekućoj godini', new_y='LAST', align='C', border=1, fill=True)
+            self.cell(44, 6, f'Vrednost na kraju tekuće godine', new_y='LAST', align='C', border=1, fill=True)
+            self.cell(12, 6, f'Kol', new_x='LMARGIN', new_y='NEXT', align='C', border=1, fill=True)
     pdf = PDF()
     pdf.add_page()
-    totals = [Decimal(0), Decimal(0), Decimal(0), Decimal(0)]
+    totals = [Decimal(0), Decimal(0), Decimal(0), Decimal(0), 0]
     for row in data:
         totals[0] += row["initial_price"]
         totals[1] += row["write_off_until_current_year"]
         totals[2] += row["depreciation_per_year"]
         totals[3] += row["price_at_end_of_year"]
+        totals[4] += row["quantity"]
         initial_price = locale.format_string('%.2f', row["initial_price"].quantize(Decimal("0.01")), grouping=True)
         write_off_until_current_year = locale.format_string('%.2f', row["write_off_until_current_year"].quantize(Decimal("0.01")), grouping=True)
         depreciation_per_year = locale.format_string('%.2f', row["depreciation_per_year"].quantize(Decimal("0.01")), grouping=True)
         price_at_end_of_year = locale.format_string('%.2f', row["price_at_end_of_year"].quantize(Decimal("0.01")), grouping=True)
+        quantity = row["quantity"]
         pdf.cell(12, 6, f'{row["category"]}', new_y='LAST', align='L', border=1)
-        pdf.cell(44, 6, f'{initial_price}', new_y='LAST', align='R', border=1)
-        pdf.cell(44, 6, f'{write_off_until_current_year}', new_y='LAST', align='R', border=1)
-        pdf.cell(44, 6, f'{depreciation_per_year}', new_y='LAST', align='R', border=1)
-        pdf.cell(44, 6, f'{price_at_end_of_year}', new_x='LMARGIN', new_y='NEXT', align='R', border=1)
+        pdf.cell(40, 6, f'{initial_price}', new_y='LAST', align='R', border=1)
+        pdf.cell(40, 6, f'{write_off_until_current_year}', new_y='LAST', align='R', border=1)
+        pdf.cell(40, 6, f'{depreciation_per_year}', new_y='LAST', align='R', border=1)
+        pdf.cell(44, 6, f'{price_at_end_of_year}', new_y='LAST', align='R', border=1)
+        pdf.cell(12, 6, f'{quantity}', new_x='LMARGIN', new_y='NEXT', align='R', border=1)
         print(f'{totals=}')
     pdf.set_fill_color(211, 211, 211)
     pdf.cell(12, 6, f'Ukupno', new_y='LAST', align='L', border=1, fill=True)
-    pdf.cell(44, 6, f'{locale.format_string("%.2f", totals[0].quantize(Decimal("0.01")), grouping=True)}', new_y='LAST', align='R', border=1, fill=True)
-    pdf.cell(44, 6, f'{locale.format_string("%.2f", totals[1].quantize(Decimal("0.01")), grouping=True)}', new_y='LAST', align='R', border=1, fill=True)
-    pdf.cell(44, 6, f'{locale.format_string("%.2f", totals[2].quantize(Decimal("0.01")), grouping=True)}', new_y='LAST', align='R', border=1, fill=True)
-    pdf.cell(44, 6, f'{locale.format_string("%.2f", totals[3].quantize(Decimal("0.01")), grouping=True)}', new_x='LMARGIN', new_y='NEXT', align='R', border=1, fill=True)
+    pdf.cell(40, 6, f'{locale.format_string("%.2f", totals[0].quantize(Decimal("0.01")), grouping=True)}', new_y='LAST', align='R', border=1, fill=True)
+    pdf.cell(40, 6, f'{locale.format_string("%.2f", totals[1].quantize(Decimal("0.01")), grouping=True)}', new_y='LAST', align='R', border=1, fill=True)
+    pdf.cell(40, 6, f'{locale.format_string("%.2f", totals[2].quantize(Decimal("0.01")), grouping=True)}', new_y='LAST', align='R', border=1, fill=True)
+    pdf.cell(44, 6, f'{locale.format_string("%.2f", totals[3].quantize(Decimal("0.01")), grouping=True)}', new_y='LAST', align='R', border=1, fill=True)
+    pdf.cell(12, 6, f'{totals[4]}', new_x='LMARGIN', new_y='NEXT', align='R', border=1, fill=True)
     
     
     path = os.path.join(project_folder, 'static', 'reports')

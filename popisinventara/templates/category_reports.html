@@ -30,6 +30,7 @@
                 <th>Otpis do tekuće godine</th>
                 <th>Otpis u tekućoj godini</th>
                 <th>Vrednost na kraju tekuće godine</th>
+                <th>Količina</th>
             </tr>
         </thead>
         <tbody>
@@ -40,6 +41,7 @@
                 <td>{{ '{:,.2f}'.format(record['write_off_until_current_year']).replace(',', ':').replace('.', ',').replace(':','.') }}</td>
                 <td>{{ '{:,.2f}'.format(record['depreciation_per_year']).replace(',', ':').replace('.', ',').replace(':','.') }}</td>
                 <td>{{ '{:,.2f}'.format(record['price_at_end_of_year']).replace(',', ':').replace('.', ',').replace(':','.') }}</td>
+                <td>{{ record['quantity'] }}</td>
             </tr>
             {% endfor %}
         </tbody>

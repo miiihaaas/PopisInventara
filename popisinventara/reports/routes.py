@@ -67,7 +67,8 @@ def category_reports_past(inventory_id):
                 'current_price': Decimal(single_item['current_price']),
                 'write_off_until_current_year': Decimal(single_item['write_off_until_current_year']),
                 'depreciation_per_year': Decimal(single_item['depreciation_per_year']),
-                'price_at_end_of_year': Decimal(single_item['price_at_end_of_year'])
+                'price_at_end_of_year': Decimal(single_item['price_at_end_of_year']),
+                'quantity': 1,
             }
             data.append(new_record)
         else:
@@ -78,6 +79,7 @@ def category_reports_past(inventory_id):
                     record['write_off_until_current_year'] += Decimal(single_item['write_off_until_current_year'])
                     record['depreciation_per_year'] += Decimal(single_item['depreciation_per_year'])
                     record['price_at_end_of_year'] += Decimal(single_item['price_at_end_of_year'])
+                    record['quantity'] += 1
                     break
     print(f'{category_list=}')
     print(f'{data=}')

@@ -770,7 +770,7 @@ def add_single_items_to_app():
     supplier = request.form.get('add_single_item_supplier')
     invoice_number = request.form.get('add_single_item_invoice_number')
     current_price, _ = current_price_calculation(initial_price, rate, purchase_date)
-    print(f'{item_id=} {item_name=} {item_room=} {initial_price=} {purchase_date=} {quantity=}')
+    print(f'{item_id=} {item_name=} {item_room=} {initial_price=} {purchase_date=} {quantity=} {input_in_app_date=} {deprecatin_value=}')
     new_single_items = []
     for i in range(1, int(quantity) + 1):
         print(f'{type(item_id)=}, {type(max_serial_number)=}, {type(i)=}')
