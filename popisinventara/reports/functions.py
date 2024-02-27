@@ -17,7 +17,7 @@ def write_off_until_current_year(single_item, year=None):
     purchase_date = single_item.purchase_date
     input_in_app_date = single_item.input_in_app_date
     initial_price = Decimal(str(single_item.initial_price))
-    if input_in_app_date:
+    if year:
         current_price = Decimal(str(single_item.initial_price)) - Decimal(str(single_item.deprecation_value))
     else:
         current_price = Decimal(str(single_item.current_price))
