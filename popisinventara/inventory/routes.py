@@ -192,7 +192,7 @@ def create_inventory_list():
                 'item_id': single_item.item_id,
                 'category': single_item.single_item_item.item_category.category_number,
                 'depreciation_rate': single_item.single_item_item.item_depreciation_rate.rate,
-                'depreciation_per_year': depreciation_per_year if depreciation_per_year < single_item.current_price else single_item.current_price, #!!!!!!
+                'depreciation_per_year': depreciation_per_year,
                 'write_off_until_current_year': write_off_til_current_year,
                 'price_at_end_of_year': price_at_end_of_year if price_at_end_of_year > 0 else 0,
             }
