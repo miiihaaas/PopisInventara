@@ -51,8 +51,8 @@ def write_off_until_current_year(single_item, year=None):
     
     if price_at_end_of_year < 0:
         price_at_end_of_year = Decimal(0)
-    elif single_item.expediture_date:
-        price_at_end_of_year = Decimal(0)
+    # elif single_item.expediture_date: #! ovo ček i ne treba, jer će se u category_reports_past filtrirati predmeti koji nisu rashodovani
+    #     price_at_end_of_year = Decimal(0)
         
     return write_off, price_at_end_of_year, depreciation_per_year
 

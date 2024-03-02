@@ -10,12 +10,12 @@ def load_user(user_id):
 
 class School(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    schoolname = db.Column(db.String(20), unique=True, nullable=False)
+    schoolname = db.Column(db.String(50), unique=True, nullable=False)
     address = db.Column(db.String(50), nullable=False)
     zip_code = db.Column(db.String(10), nullable=False)
-    city = db.Column(db.String(20), nullable=False)
-    municipality = db.Column(db.String(20), nullable=False)
-    country = db.Column(db.String(20), nullable=False)
+    city = db.Column(db.String(50), nullable=False)
+    municipality = db.Column(db.String(50), nullable=False)
+    country = db.Column(db.String(50), nullable=False)
     mb = db.Column(db.String(20), nullable=False)
     jbkjs = db.Column(db.String(20), nullable=False)
     settings_show_quantity = db.Column(db.Boolean, nullable=False, default=False)
@@ -30,7 +30,7 @@ class School(db.Model):
 class Building(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     school_id = db.Column(db.Integer, db.ForeignKey('school.id'), nullable=False)
-    name = db.Column(db.String(20), nullable=False)
+    name = db.Column(db.String(50), nullable=False)
     address = db.Column(db.String(50), nullable=False)
     city = db.Column(db.String(50), nullable=False)
     rooms = db.relationship('Room', backref='room_building', lazy='dynamic')
@@ -39,7 +39,7 @@ class Building(db.Model):
 class Room(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     building_id = db.Column(db.Integer, db.ForeignKey('building.id'), nullable=False)
-    name = db.Column(db.String(20), nullable=False) # prostorija 101, prostorija 102, prostorija 103... prostorija 201, prostorija 202...
+    name = db.Column(db.String(50), nullable=False) # prostorija 101, prostorija 102, prostorija 103... prostorija 201, prostorija 202...
     dynamic_name = db.Column(db.String(50), nullable=False) # učionica I-1, učionica I-2... učionica II-1... kancelarija, biblioteka...
     single_items = db.relationship('SingleItem', backref='single_item_room', lazy='dynamic')
     

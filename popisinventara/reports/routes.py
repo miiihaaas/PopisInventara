@@ -56,33 +56,34 @@ def category_reports_past(inventory_id):
     data = []
     category_list = []
     for single_item in single_items:
-        category = single_item['category']
-        single_item_instance = SingleItem.query.get(single_item['item_id'])
-        # print(f'{category=}')
-        if category not in category_list:
-            category_list.append(category)
-            new_record = {
-                'category': category,
-                'initial_price': Decimal(single_item['initial_price']),
-                'current_price': Decimal(single_item['current_price']),
-                'write_off_until_current_year': Decimal(single_item['write_off_until_current_year']),
-                'depreciation_per_year': Decimal(single_item['depreciation_per_year']),
-                'price_at_end_of_year': Decimal(single_item['price_at_end_of_year']),
-                'quantity': 1,
-            }
-            data.append(new_record)
-        else:
-            for record in data:
-                if record['category'] == category:
-                    record['initial_price'] += Decimal(single_item['initial_price'])
-                    record['current_price'] += Decimal(single_item['current_price'])
-                    record['write_off_until_current_year'] += Decimal(single_item['write_off_until_current_year'])
-                    record['depreciation_per_year'] += Decimal(single_item['depreciation_per_year'])
-                    record['price_at_end_of_year'] += Decimal(single_item['price_at_end_of_year'])
-                    record['quantity'] += 1
-                    break
-    print(f'{category_list=}')
-    print(f'{data=}')
+        if single_item['expediture_date'] is not None:
+            category = single_item['category']
+            single_item_instance = SingleItem.query.get(single_item['item_id'])
+            # print(f'{category=}')
+            if category not in category_list:
+                category_list.append(category)
+                new_record = {
+                    'category': category,
+                    'initial_price': Decimal(single_item['initial_price']),
+                    'current_price': Decimal(single_item['current_price']),
+                    'write_off_until_current_year': Decimal(single_item['write_off_until_current_year']),
+                    'depreciation_per_year': Decimal(single_item['depreciation_per_year']),
+                    'price_at_end_of_year': Decimal(single_item['price_at_end_of_year']),
+                    'quantity': 1,
+                }
+                data.append(new_record)
+            else:
+                for record in data:
+                    if record['category'] == category:
+                        record['initial_price'] += Decimal(single_item['initial_price'])
+                        record['current_price'] += Decimal(single_item['current_price'])
+                        record['write_off_until_current_year'] += Decimal(single_item['write_off_until_current_year'])
+                        record['depreciation_per_year'] += Decimal(single_item['depreciation_per_year'])
+                        record['price_at_end_of_year'] += Decimal(single_item['price_at_end_of_year'])
+                        record['quantity'] += 1
+                        break
+        print(f'{category_list=}')
+        print(f'{data=}')
     category_reports_past_pdf(data, inventory)
     # return f'single_items: {single_items}'
     return render_template('category_reports.html', 
@@ -95,6 +96,7 @@ def category_reports_past(inventory_id):
 @reports.route('/category_reports_expediture/<int:inventory_id>') #! izveštaj o rashodu // rekapitulacija po kontu - rashod
 def category_reports_expediture(inventory_id):
     inventory = Inventory.query.get_or_404(inventory_id)
+    inventory_year = inventory.date.year
     single_items = json.loads(inventory.working_data)['single_items']
     # print(f'{single_items=}')
     data = []
@@ -102,28 +104,34 @@ def category_reports_expediture(inventory_id):
     for single_item in single_items:
         if single_item['expediture_date']:
             print(f'{single_item["expediture_date"]=}')
-            category = single_item['category']
-            # print(f'{category=}')
-            if category not in category_list:
-                category_list.append(category)
-                new_record = {
-                    'category': category,
-                    'initial_price': Decimal(single_item['initial_price']),
-                    'write_off_until_current_year': Decimal(single_item['write_off_until_current_year']),
-                    'depreciation_per_year': Decimal(single_item['depreciation_per_year']),
-                    'price_at_end_of_year': Decimal(single_item['price_at_end_of_year']),
-                    'current_price': Decimal(single_item['current_price']),
-                }
-                data.append(new_record)
-            else:
-                for record in data:
-                    if record['category'] == category:
-                        record['initial_price'] += Decimal(single_item['initial_price'])
-                        record['current_price'] += Decimal(single_item['current_price'])
-                        record['write_off_until_current_year'] += Decimal(single_item['write_off_until_current_year'])
-                        record['depreciation_per_year'] += Decimal(single_item['depreciation_per_year'])
-                        record['price_at_end_of_year'] += Decimal(single_item['price_at_end_of_year'])
-                        break
+            # Pretvaranje stringa u datum
+            expediture_date = datetime.datetime.strptime(single_item['expediture_date'], '%Y-%m-%d')
+
+            # Dobijanje godine
+            expediture_year = expediture_date.year
+            if expediture_year == inventory_year:
+                category = single_item['category']
+                # print(f'{category=}')
+                if category not in category_list:
+                    category_list.append(category)
+                    new_record = {
+                        'category': category,
+                        'initial_price': Decimal(single_item['initial_price']),
+                        'write_off_until_current_year': Decimal(single_item['write_off_until_current_year']),
+                        'depreciation_per_year': Decimal(single_item['depreciation_per_year']),
+                        'price_at_end_of_year': Decimal(single_item['price_at_end_of_year']),
+                        'current_price': Decimal(single_item['current_price']),
+                    }
+                    data.append(new_record)
+                else:
+                    for record in data:
+                        if record['category'] == category:
+                            record['initial_price'] += Decimal(single_item['initial_price'])
+                            record['current_price'] += Decimal(single_item['current_price'])
+                            record['write_off_until_current_year'] += Decimal(single_item['write_off_until_current_year'])
+                            record['depreciation_per_year'] += Decimal(single_item['depreciation_per_year'])
+                            record['price_at_end_of_year'] += Decimal(single_item['price_at_end_of_year'])
+                            break
     print(f'{category_list=}')
     print(f'{data=}')
     category_reports_expediture_pdf(data, inventory)
