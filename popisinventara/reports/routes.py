@@ -56,7 +56,7 @@ def category_reports_past(inventory_id):
     data = []
     category_list = []
     for single_item in single_items:
-        if single_item['expediture_date'] is not None:
+        if single_item['expediture_date'] is None:
             category = single_item['category']
             single_item_instance = SingleItem.query.get(single_item['item_id'])
             # print(f'{category=}')
