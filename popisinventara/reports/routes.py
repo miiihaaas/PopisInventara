@@ -145,34 +145,45 @@ def category_reports_expediture(inventory_id):
 @reports.route('/category_reports_expediture_item/<int:inventory_id>') #! Izveštaj o rashodu (po kontima i predmetima) // Rashod za xxxx godinu
 def category_reports_expediture_item(inventory_id):
     inventory = Inventory.query.get_or_404(inventory_id)
+    inventory_year = inventory.date.year
     single_items = json.loads(inventory.working_data)['single_items']
     data = []
     category_item_list = []
     for single_item in single_items:
         if single_item['expediture_date']: #! verovatno treba dodati rashod samo za godinu u kojoj je rađen popis ( and expediture_date.year == inventory.date.year ) // trenutno lista sve predmete koji su rashodovani do popisa
-            category = single_item['category']
-            item = single_item["item_id"]
-            if (category, item) not in category_item_list:
-                category_item_list.append((category, item))
-                new_record = {
-                    'category': category,
-                    'item': single_item['name'],
-                    'quantity': 1,
-                    'initial_price': Decimal(single_item['initial_price']),
-                    'write_off_until_current_year': Decimal(single_item['write_off_until_current_year']),
-                    'depreciation_per_year': Decimal(single_item['depreciation_per_year']),
-                    'price_at_end_of_year': Decimal(single_item['price_at_end_of_year']),
-                }
-                data.append(new_record)
-            else:
-                for record in data:
-                    if record['category'] == category and record['item'] == item:
-                        record['quantity'] += 1
-                        record['initial_price'] += Decimal(single_item['initial_price'])
-                        record['write_off_until_current_year'] += Decimal(single_item['write_off_until_current_year'])
-                        record['depreciation_per_year'] += Decimal(single_item['depreciation_per_year'])
-                        record['price_at_end_of_year'] += Decimal(single_item['price_at_end_of_year'])
-                        break
+            # Pretvaranje stringa u datum
+            expediture_date = datetime.strptime(single_item['expediture_date'], '%Y-%m-%d')
+
+            # Dobijanje godine
+            expediture_year = expediture_date.year
+            if expediture_year == inventory_year:
+                category = single_item['category']
+                item = single_item["item_id"]
+                found = False
+                for tuple in category_item_list:
+                    x, y = tuple
+                    if x == category and y == item:
+                        found = True
+                        for record in data:
+                            record['quantity'] += 1
+                            record['initial_price'] += Decimal(single_item['initial_price'])
+                            record['write_off_until_current_year'] += Decimal(single_item['write_off_until_current_year'])
+                            record['depreciation_per_year'] += Decimal(single_item['depreciation_per_year'])
+                            record['price_at_end_of_year'] += Decimal(single_item['price_at_end_of_year'])
+                            break
+
+                if not found:
+                    category_item_list.append((category, item))
+                    new_record = {
+                        'category': category,
+                        'item': single_item['name'],
+                        'quantity': 1,
+                        'initial_price': Decimal(single_item['initial_price']),
+                        'write_off_until_current_year': Decimal(single_item['write_off_until_current_year']),
+                        'depreciation_per_year': Decimal(single_item['depreciation_per_year']),
+                        'price_at_end_of_year': Decimal(single_item['price_at_end_of_year']),
+                    }
+                    data.append(new_record)
     report_type = 'expediture_item'
     category_reports_item_pdf(data, inventory, report_type)
     return render_template('category_reports_item.html',
