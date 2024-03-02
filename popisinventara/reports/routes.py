@@ -105,7 +105,7 @@ def category_reports_expediture(inventory_id):
         if single_item['expediture_date']:
             print(f'{single_item["expediture_date"]=}')
             # Pretvaranje stringa u datum
-            expediture_date = datetime.datetime.strptime(single_item['expediture_date'], '%Y-%m-%d')
+            expediture_date = datetime.strptime(single_item['expediture_date'], '%Y-%m-%d')
 
             # Dobijanje godine
             expediture_year = expediture_date.year
