@@ -64,8 +64,8 @@
                     <a class="nav-link dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" href="#">Magacini</a>
                     <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdownMenuLink">
                       <a class="dropdown-item" href="{{url_for('single_items.room_single_items', room_id=1)}}">Virtuelni magacin</a>
-                      <a class="dropdown-item" href="{{url_for('single_items.room_single_items', room_id=2)}}">Magacin reversa</a>
-                      <a class="dropdown-item" href="{{url_for('single_items.room_single_items', room_id=3)}}">Magacin rashodovanih predmeta</a>
+                      <a class="dropdown-item" href="{{url_for('single_items.room_single_items', room_id=2)}}">Magacin rashodovanih predmeta</a>
+                      <a class="dropdown-item" href="{{url_for('single_items.room_single_items', room_id=3)}}">Magacin reversa</a>
                     </div>
                   </li>
                   <li class="nav-item dropdown dropdown--align-right">
@@ -73,7 +73,7 @@
                     <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdownMenuLink">
                       <a class="dropdown-item" href="{{ url_for('users.user_list') }}">Korisnički nalozi</a>
                       <a class="dropdown-item" href="{{ url_for('schools.school', school_id=1) }}">Škola</a>
-                      <a class="dropdown-item" href="{{ url_for('schools.buildings_rooms') }}">Zgrade / Prostorije</a>
+                      <a class="dropdown-item" href="{{ url_for('schools.buildings_rooms') }}">Zgrade | Prostorije</a>
                       <hr>
                       <a class="dropdown-item" href="{{ url_for('items.category') }}">Konta</a>
                       <a class="dropdown-item" href="{{ url_for('items.depreciation_rates') }}">Stope amortizacije</a>

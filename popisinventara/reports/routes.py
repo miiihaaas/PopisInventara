@@ -253,7 +253,7 @@ def category_reports_new_purchases_item(inventory_id):
                 new_record = {
                     'category': category,
                     'item_id': item_id,
-                    'item': single_item['name'],
+                    'item': single_item['name'], #! možda je bolje da bude item.name?
                     'quantity': 1,
                     'initial_price': Decimal(single_item['initial_price']),
                     'write_off_until_current_year': Decimal(single_item['write_off_until_current_year']),
