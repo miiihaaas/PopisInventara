@@ -704,6 +704,70 @@ def undo_expediture_single_item():
     return redirect(url_for('single_items.single_item_list'))
 
 
+@single_items.route('/undo_expediture_serial', methods=['GET', 'POST']) #!
+def undo_expediture_serial():
+    active_inventory_list = Inventory.query.filter_by(status='active').first()
+    if active_inventory_list:
+        flash(f'Nije moguće stornirati rashodovani predmet dok je aktivan popis.', 'danger')
+        return redirect(url_for('single_items.single_item_list'))
+    serial = request.form.get('serial_expediture_undo')
+    single_items_with_same_serial = SingleItem.query.filter_by(serial=int(serial)).all()
+    for single_item in single_items_with_same_serial:
+        print(f'poništavam rashod za ovaj predmet: {single_item=}')
+        single_item.expediture_date = None
+        single_item.expediture_price = None
+        single_item.room_id = 1 #! room_id = 1 je virtuelni magacin
+        db.session.commit()
+    flash(f'Predmet: {single_item.name} je storniran iz rashoda.', 'success')
+    update_price()
+    return redirect(url_for('single_items.single_item_list'))
+
+
+
+
+@single_items.route('/expediture_serial', methods=['GET', 'POST']) #!
+def expediture_serial():
+    print('test rashod po seriji')
+    active_inventory_list = Inventory.query.filter_by(status='active').first()
+    if active_inventory_list:
+        flash(f'Nije moguće rashodovati predmete dok je aktivan popis.', 'danger')
+        return redirect(url_for('single_items.single_item_list'))
+    serial = request.form.get('serial_expediture')
+    expediture_date = request.form.get('serial_expediture_date_expediture')
+    single_item = SingleItem.query.filter_by(serial=int(serial)).first() #! samo da bi se znao datum nabavke
+    if not expediture_date or not expediture_date.strip():
+        flash('Da bi ste rashodovali predmet, morate uneti validan datum rashoda.', 'danger')
+        return redirect(url_for('single_items.single_item_list'))
+    elif expediture_date > date.today().strftime('%Y-%m-%d'):
+        flash('Odabrani datum rashoda je u budućnosti. Da bi ste rashodovali predmet, morate uneti validan datum rashoda.', 'danger')
+        return redirect(url_for('single_items.single_item_list'))
+    elif expediture_date < single_item.purchase_date.strftime('%Y-%m-%d'):
+        flash('Odabrani datum rashoda je pre kupovine predmeta. Da bi ste rashodovali predmet, morate uneti datum rashoda koji je nakon kupovine predmeta.', 'danger')
+        return redirect(url_for('single_items.single_item_list'))
+    elif False:
+        print('dodati uslov da je datum rashoda obavezan da bude u tekućoj godini // ispravi False u potrebni uslov')
+    else:
+        expediture_date = datetime.strptime(request.form.get('serial_expediture_date_expediture'), '%Y-%m-%d').date()
+    
+    single_items_with_same_serial = SingleItem.query.filter_by(serial=int(serial)).all()
+    for single_item in single_items_with_same_serial:
+        initial_price = single_item.initial_price
+        rate = single_item.single_item_item.item_depreciation_rate.rate
+        purchase_date = single_item.purchase_date
+        input_in_app_date = single_item.input_in_app_date
+        deprecation_value = single_item.deprecation_value
+
+        single_item.current_price, single_item.expediture_price = current_price_calculation(initial_price, rate, purchase_date, expediture_date, None, input_in_app_date, deprecation_value)
+        single_item.expediture_date = expediture_date
+        single_item.room_id = 2 #! room_id = 2 je magacin rashoda
+        db.session.commit()
+    if len(single_items_with_same_serial) == 1:
+        flash(f'Uspešno ste rashodovali predmet po seriji: {serial}.', 'success')
+    else:
+        flash(f'Uspešno ste rashodovali {len(single_items_with_same_serial)} predmeta po seriji: {serial}.', 'success')
+    return redirect(url_for('single_items.single_item_list'))
+
+
 @single_items.route('/add_single_items_to_app', methods=['GET', 'POST'])
 def add_single_items_to_app():
     single_items_list = SingleItem.query.all()

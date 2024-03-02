@@ -224,6 +224,74 @@
         </div>
     </div>
 </div>
+<div class="modal fade" id="expeditureSerial" tabindex="-1" role="dialog" aria-labelledby="expeditureSerialLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="expeditureSerialLabel">Rashodovanje serije predmeta</h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form method="POST" action="{{ url_for('single_items.expediture_serial') }}">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-control-label" for="item_id_expediture">ID tipa predmeta</label>
+                        <input class="form-control" type="text" id="item_id_expediture" name="item_id_expediture" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-control-label" for="item_name_expediture">Naziv predmeta</label>
+                        <input class="form-control" type="text" id="item_name_expediture" name="item_name_expediture" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-control-label" for="serial_expediture">Serija</label>
+                        <input class="form-control" type="text" id="serial_expediture" name="serial_expediture" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-control-label" for="serial_expediture_date_expediture">Datum rashoda</label>
+                        <input class="form-control" type="date" id="serial_expediture_date_expediture" name="serial_expediture_date_expediture">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Otkažite</button>
+                        <button type="submit" class="btn btn-danger">Rashodujte seriju predmeta</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="undoExpeditureSerial" tabindex="-1" role="dialog" aria-labelledby="undoExpeditureSerialLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="undoExpeditureSerialLabel">Rashodovanje serije predmeta - Storno</h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form method="POST" action="{{ url_for('single_items.undo_expediture_serial') }}">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-control-label" for="item_id_expediture_undo">ID tipa predmeta</label>
+                        <input class="form-control" type="text" id="item_id_expediture_undo" name="item_id_expediture_undo" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-control-label" for="item_name_expediture_undo">Naziv predmeta</label>
+                        <input class="form-control" type="text" id="item_name_expediture_undo" name="item_name_expediture_undo" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-control-label" for="serial_expediture_undo">Serija</label>
+                        <input class="form-control" type="text" id="serial_expediture_undo" name="serial_expediture_undo" readonly>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Otkažite</button>
+                        <button type="submit" class="btn btn-danger">Storno</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 <div class="modal fade" id="undoExpeditureSingleItem" tabindex="-1" role="dialog" aria-labelledby="undoExpeditureSingleItemLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
@@ -427,6 +495,16 @@
         document.getElementById("single_item_name_expediture_undo").value = itemName
         document.getElementById("single_item_id_expediture_undo").value = singleItemId
         document.getElementById("single_item_inventory_number_expediture_undo").value = inventoryNumber
+    }
+    function expeditureSerial (itemId, itemName, serial) {
+        document.getElementById("item_id_expediture").value = itemId
+        document.getElementById("item_name_expediture").value = itemName
+        document.getElementById("serial_expediture").value = serial
+    }
+    function undoExpeditureSerial (itemId, itemName, serial) {
+        document.getElementById("item_id_expediture_undo").value = itemId
+        document.getElementById("item_name_expediture_undo").value = itemName
+        document.getElementById("serial_expediture_undo").value = serial
     }
     function reverseSingleItem (singleItemId, inventoryNumber, itemName) {
         document.getElementById("single_item_name_reverse").value = itemName
@@ -718,17 +796,31 @@
                     data: null,
                     render: function (data, type, row) {
                         // Generiše HTML za novu kolonu
-                        if (row.room_id) {
+                        if (row.room_id === 2) { // ako je predmet rashodovan, room_id = 2 magacin rashodovanih premdeta
+                            // Koristi podatke iz reda da konstruiraš hyperlink
+                            var url = '{{ url_for("single_items.single_item_rooms", item_id=1) }}';
+                            url = url.replace(1, row.item_id);
+                            // Kreiraj funkciju za dinamičko generisanje HTML-a unutar onclick
+                            // editSingleItem (singleItemName, singleItemQuantity, singleItemInitialPrice, singleItemDate, singleItemSupplier, singleItemInvoiceNumber)
+                            var undoExpeditureSerialFunction = 'undoExpeditureSerial(\'' + row.item_id + '\', \'' + row.name + '\', \'' + row.series + '\')';
+
+                            var html = '<td>' + 
+                                            '<a class="btn-x btn-primary-x" href="" data-bs-toggle="modal" onclick="'+ undoExpeditureSerialFunction +'" data-bs-target="#undoExpeditureSerial" title="Rashodovati - Storno"><i class="fa fa-trash-can-arrow-up awesomedelete" aria-hidden="true"></i></a>' +
+                                        '</td>';
+                            return html;
+                        } else {
                             // Koristi podatke iz reda da konstruiraš hyperlink
                             var url = '{{ url_for("single_items.single_item_rooms", item_id=1) }}';
                             url = url.replace(1, row.item_id);
                             // Kreiraj funkciju za dinamičko generisanje HTML-a unutar onclick
                             // editSingleItem (singleItemName, singleItemQuantity, singleItemInitialPrice, singleItemDate, singleItemSupplier, singleItemInvoiceNumber)
                             var editSingleItemFunction = 'editSingleItem(\'' + row.series + '\', \'' + row.item_id + '\', \'' + row.name + '\', \'' + row.quantity + '\', \'' + row.initial_price + '\', \'' + row.purchase_date + '\', \'' + row.supplier + '\', \'' + row.invoice_number + '\')';
+                            var expeditureSerialFunction = 'expeditureSerial(\'' + row.item_id + '\', \'' + row.name + '\', \'' + row.series + '\')';
 
                             var html = '<td>' + 
                                             '<a class="btn-x btn-primary-x" href="' + url + '" title="Pregled predmeta po prostorijama"><i class="fa fa-door-closed awesomeedit" aria-hidden="true"></i></a>' + 
-                                            '<a class="btn-x btn-primary-x" href="" data-bs-toggle="modal" onclick="'+ editSingleItemFunction +'" data-bs-target="#editSingleItem" title="Izmena serije"><i class="fa fa-edit awesomeedit" aria-hidden="true"></i></a>'
+                                            '<a class="btn-x btn-primary-x" href="" data-bs-toggle="modal" onclick="'+ editSingleItemFunction +'" data-bs-target="#editSingleItem" title="Izmena serije"><i class="fa fa-edit awesomeedit" aria-hidden="true"></i></a>' + 
+                                            '<a class="btn-x btn-primary-x" href="" data-bs-toggle="modal" onclick="'+ expeditureSerialFunction +'" data-bs-target="#expeditureSerial" title="Rashodovati seriju"><i class="fa fa-trash-can awesomedelete" aria-hidden="true"></i></a>' +
                                         '</td>';
                             return html;
                         }
