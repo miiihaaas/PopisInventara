@@ -76,17 +76,17 @@
 <table id="data" border="1" class="table table-striped userlist">
     <thead>
         <tr>
-            <td>ID</td>
-            <td>Naziv</td>
-            <td>Procenat amortizacije</td>
-            <td></td>
+            <th>ID</th>
+            <th style="text-align: left !important;">Naziv</th>
+            <th>Procenat amortizacije</th>
+            <th></th>
         </tr>
     </thead>
     <tbody>
         {% for depreciation_rate in depreciation_rates %}
         <tr>
             <td>{{ depreciation_rate.id }}</td>
-            <td>{{ depreciation_rate.name }}</td>
+            <td style="text-align: left !important;">{{ depreciation_rate.name }}</td>
             <td>{{ depreciation_rate.rate }}%</td>
             <td><a href="#" class="btn-x btn-primary-x" data-bs-toggle="modal" data-bs-target="#editDepreciationRate" onclick="editRate('{{depreciation_rate.id}}', '{{ depreciation_rate.name }}', '{{ depreciation_rate.rate }}')" title="Editovanje stope amirtizacije"><i class="fa fa-edit awesomeedit" aria-hidden="true"></i></a></td>
         </tr>

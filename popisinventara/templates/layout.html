@@ -37,7 +37,6 @@
           <a class="navbar-brand mr-4" href="{{ url_for('main.home') }}">{{ current_user.user_school.schoolname }} | {{ current_user.name }}</a>
           {% endif %}
           <div class="collapse navbar-collapse" id="navbarToggle">
-
               <!-- Navbar Right Side -->
               <div class="navbar-nav">
                 {% if current_user.is_authenticated %}
