@@ -84,10 +84,19 @@ def category_reports_past(inventory_id):
                         break
         print(f'{category_list=}')
         print(f'{data=}')
+    totals = {
+        'initial_price': sum(record['initial_price'] for record in data),
+        'current_price': sum(record['current_price'] for record in data),
+        'write_off_until_current_year': sum(record['write_off_until_current_year'] for record in data),
+        'depreciation_per_year': sum(record['depreciation_per_year'] for record in data),
+        'price_at_end_of_year': sum(record['price_at_end_of_year'] for record in data),
+        'quantity': sum(record['quantity'] for record in data),
+    }
     category_reports_past_pdf(data, inventory)
     # return f'single_items: {single_items}'
     return render_template('category_reports.html', 
                             data=data,
+                            totals=totals,
                             inventory_id=inventory_id,
                             title=f'Izveštaj po kontima',
                             legend=f'Izveštaj po kontima - popis {inventory.date}')
@@ -121,6 +130,7 @@ def category_reports_expediture(inventory_id):
                         'depreciation_per_year': Decimal(single_item['depreciation_per_year']),
                         'price_at_end_of_year': Decimal(single_item['price_at_end_of_year']),
                         'current_price': Decimal(single_item['current_price']),
+                        'quantity': 1,
                     }
                     data.append(new_record)
                 else:
@@ -131,12 +141,22 @@ def category_reports_expediture(inventory_id):
                             record['write_off_until_current_year'] += Decimal(single_item['write_off_until_current_year'])
                             record['depreciation_per_year'] += Decimal(single_item['depreciation_per_year'])
                             record['price_at_end_of_year'] += Decimal(single_item['price_at_end_of_year'])
+                            record['quantity'] += 1
                             break
     print(f'{category_list=}')
     print(f'{data=}')
+    totals = {
+        'initial_price': sum(record['initial_price'] for record in data),
+        'current_price': sum(record['current_price'] for record in data),
+        'write_off_until_current_year': sum(record['write_off_until_current_year'] for record in data),
+        'depreciation_per_year': sum(record['depreciation_per_year'] for record in data),
+        'price_at_end_of_year': sum(record['price_at_end_of_year'] for record in data),
+        'quantity': sum(record['quantity'] for record in data),
+    }
     category_reports_expediture_pdf(data, inventory)
     return render_template('category_reports_expediture.html',
                             data=data,
+                            totals=totals,
                             inventory_id=inventory_id,
                             title=f'Rekapitulacija rashoda po kontima - datum popisa: {inventory.date}',
                             legend=f'Rekapitulacija rashoda po kontima')
@@ -184,10 +204,18 @@ def category_reports_expediture_item(inventory_id):
                         'price_at_end_of_year': Decimal(single_item['price_at_end_of_year']),
                     }
                     data.append(new_record)
+    totals = {
+        'quantity': sum(record['quantity'] for record in data),
+        'initial_price': sum(record['initial_price'] for record in data),
+        'write_off_until_current_year': sum(record['write_off_until_current_year'] for record in data),
+        'depreciation_per_year': sum(record['depreciation_per_year'] for record in data),
+        'price_at_end_of_year': sum(record['price_at_end_of_year'] for record in data),
+    }
     report_type = 'expediture_item'
     category_reports_item_pdf(data, inventory, report_type)
     return render_template('category_reports_item.html',
                             data=data,
+                            totals=totals,
                             inventory_id=inventory_id,
                             report_type=report_type,
                             title=f'Rekapitulacija rashodovanih predmeta po kontima',
@@ -230,8 +258,12 @@ def category_reports_new_purchases_past(inventory_id):
     print(f'{category_list=}')
     print(f'{data=}')
     category_reports_new_purchases_pdf(data, inventory)
+    totals = {
+        'initial_price': sum(record['initial_price'] for record in data),
+    }
     return render_template('category_reports_new_purchases.html',
                             data=data,
+                            totals=totals,
                             inventory_id=inventory_id,
                             title=f'Rekapitulacija novih nabavki po kontima',
                             legend=f'Rekapitulacija novih nabavki po kontima - datum popisa: {inventory.date}')
@@ -272,10 +304,18 @@ def category_reports_new_purchases_item(inventory_id):
                         break
     print(f'{category_item_list=}')
     print(f'{data=}')
+    totals = {
+        'quantity': sum(record['quantity'] for record in data),
+        'initial_price': sum(record['initial_price'] for record in data),
+        'write_off_until_current_year': sum(record['write_off_until_current_year'] for record in data),
+        'depreciation_per_year': sum(record['depreciation_per_year'] for record in data),
+        'price_at_end_of_year': sum(record['price_at_end_of_year'] for record in data),
+    }
     report_type = 'new_purchases_item'
     category_reports_item_pdf(data, inventory, report_type)
     return render_template('category_reports_item.html',
                             data=data,
+                            totals=totals,
                             inventory_id=inventory_id,
                             report_type=report_type,
                             title=f'Rekapitulacija nabavljenih predmeta po kontima',

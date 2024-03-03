@@ -31,6 +31,7 @@
                 <th>Otpis u tekućoj godini</th>
                 <th>Ukupan otpis</th>
                 <th>Rashodovana vrednost</th>
+                <th>Količina</th>
             </tr>
         </thead>
         <tbody>
@@ -52,21 +53,23 @@
                 <td data-raw-value="{{ record['price_at_end_of_year'] }}">
                     {{ '{:,.2f}'.format(record['price_at_end_of_year']).replace(',', ':').replace('.', ',').replace(':','.') }}
                 </td>
-                
+                <td>{{ record['quantity'] }}</td>
             </tr>
             {% endfor %}
         </tbody>
         <tfoot>
             <tr>
-                <th>Ukupno</th>
-                <th></th>
-                <th></th>
-                <th></th>
-                <th></th>
-                <th></th>
+                <th>Ukupno:</th>
+                <td>{{ '{:,.2f}'.format(totals['initial_price']).replace(',', ':').replace('.', ',').replace(':','.') }}</td>
+                <td>{{ '{:,.2f}'.format(totals['write_off_until_current_year']).replace(',', ':').replace('.', ',').replace(':','.') }}</td>
+                <td>{{ '{:,.2f}'.format(totals['depreciation_per_year']).replace(',', ':').replace('.', ',').replace(':','.') }}</td>
+                <td>{{ '{:,.2f}'.format(totals['depreciation_per_year'] + totals['write_off_until_current_year']).replace(',', ':').replace('.', ',').replace(':','.') }}</td>
+                <td>{{ '{:,.2f}'.format(totals['price_at_end_of_year']).replace(',', ':').replace('.', ',').replace(':','.') }}</td>
+                <td>{{ totals['quantity'] }}</td>
             </tr>
         </tfoot>
     </table>
+    {{ totals }}
 </div>
 
 {% endblock content%}

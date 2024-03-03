@@ -37,6 +37,12 @@
             </tr>
             {% endfor %}
         </tbody>
+        <tfoot>
+            <tr>
+                <th>Ukupno:</th>
+                <td>{{ '{:,.2f}'.format(totals['initial_price']).replace(',', ':').replace('.', ',').replace(':','.') }}</td>
+            </tr>
+        </tfoot>
     </table>
 </div>
 

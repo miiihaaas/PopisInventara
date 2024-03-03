@@ -121,7 +121,7 @@ a.page-link:not(.page-item:first-child a.page-link, .page-item:last-child a.page
 .content-section ul.list-group li.list-group-item { border-bottom: 1px solid #ddd; margin-bottom: 1px; }
 .logincentered { display: flex; flex-direction: column; height: 89vh; justify-content: center; }
 fieldset.form-group { display: flex; flex-direction: column; max-width: 50%; margin: 0 auto 30px auto; }
-fieldset.loginfield { max-width: 30%; }
+fieldset.loginfield { max-width: 30%; width: 500px}
 form .form-group .btn { margin-bottom: 10px; }
 /*.container input.form-control { border: 0; border-bottom: 1px solid #ccc; border-radius: 0; background-color: transparent; }
 .container input.form-control:focus { box-shadow: none; border-bottom: 3px solid #940052 !important; }*/
