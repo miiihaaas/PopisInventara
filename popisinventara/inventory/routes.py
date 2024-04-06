@@ -414,7 +414,7 @@ def edit_inventory_room_list(inventory_id, room_id):
         print(f'test: {inventory_item_list_data=}')
         room = Room.query.get_or_404(room_id)
         room_name = f'{Room.query.get_or_404(room.id).room_building.name} - ({Room.query.get_or_404(room.id).name}) {Room.query.get_or_404(room.id).dynamic_name}'
-        popisna_lista_gen(inventory_item_list_data, room, inventory_id)
+        popisna_lista_gen(inventory_item_list_data, room, inventory_id, school)
     if inventory.status == 'finished':
         title = f"Pregled popisne liste: {room_id}"
     else:

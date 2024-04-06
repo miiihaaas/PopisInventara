@@ -7,12 +7,11 @@
 <div class="form-group mb-4">
     <a class="btn btn-secondary" href="javascript:history.back()">Nazad</a>
     {% if current_user.authorization == "admin" %}
-    <a class="btn btn-primary" href="{{ url_for('static', filename='inventory_lists/inventory_room_list_no_quantity.pdf') }}" target="_blank">Print bez količina</a>
-    <a class="btn btn-primary" href="{{ url_for('static', filename='inventory_lists/inventory_room_list.pdf') }}" target="_blank">Print sa količinama</a>
+    <a class="btn btn-primary" href="{{ url_for('static', filename='inventory_lists/inventory_room_list_no_quantity.pdf') }}" target="_blank">Popisna lista bez količina</a>
+    <a class="btn btn-primary" href="{{ url_for('static', filename='inventory_lists/inventory_room_list.pdf') }}" target="_blank">Popisna lista sa količinama</a>
     {% endif %}
 </div>
 <form action="" method="POST">
-    {{ school.settings_show_quantity }}
     <table id="data_1" border="1" class="table table-striped userlist">
         <thead>
             <tr>
