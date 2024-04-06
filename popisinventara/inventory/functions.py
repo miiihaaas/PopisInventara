@@ -9,7 +9,7 @@ font_path = os.path.join(project_folder, 'static', 'fonts', 'DejaVuSansCondensed
 font_path_B = os.path.join(project_folder, 'static', 'fonts', 'DejaVuSansCondensed-Bold.ttf')
 
 
-def popisna_lista_gen(inventory_item_list_data, room, inventory_id, school):
+def popisna_lista_gen(inventory_item_list_data, room, inventory_id, school, inventory):
     print(f'pokrenuta je funkcija popisna_lista_gen: {inventory_item_list_data=}')
     room_name = f'{Room.query.get_or_404(room.id).room_building.name} - ({Room.query.get_or_404(room.id).name}) {Room.query.get_or_404(room.id).dynamic_name}'
     room_id = room.id
@@ -25,7 +25,7 @@ def popisna_lista_gen(inventory_item_list_data, room, inventory_id, school):
             #     self.set_display_mode('L')
             def header(self):
                 self.set_font('DejaVuSansCondensed', 'B', 12)
-                self.cell(135, 7, f'Datum: {datetime.now().strftime("%d.%m.%Y.")}', new_y='LAST', align='L', border=0)
+                self.cell(135, 7, f'Datum: {inventory.date.strftime("%d.%m.%Y.")}', new_y='LAST', align='L', border=0)
                 self.cell(135, 7, f'{school.schoolname}', new_x='LMARGIN', new_y='NEXT', align='R', border=0)
                 self.cell(135, 7, f'Popisna lista: {room_id}', new_y='LAST', align='L', border=0)
                 self.cell(135, 7, f'{school.address}', new_x='LMARGIN', new_y='NEXT', align='R', border=0)
