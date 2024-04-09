@@ -2,21 +2,24 @@
 {% block content %}
 <div class="h1">{{ title }}</div>
 <div class="form-group mb-4">
-    <a class="btn btn-secondary" href="javascript:history.back()">Nazad</a>
-    <div class="d-flex justify-content-between align-items-center">
-        <div class="form-group select2widthmax">
-            <label class="form-control-label" for="room_select">Filter po prostoriji</label>
-            <select class="form-select" name="room_select" id="room_select">
-                <option value="">Sve prostorije</option>
-                {% for room in room_list %}
-                <option value="{{room.id}}">({{room.name}}) {{room.dynamic_name}}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <!-- <div class="form-check form-switch">
-            <input type="checkbox" class="form-check-input" id="current_year_procurement" name="current_year_procurement">
-            <label class="form-check-label" for="current_year_procurement">Nabavke u tekućoj godini</label>
-        </div> -->
+    <a class="btn btn-secondary mb-4" href="javascript:history.back()">Nazad</a>
+    <a class="btn btn-primary mb-4" href="{{ url_for('static', filename='reports/serial_reports.pdf') }}" target="_blank">Izvoz izveštaja u PDF fajl</a>
+    <div class="btn-group mb-4">
+        <button type="button" class="btn btn-danger dropdown-toggle mb-4" data-bs-toggle="dropdown" aria-expanded="false">
+            Ostali izveštaji
+        </button>
+        <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="{{ url_for('reports.category_reports_expediture', inventory_id=inventory_id) }}">Rekapitulacija rashoda po kontima</a></li>
+            <li><a class="dropdown-item" href="{{ url_for('reports.category_reports_expediture_item', inventory_id=inventory_id) }}">Rekapitulacija rashodovanih predmeta po kontima</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="{{ url_for('reports.category_reports_new_purchases_past', inventory_id=inventory_id) }}">Rekapitulacija novih nabavki po kontima</a></li>
+            <li><a class="dropdown-item" href="{{ url_for('reports.category_reports_new_purchases_item', inventory_id=inventory_id) }}">Rekapitulacija nabavljenih predmeta po kontima</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="#">Obračun amortizacije osnovnih sredstava pregled po prostorijama i po predmetima</a></li>
+            <li><a class="dropdown-item" href="#">Rekapitulacija obračuna amortizacije po prostorijama</a></li>
+            <li><a class="dropdown-item" href="{{ url_for('reports.single_item_working', inventory_id=inventory_id) }}">Stanje inventara</a></li>
+            <li><a class="dropdown-item" href="{{ url_for('reports.category_reports_past', inventory_id=inventory_id) }}">Izveštaj po kontima</a></li>
+        </ul>
     </div>
 </div>
 <ul class="nav nav-tabs justify-content-center mb-4" id="myTab" role="tablist">
@@ -78,11 +81,8 @@
                     <th>Količina</th>
                     <th>Nabavna vrednost</th>
                     <th>Otpis do tekuće godine</th>
-                    <!-- <th>Vrednost na kraju godine</th> -->
-                    <th>Datum nabavke</th>
-                    <th>Dobavljač</th>
-                    <th>Broj fakture</th>
-                    <!-- <th></th> -->
+                    <th>Otpis u tekućoj godini</th>
+                    <th>Vrednost na kraju godine</th>
                 </tr>
             </thead>
             <tbody>
@@ -93,10 +93,9 @@
                     <td>{{ item['name'] }}</td>
                     <td>{{ item['quantity'] }}</td>
                     <td>{{ item['initial_price'] }}</td>
-                    <td></td>
-                    <td>{{ item['purchase_date'] }}</td>
-                    <td>{{ item['supplier'] }}</td>
-                    <td>{{ item['invoice_number'] }}</td>
+                    <td>{{ item['write_off_until_current_year'] }}</td>
+                    <td>{{ item['depreciation_per_year'] }}</td>
+                    <td>{{ item['price_at_end_of_year'] }}</td>
                 </tr>
                 {% endfor %}
             </tbody>

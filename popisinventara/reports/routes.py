@@ -3,7 +3,7 @@ from decimal import Decimal
 import json
 from flask import Blueprint
 from popisinventara.models import Inventory, Room, SingleItem
-from popisinventara.reports.functions import write_off_until_current_year, category_reports_past_pdf, category_reports_expediture_pdf, category_reports_item_pdf, category_reports_new_purchases_pdf
+from popisinventara.reports.functions import write_off_until_current_year, category_reports_past_pdf, category_reports_expediture_pdf, category_reports_item_pdf, category_reports_new_purchases_pdf, serial_reports_pdf
 from flask import render_template
 
 
@@ -329,15 +329,21 @@ def single_item_working(inventory_id):
     inventory_single_items_working = json.loads(inventory.working_data)['single_items']
     print(f'{inventory_single_items_working=}')
     all_room_list = Room.query.all()
-    room_list = [room for room in all_room_list if room.id not in [2]]
+    room_list = [room for room in all_room_list if room.id not in [2]] #! ako nije u magacinu rashodovanih predmeta [2]
     inventory_cumulatively_per_series_working = []
     for single_item in inventory_single_items_working:
         found = False
         for item in inventory_cumulatively_per_series_working:
             if item['serial'] == single_item['serial']:
+                item['item_id'] = single_item['item_id']
+                item['serial'] = single_item['serial']
+                item['name'] = single_item['name']
                 item['quantity'] += 1
                 item['initial_price'] += Decimal(single_item['initial_price'])
                 item['current_price'] += Decimal(single_item['current_price'])
+                item['depreciation_per_year'] += Decimal(single_item['depreciation_per_year'])
+                item['write_off_until_current_year'] += Decimal(single_item['write_off_until_current_year'])
+                item['price_at_end_of_year'] += Decimal(single_item['price_at_end_of_year'])
                 found = True
                 break
         if not found:
@@ -345,11 +351,20 @@ def single_item_working(inventory_id):
             # inventory_cumulatively_per_series_working.append(single_item)
             #! Ako serija nije pronađena, dodajte novu seriju u listu
             new_item = single_item.copy()
+            new_item['item_id'] = single_item['item_id']
+            new_item['serial'] = new_item['serial']
+            new_item['name'] = new_item['name']
             new_item['quantity'] = 1
             new_item['initial_price'] = Decimal(new_item['initial_price'])
             new_item['current_price'] = Decimal(new_item['current_price'])
+            new_item['depreciation_per_year'] = Decimal(new_item['depreciation_per_year'])
+            new_item['write_off_until_current_year'] = Decimal(new_item['write_off_until_current_year'])
+            new_item['price_at_end_of_year'] = Decimal(new_item['price_at_end_of_year'])
             inventory_cumulatively_per_series_working.append(new_item)
     print(f'{inventory_cumulatively_per_series_working=}')
+    serial_reports_pdf(inventory_cumulatively_per_series_working, inventory)
+    
+    
     inventory_cumulatively_per_item_working = []
     for single_item in inventory_single_items_working:
         found = False
@@ -376,4 +391,5 @@ def single_item_working(inventory_id):
                             inventory_single_items_working=inventory_single_items_working,
                             inventory_cumulatively_per_series_working=inventory_cumulatively_per_series_working,
                             inventory_cumulatively_per_item_working=inventory_cumulatively_per_item_working,
+                            inventory_id=inventory_id
                             )
