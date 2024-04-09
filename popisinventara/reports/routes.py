@@ -361,6 +361,8 @@ def single_item_working(inventory_id):
             new_item['write_off_until_current_year'] = Decimal(new_item['write_off_until_current_year'])
             new_item['price_at_end_of_year'] = Decimal(new_item['price_at_end_of_year'])
             inventory_cumulatively_per_series_working.append(new_item)
+    # sortira po item_id
+    inventory_cumulatively_per_series_working.sort(key=lambda x: x['item_id'])
     print(f'{inventory_cumulatively_per_series_working=}')
     serial_reports_pdf(inventory_cumulatively_per_series_working, inventory)
     
