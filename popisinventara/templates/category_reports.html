@@ -29,6 +29,7 @@
                 <th>Nabavna vrednost</th>
                 <th>Otpis do tekuće godine</th>
                 <th>Otpis u tekućoj godini</th>
+                <th>Ukupan otpis</th>
                 <th>Vrednost na kraju tekuće godine</th>
                 <th>Količina</th>
             </tr>
@@ -40,6 +41,7 @@
                 <td>{{ '{:,.2f}'.format(record['initial_price']).replace(',', ':').replace('.', ',').replace(':','.') }}</td>
                 <td>{{ '{:,.2f}'.format(record['write_off_until_current_year']).replace(',', ':').replace('.', ',').replace(':','.') }}</td>
                 <td>{{ '{:,.2f}'.format(record['depreciation_per_year']).replace(',', ':').replace('.', ',').replace(':','.') }}</td>
+                <td>{{ '{:,.2f}'.format(record['write_off_until_current_year'] + record['depreciation_per_year']).replace(',', ':').replace('.', ',').replace(':','.') }}</td>
                 <td>{{ '{:,.2f}'.format(record['price_at_end_of_year']).replace(',', ':').replace('.', ',').replace(':','.') }}</td>
                 <td>{{ record['quantity'] }}</td>
             </tr>
@@ -51,6 +53,7 @@
                 <th>{{ '{:,.2f}'.format(totals['initial_price']).replace(',', ':').replace('.', ',').replace(':','.') }}</th>
                 <th>{{ '{:,.2f}'.format(totals['write_off_until_current_year']).replace(',', ':').replace('.', ',').replace(':','.') }}</th>
                 <th>{{ '{:,.2f}'.format(totals['depreciation_per_year']).replace(',', ':').replace('.', ',').replace(':','.') }}</th>
+                <th>{{ '{:,.2f}'.format(totals['write_off_until_current_year'] + totals['depreciation_per_year']).replace(',', ':').replace('.', ',').replace(':','.') }}</th>
                 <th>{{ '{:,.2f}'.format(totals['price_at_end_of_year']).replace(',', ':').replace('.', ',').replace(':','.') }}</th>
                 <th>{{ totals['quantity'] }}</th>
             </tr>

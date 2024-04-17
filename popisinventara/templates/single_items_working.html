@@ -82,6 +82,7 @@
                     <th>Nabavna vrednost</th>
                     <th>Otpis do tekuće godine</th>
                     <th>Otpis u tekućoj godini</th>
+                    <th>Ukupan otpis</th>
                     <th>Vrednost na kraju godine</th>
                 </tr>
             </thead>
@@ -95,6 +96,7 @@
                     <td>{{ item['initial_price'] }}</td>
                     <td>{{ item['write_off_until_current_year'] }}</td>
                     <td>{{ item['depreciation_per_year'] }}</td>
+                    <td>{{ item['write_off_until_current_year'] + item['depreciation_per_year'] }}</td>
                     <td>{{ item['price_at_end_of_year'] }}</td>
                 </tr>
                 {% endfor %}
