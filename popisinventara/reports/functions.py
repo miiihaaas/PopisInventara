@@ -337,6 +337,7 @@ def serial_reports_pdf(inventory_cumulatively_per_series_working, inventory):
         initial_price = locale.format_string('%.2f', row["initial_price"].quantize(Decimal("0.01")), grouping=True)
         write_off_until_current_year = locale.format_string('%.2f', row["write_off_until_current_year"].quantize(Decimal("0.01")), grouping=True)
         depreciation_per_year = locale.format_string('%.2f', row["depreciation_per_year"].quantize(Decimal("0.01")), grouping=True)
+        total_depreciation = locale.format_string('%.2f', (row["write_off_until_current_year"] + row["depreciation_per_year"]).quantize(Decimal("0.01")), grouping=True)
         price_at_end_of_year = locale.format_string('%.2f', row["price_at_end_of_year"].quantize(Decimal("0.01")), grouping=True)
         pdf.cell(10, 6, f'{row["item_id"]}', new_y='LAST', align='L', border=1)
         pdf.cell(10, 6, f'{row["serial"]}', new_y='LAST', align='L', border=1)
@@ -345,7 +346,7 @@ def serial_reports_pdf(inventory_cumulatively_per_series_working, inventory):
         pdf.cell(35, 6, f'{initial_price}', new_y='LAST', align='R', border=1)
         pdf.cell(35, 6, f'{write_off_until_current_year}', new_y='LAST', align='R', border=1)
         pdf.cell(35, 6, f'{depreciation_per_year}', new_y='LAST', align='R', border=1)
-        pdf.cell(35, 6, f'{write_off_until_current_year + depreciation_per_year}', new_y='LAST', align='R', border=1)
+        pdf.cell(35, 6, f'{total_depreciation}', new_y='LAST', align='R', border=1)
         pdf.cell(35, 6, f'{price_at_end_of_year}', new_x='LMARGIN', new_y='NEXT', align='R', border=1)
     
     pdf.set_fill_color(211, 211, 211)
