@@ -1,125 +1,296 @@
 {% extends "layout.html" %}
 {% block content %}
 <div class="h1">{{ title }}</div>
-<div class="form-group mb-4">
-    <input class="form-control" type="text" value="{{room_name}}" disabled>
-</div>
-<div class="form-group mb-4">
-    <a class="btn btn-secondary" href="javascript:history.back()">Nazad</a>
-    {% if current_user.authorization == "admin" %}
-    <a class="btn btn-primary" href="{{ url_for('static', filename='inventory_lists/inventory_room_list_no_quantity.pdf') }}" target="_blank">Popisna lista bez količina</a>
-    <a class="btn btn-primary" href="{{ url_for('static', filename='inventory_lists/inventory_room_list.pdf') }}" target="_blank">Popisna lista sa količinama</a>
-    {% endif %}
-</div>
-<form action="" method="POST">
-    <table id="data_1" border="1" class="table table-striped userlist">
-        <thead>
-            <tr>
-                <th>ID tipa predmeta</th>
-                <th>Serija</th>
-                <th>Naziv tipa predmeta</th>
-                <th>Naziv predmeta</th>
-                {% if school.settings_show_quantity or current_user.authorization == 'admin' %}
-                <th>Količina</th>
-                {% endif %}
-                <th>Popisana količina</th>
-                <th>Komentar</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for item in inventory_item_list_data %}
-            <tr>
-                <td>{{ item.item_id }}</td>
-                <td name="serial_{{ item.serial }}">{{ item.serial }}</td>
-                <td>{{ item.item_name }}</td>
-                <td>{{ item.name }}</td>
-                {% if school.settings_show_quantity or current_user.authorization == 'admin' %}
-                <td>{{ item.quantity }}</td>
-                {% endif %}
-                {%if inventory.status == 'finished' %}
-                <td><input class="form-control" type="number" min="0" name="quantity_input_{{ item.serial }}" value="{{item.quantity_input}}" disabled></td>
-                <td><input class="form-control" type="text" name="comment_{{ item.serial }}" value="{{item.comment}}" disabled></td>
-                {% else %}
-                <td><input class="form-control" type="number" min="0" name="quantity_input_{{ item.serial }}" value="{{item.quantity_input}}"></td>
-                <td><input class="form-control" type="text" name="comment_{{ item.serial }}" value="{{item.comment}}"></td>
-                {% endif %}
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    {%if not inventory.status == 'finished' %}
-    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newSingleItem">Dodajte novu stavku</button>
-    <button class="btn btn-primary" type="submit">Sačuvajte izmene</button>
-    {% endif %}
-</form>
-<div class="modal fade" id="newSingleItem" tabindex="-1" role="dialog" aria-labelledby="newSingleItemLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="newSingleItemLabel">Dodavanje novog predmeta u popisnu listu</h5>
-                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
+
+<div class="page-content">
+    <!-- Room Info -->
+    <div class="room-info card shadow-sm mb-4">
+        <div class="card-body">
+            <div class="d-flex align-items-center">
+                <i class="fa fa-door-open text-primary me-2 fs-4"></i>
+                <input class="form-control-plaintext fs-5 fw-bold" type="text" value="{{room_name}}" readonly>
             </div>
-            <form method="POST" action="{{ url_for('inventory.add_single_item_to_room')}}">
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label class="form-control-label" for="add_single_item_data">ID / Serija / Tip predmeta / Predmet</label>
-                        <select class="form-select" name="add_single_item_data" id="add_single_item_data">
-                            <option value=""></option>
-                            {% for item in all_serials_items_list %}
-                            <option value="{{item[1]}}">{{item[0]}} / {{ item[1] }} / {{ item[2] }} / {{ item[3] }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-control-label" for="add_single_item_quantity">Popisana količina</label>
-                        <input class="form-control" type="number" id="add_single_item_quantity" name="add_single_item_quantity">
-                    </div>
-                    <div class="form-group" style="display: none;">
-                        <label class="form-control-label" for="add_single_item_inventory_id">Popis_id</label>
-                        <input class="form-control" type="text" id="add_single_item_inventory_id" name="add_single_item_inventory_id" value="{{inventory_id}}" readonly>
-                    </div>
-                    <div class="form-group" style="display: none;">
-                        <label class="form-control-label" for="add_single_item_room_id">Room_id</label>
-                        <input class="form-control" type="text" id="add_single_item_room_id" name="add_single_item_room_id" value="{{room_id}}" readonly>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-control-label" for="add_single_item_comment">Komentar</label>
-                        <input class="form-control" type="text" id="add_single_item_comment" name="add_single_item_comment">
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="action-buttons mb-4">
+        <a class="btn btn-secondary" href="javascript:history.back()">
+            <i class="fa fa-arrow-left me-2"></i>Nazad
+        </a>
+        {% if current_user.authorization == "admin" %}
+        <a class="btn btn-primary" href="{{ url_for('static', filename='inventory_lists/inventory_room_list.pdf') }}" target="_blank">
+            <i class="fa fa-file-pdf me-2"></i>Lista bez količina
+        </a>
+        <a class="btn btn-primary" href="{{ url_for('static', filename='inventory_lists/inventory_room_list_with_quantities.pdf') }}" target="_blank">
+            <i class="fa fa-file-pdf me-2"></i>Lista sa količinama
+        </a>
+        {% endif %}
+    </div>
+
+    <!-- Main Form -->
+    <form action="" method="POST" id="mainForm">
+        <div class="table-responsive">
+            <table id="data_1" class="table table-striped report-table">
+                <thead>
+                    <tr>
+                        <th>Naziv predmeta</th>
+                        <th>Serija</th>
+                        <th>Konto</th>
+                        <th class="text-end">Procenat amortizacije</th>
+                        <th class="text-end">Količina</th>
+                        <th class="text-end">Popisana količina</th>
+                        <th>Komentar</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in inventory_item_list_data %}
+                    <tr>
+                        <td>{{ item.name }}</td>
+                        <td>{{ item.serial }}</td>
+                        <td>{{ item.category_number }}</td>
+                        <td class="text-end">{{ item.depreciation_rate }}%</td>
+                        <td class="text-end">{{ item.quantity }}</td>
+                        {% if inventory.status == 'finished' %}
+                        <td class="text-end">
+                            <input class="form-control text-end" type="number" min="0" 
+                                    name="quantity_input_{{ item.serial }}" 
+                                    value="{{ item.quantity_input }}" readonly>
+                        </td>
+                        <td>
+                            <input class="form-control" type="text" 
+                                    name="comment_{{ item.serial }}" 
+                                    value="{{ item.comment|default('') }}" readonly>
+                        </td>
+                        {% else %}
+                        <td class="text-end">
+                            <input class="form-control quantity-input text-end" type="number" min="0" 
+                                    name="quantity_input_{{ item.serial }}" 
+                                    value="{{ item.quantity_input }}" required>
+                        </td>
+                        <td>
+                            <input class="form-control" type="text" 
+                                    name="comment_{{ item.serial }}" 
+                                    value="{{ item.comment|default('') }}"
+                                    placeholder="Unesite komentar...">
+                        </td>
+                        {% endif %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr class="table-dark">
+                        <td colspan="4" class="text-end fw-bold">Ukupno:</td>
+                        <td class="text-end fw-bold" id="total-quantity">
+                            {{ inventory_item_list_data|sum(attribute='quantity') }}
+                        </td>
+                        <td class="text-end fw-bold" id="total-quantity-input">
+                            {{ inventory_item_list_data|sum(attribute='quantity_input') }}
+                        </td>
+                        <td></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        {% if inventory.status != 'finished' %}
+        <div class="form-actions mt-4 d-flex gap-2">
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newSingleItem">
+                <i class="fa fa-plus me-2"></i>Dodaj stavku
+            </button>
+            <button class="btn btn-success" type="submit">
+                <i class="fa fa-save me-2"></i>Sačuvaj izmene
+            </button>
+        </div>
+        {% endif %}
+    </form>
+
+    <!-- Add New Item Modal -->
+    <div class="modal fade" id="newSingleItem" tabindex="-1" aria-labelledby="newSingleItemLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="newSingleItemLabel">
+                        <i class="fa fa-plus me-2"></i>Nova stavka popisa
+                    </h5>
+                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form method="POST" action="{{ url_for('inventory.add_single_item_to_room')}}" id="addItemForm">
+                    <div class="modal-body">
+                        <div class="form-group mb-3">
+                            <label class="form-label" for="add_single_item_data">Izaberite predmet</label>
+                            <select class="form-select" name="add_single_item_data" id="add_single_item_data" required>
+                                <option value="">Izaberite predmet</option>
+                                {% for item in all_serials_items_list %}
+                                <option value="{{ item[0] }}">
+                                    ({{ item[1] }}) / Serija: {{ item[0] }} / Konto: {{ item[2] }} / Amortizacija: {{ item[3] }}%
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label class="form-label" for="add_single_item_quantity">Popisana količina</label>
+                            <input class="form-control" type="number" min="0" 
+                                    id="add_single_item_quantity" 
+                                    name="add_single_item_quantity" 
+                                    placeholder="Unesite količinu" required>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label class="form-label" for="add_single_item_comment">Komentar</label>
+                            <input class="form-control" type="text" 
+                                    id="add_single_item_comment" 
+                                    name="add_single_item_comment"
+                                    placeholder="Unesite komentar">
+                        </div>
+                        <input type="hidden" name="add_single_item_inventory_id" value="{{ inventory_id }}">
+                        <input type="hidden" name="add_single_item_room_id" value="{{ room_id }}">
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Otkažite</button>
-                        <button type="submit" class="btn btn-primary">Sačuvajte</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="fa fa-times me-2"></i>Otkaži
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fa fa-save me-2"></i>Sačuvaj
+                        </button>
                     </div>
-                </div>
-            </form>
+                </form>
+            </div>
         </div>
     </div>
 </div>
-
-{% endblock content%}
+{% endblock %}
 
 {% block scripts %}
 <script>
-    $(document).ready(function () {
-        $("#data_1").DataTable({
-            order: [[1, "asc"]],
-            language: {
-                url: "//cdn.datatables.net/plug-ins/1.12.1/i18n/sr-SP.json",
-                stateSave: true
-            },
-            // lengthMenu: [100, 200, 400], // Postavljanje podrazumevanih vrednosti za prikazivanje
-            paging: false, // Isključivanje paginacije
-        });
+$(document).ready(function () {
+    // DataTable inicijalizacija
+    const table = $("#data_1").DataTable({
+        order: [[1, "asc"]],
+        language: {
+            url: "//cdn.datatables.net/plug-ins/1.12.1/i18n/sr-SP.json"
+        },
+        pageLength: 25,
+        responsive: true,
+        paging: false,
+        stateSave: true,
+        columnDefs: [
+            { className: "text-end", targets: [3,4,5] }
+        ]
     });
+
+    // Select2 inicijalizacija
     $('#add_single_item_data').select2({
         dropdownParent: $('#newSingleItem'),
         placeholder: 'Izaberite predmet',
         allowClear: true,
         width: '100%',
         tags: false,
-        closeOnSelect: true,
-    })
+        closeOnSelect: true
+    });
+
+    function updateTotals() {
+        let totalQuantityInput = 0;
+        $('.quantity-input').each(function() {
+            totalQuantityInput += parseInt($(this).val()) || 0;
+        });
+        $('#total-quantity-input').text(totalQuantityInput);
+    }
+
+    // Form validacija
+    $('#mainForm').on('submit', function(e) {
+        let hasEmptyInputs = false;
+        $(this).find('input[type="number"]').each(function() {
+            if ($(this).val() === '') {
+                hasEmptyInputs = true;
+                $(this).addClass('is-invalid');
+            }
+        });
+
+        if (hasEmptyInputs) {
+            e.preventDefault();
+            alert('Molimo popunite sva obavezna polja u tabeli.');
+            return false;
+        }
+    });
+
+    $('#addItemForm').on('submit', function(e) {
+        if (!$('#add_single_item_data').val() || !$('#add_single_item_quantity').val()) {
+            e.preventDefault();
+            alert('Molimo popunite sva obavezna polja.');
+            return false;
+        }
+    });
+
+    $('.quantity-input').on('input', function() {
+        $(this).removeClass('is-invalid');
+        updateTotals();
+    });
+
+    updateTotals();
+});
 </script>
+
+<style>
+/* Form Controls */
+.form-control-plaintext {
+    font-size: 1.1rem;
+    padding: 0.5rem 0;
+    color: var(--color-text);
+}
+
+.form-control:read-only,
+.form-control:disabled {
+    background-color: #f8f9fa;
+    opacity: 1;
+}
+
+/* Table Styles */
+.report-table td {
+    vertical-align: middle;
+}
+
+.report-table .form-control {
+    min-width: 80px;
+}
+
+.quantity-input.is-invalid {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.1);
+}
+
+#total-quantity-input, 
+#total-quantity {
+    font-weight: bold;
+}
+
+/* Action Buttons */
+.action-buttons {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+/* Modal Customization */
+.modal-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.modal-footer {
+    background-color: #f8f9fa;
+    border-top: 1px solid var(--color-border);
+}
+
+@media (max-width: 768px) {
+    .action-buttons {
+        flex-direction: column;
+    }
+    
+    .action-buttons .btn {
+        width: 100%;
+    }
+}
+</style>
 {% endblock %}

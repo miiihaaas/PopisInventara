@@ -1,65 +1,128 @@
 {% extends "layout.html" %}
 {% block content %}
+
+<!-- Page Header -->
 <div class="h1">{{title}}</div>
-<div class="form-group mb-4">
-    <div class="row">
-        <div class="col-md-4">
-            <a class="btn btn-secondary" href="javascript:history.back()">Nazad</a>  <!-- ovde je u klasi bilo " sec-nazad" -->
-            {% if not inventory %}
-            <a class="btn btn-primary mb-4" href="{{url_for('single_items.move_select_item')}}">Premeštaj</a>
-            {% endif %}
-        </div>
-        <div class="col-md-4">
-            <label for="item_id">ID predmeta</label>
-            <input id="item_id" name="item_id" type="text" class="form-control" value="{{item.id}}" readonly>
-        </div>
-        <div class="col-md-4">
-            <label for="item_name">Naziv predmeta</label>
-            <input id="item_name" name="item_name" type="text" class="form-control" value="{{item.name}}" readonly>
+
+<!-- Item Info Card -->
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <div class="row g-3">
+            <!-- Action Buttons - stavićemo ih u poseban red -->
+            <div class="col-12">
+                <div class="action-buttons">
+                    <a class="btn btn-secondary" href="javascript:history.back()">
+                        <i class="fa fa-arrow-left me-2"></i>Nazad
+                    </a>
+                    {% if not inventory %}
+                    <a class="btn btn-primary" href="{{url_for('single_items.move_select_serial')}}">
+                        <i class="fa fa-exchange-alt me-2"></i>Premeštaj
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Item Details - u novom redu -->
+            <div class="col-12">
+                <div class="row g-3">
+                    <!-- Basic Info -->
+                    <div class="col-md-2">
+                        <div class="form-group">
+                            <label class="form-control-label" for="series">Serija</label>
+                            <input id="series" name="series" type="text" 
+                                   class="form-control" 
+                                   value="{{'{:05d}'.format(reference_item.serial|int)}}" readonly>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="form-control-label" for="item_name">Naziv predmeta</label>
+                            <input id="item_name" name="item_name" type="text" 
+                                   class="form-control" value="{{reference_item.name}}" readonly>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label class="form-control-label" for="category_info">Konto</label>
+                            <input id="category_info" name="category_info" type="text" 
+                                   class="form-control" value="{{data_list[0].category_info}}" readonly>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label class="form-control-label" for="depreciation_info">Amortizacija</label>
+                            <input id="depreciation_info" name="depreciation_info" type="text" 
+                                   class="form-control" value="{{data_list[0].depreciation_info}}" readonly>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
-<table id="data" border="1" class="table table-striped userlist">
-    <thead>
-        <tr>
-            <td>Zgrada</td>
-            <td>Prostorija</td>
-            <td>Serija</td>
-            <td>Količina</td>
-            <td></td>
-        </tr>
-    </thead>
-    <tbody>
-        {% for data in data_list %}
-        <tr>
-            <td>{{ data.building }}</td>
-            <td>{{ data.room }}</td>
-            <td>{{ data.serial }}</td>
-            <td>{{ data.quantity }}</td>
-            <td>
-                {% if inventory %}
-                    {% if data['room_id'] not in [1, 2] %}
-                    <a href="{{url_for('inventory.edit_inventory_room_list', inventory_id=inventory.id, room_id=data['room_id'])}}" class="btn-x btn-primary-x"title="Pregled predmeta u prostoriji listi"><i class="fa fa-door-open awesomeedit" aria-hidden="true"></i></a>
-                    {% endif %}
-                {% else %}
-                <a href="{{url_for('single_items.room_single_items', room_id=data['room_id'])}}" class="btn-x btn-primary-x"title="Pregled predmeta u prostoriji"><i class="fa fa-door-closed awesomeedit" aria-hidden="true"></i></a>
-                {% endif %}
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+<!-- Items Table -->
+<div class="table-responsive">
+    <table id="data" class="table table-striped report-table">
+        <thead>
+            <tr>
+                <th>Zgrada</th>
+                <th>Prostorija</th>
+                <th>Serija</th>
+                <th class="text-end">Količina</th>
+                <th class="text-end">Nabavna vrednost</th>
+                <th class="text-end">Trenutna vrednost</th>
+                <th class="text-end">Akcije</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for data in data_list %}
+            <tr>
+                <td>{{ data.building }}</td>
+                <td>{{ data.room }}</td>
+                <td>{{ '{:05d}'.format(data.serial|int) }}</td>
+                <td class="text-end">{{ data.quantity }}</td>
+                <td class="text-end">{{ "%.2f"|format(data.initial_price) }}</td>
+                <td class="text-end">{{ "%.2f"|format(data.current_price) }}</td>
+                <td>
+                    <div class="d-flex gap-2 justify-content-end">
+                        {% if inventory %}
+                            {% if data['room_id'] not in [1, 2] %}
+                            <a href="{{url_for('inventory.edit_inventory_room_list', inventory_id=inventory.id, room_id=data['room_id'])}}" 
+                               title="Pregled predmeta u prostoriji liste">
+                               <i class="fa fa-door-open awesomeedit"></i>
+                            </a>
+                            {% endif %}
+                        {% else %}
+                            <a href="{{url_for('single_items.room_single_items', room_id=data['room_id'])}}" 
+                               title="Pregled predmeta u prostoriji">
+                               <i class="fa fa-door-closed awesomeedit"></i>
+                            </a>
+                        {% endif %}
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
 {% endblock content%}
+
 {% block scripts %}
 <script>
     $(document).ready(function () {
-    $("#data").DataTable({
-        order: [[0, "asc"], [1, "asc"], [2, "asc"]],
-        language: {
-            url: "//cdn.datatables.net/plug-ins/1.12.1/i18n/sr-SP.json",
-            stateSave: true
-        },
+        $("#data").DataTable({
+            order: [[0, "asc"], [1, "asc"]],
+            language: {
+                url: "//cdn.datatables.net/plug-ins/1.12.1/i18n/sr-SP.json"
+            },
+            stateSave: true,
+            responsive: true,
+            columnDefs: [
+                { className: "text-end", targets: [3,4,5] },
+                { orderable: false, targets: [-1] }
+            ]
         });
     });
 </script>

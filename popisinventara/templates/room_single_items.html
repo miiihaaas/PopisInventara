@@ -1,70 +1,116 @@
 {% extends "layout.html" %}
 {% block content %}
 <div class="h1">{{title}}</div>
-<div class="form-group mb-4">
-    <div class="row">
-        <div class="col-md-4">
-            <a class="btn btn-secondary sec-nazad" href="javascript:history.back()">Nazad</a>
-            <a class="btn btn-primary mb-4" href="{{url_for('single_items.move_select_item')}}">Premeštaj</a>
-        </div>
-        <div class="col-md-4">
-            <label for="room_id">ID prostorije</label>
-            <input id="room_id" name="room_id" type="text" class="form-control" value="{{room.id}}" readonly>
-        </div>
-        <div class="col-md-4">
-            <label for="room_name">Naziv prostorije</label>
-            <input id="room_name" name="room_name" type="text" class="form-control" value="{{room.room_building.name}} > ({{room.name}}) {{room.dynamic_name}}" readonly>
+
+<div class="room-info-section mb-4">
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="row align-items-end g-3">
+                <!-- Action Buttons -->
+                <div class="col-md-4">
+                    <div class="action-buttons">
+                        <a class="btn btn-secondary" href="javascript:history.back()">
+                            <i class="fa fa-arrow-left me-2"></i>Nazad
+                        </a>
+                        <a class="btn btn-primary" href="{{url_for('single_items.move_select_serial')}}">
+                            <i class="fa fa-exchange-alt me-2"></i>Premeštaj
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Room ID -->
+                <div class="col-md-4">
+                    <div class="form-group mb-0">
+                        <label class="form-control-label" for="room_id">ID prostorije</label>
+                        <input id="room_id" name="room_id" type="text" 
+                               class="form-control" value="{{room.id}}" readonly>
+                    </div>
+                </div>
+                
+                <!-- Room Name -->
+                <div class="col-md-4">
+                    <div class="form-group mb-0">
+                        <label class="form-control-label" for="room_name">Naziv prostorije</label>
+                        <input id="room_name" name="room_name" type="text" 
+                               class="form-control" 
+                               value="{{room.building.name}} > ({{room.name}}) {{room.dynamic_name}}" 
+                               readonly>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
-<table id="data" border="1" class="table table-striped userlist">
-    <thead>
-        <tr>
-            <th>ID tipa predmeta</th>
-            <th>Naziv tipa predmeta</th>
-            <th>Naziv predmeta</th>
-            <th>Serija</th>
-            <th>Količina</th>
-            {% if not active_inventory_list %}
-                <th></th>
-            {% endif %}
-        </tr>
-    </thead>
-    <tbody>
-        {% for data in data_list %}
-        <tr>
-            <td>{{ data.id }}</td>
-            <td>{{ data.item_name }}</td>
-            <td>{{ data.single_item_name }}</td>
-            <td>{{ data.serial }}</td>
-            <td>{{ data.quantity }}</td>
-            {% if not active_inventory_list %}
-                {% if room.id in [2, 3, 4] %}
+
+<!-- Items Table -->
+<div class="table-responsive">
+    <table id="data" class="table table-striped report-table">
+        <thead>
+            <tr>
+                <th>Serija</th>
+                <th>Naziv predmeta</th>
+                <th>Konto</th>
+                <th>Stopa amortizacije</th>
+                <th>Količina</th>
+                {% if not active_inventory_list %}
+                    <th class="text-end">Akcije</th>
+                {% endif %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for data in data_list %}
+            <tr>
+                <td>{{ data.serial }}</td>
+                <td>{{ data.name }}</td>
+                <td>{{ data.category_name }}</td>
+                <td>{{ data.depreciation_rate }}</td>
+                <td class="text-end">{{ data.quantity }}</td>
+                {% if not active_inventory_list %}
                     <td>
-                        <a href="{{url_for('single_items.single_item_rooms', item_id=data.id)}}" class="btn-x btn-primary-x" title="Pregled predmeta po prostorijama"><i class="fa fa-door-closed awesomeedit" aria-hidden="true"></i></a>
-                    </td>
-                {% else %}
-                    <td>
-                        <a href="{{url_for('single_items.move_to', item_id=data.id, room_id=room.id)}}" class="btn-x btn-primary-x" title="Premeštanje u izabranu prostoriju iz različitih prostorija"><i class="fa fa-right-to-bracket awesomeedit" aria-hidden="true"></i></a>
-                        <a href="{{url_for('single_items.single_item_rooms', item_id=data.id)}}" class="btn-x btn-primary-x" title="Pregled predmeta po prostorijama"><i class="fa fa-door-closed awesomeedit" aria-hidden="true"></i></a>
-                        <a href="{{url_for('single_items.move_from', serial=data.serial, room_id=room.id)}}" class="btn-x btn-primary-x" title="Premeštanje iz izabrane prostorije u više različitih prostorija"><i class="fa fa-right-from-bracket awesomeedit" aria-hidden="true"></i></a>
+                        <div class="d-flex gap-2 justify-content-end">
+                            {% if room.id in [2, 3, 4] %}
+                                <a href="{{url_for('single_items.single_item_list')}}" 
+                                   title="Pregled svih predmeta">
+                                    <i class="fa fa-door-closed awesomeedit"></i>
+                                </a>
+                            {% else %}
+                                <a href="{{url_for('single_items.move_to', serial=data.serial, room_id=room.id)}}" 
+                                   title="Premeštanje u izabranu prostoriju">
+                                    <i class="fa fa-right-to-bracket awesomeedit"></i>
+                                </a>
+                                <a href="{{url_for('single_items.single_item_rooms', serial=data.serial)}}" 
+                                   title="Pregled po prostorijama">
+                                    <i class="fa fa-door-closed awesomeedit"></i>
+                                </a>
+                                <a href="{{url_for('single_items.move_from', serial=data.serial, room_id=room.id)}}" 
+                                   title="Premeštanje iz prostorije">
+                                    <i class="fa fa-right-from-bracket awesomeedit"></i>
+                                </a>
+                            {% endif %}
+                        </div>
                     </td>
                 {% endif %}
-            {% endif %}
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
 {% endblock content%}
+
 {% block scripts %}
 <script>
     $(document).ready(function () {
-    $("#data").DataTable({
-        order: [[0, "asc"], [1, "asc"], [2, "asc"]],
-        language: {
-            url: "//cdn.datatables.net/plug-ins/1.12.1/i18n/sr-SP.json",
-            stateSave: true
-        },
+        $("#data").DataTable({
+            order: [[0, "asc"], [1, "asc"]],
+            language: {
+                url: "//cdn.datatables.net/plug-ins/1.12.1/i18n/sr-SP.json"
+            },
+            stateSave: true,
+            responsive: true,
+            columnDefs: [
+                { className: "text-end", targets: [4] },
+                { orderable: false, targets: [-1] }
+            ]
         });
     });
 </script>

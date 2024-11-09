@@ -1,24 +1,63 @@
 {% extends "layout.html" %}
 {% block content %}
+
+<!-- Debug info -->
+<div >
+    <h4>Debug Info:</h4>
+    {% with %}
+        {% set first_room = rooms[0] %}
+        <p>Type: {{ first_room.__class__.__name__ if first_room.__class__ is defined else 'No class' }}</p>
+        <p>Has building: {{ first_room.building is defined }}</p>
+        <p>Is dict: {{ first_room is mapping }}</p>
+        <p>Dict contents: {{ first_room | tojson }}</p>
+        <p>{{first_room}}</p>
+    {% endwith %}
+</div>
+<div >
+    <h4>Debug Info:</h4>
+    {% with %}
+        {% set first_building = buildings[0] %}
+        <p>Type: {{ first_building.__class__.__name__ if first_building.__class__ is defined else 'No class' }}</p>
+        <p>Has building: {{ first_building.building is defined }}</p>
+        <p>Is dict: {{ first_building is mapping }}</p>
+        <p>{{first_building}}</p>
+    {% endwith %}
+</div>
+
 <div class="h1">{{ legend }}</div>
 <ul class="nav nav-tabs justify-content-center mb-4" id="myTab" role="tablist">
     <li class="nav-item" role="presentation">
-        <button class="nav-link" id="building-tab" data-bs-toggle="tab" data-bs-target="#building" type="button" role="tab" aria-controls="building" aria-selected="false">Zgrade</button>
+        <button class="nav-link" id="building-tab" data-bs-toggle="tab" data-bs-target="#building">
+            <i class="fa fa-building me-2"></i>Zgrade
+        </button>
     </li>
     <li class="nav-item" role="presentation">
-        <button class="nav-link active" id="room-tab" data-bs-toggle="tab" data-bs-target="#room" type="button" role="tab" aria-controls="room" aria-selected="false">Prostorije</button>
+        <button class="nav-link active" id="room-tab" data-bs-toggle="tab" data-bs-target="#room">
+            <i class="fa fa-door-open me-2"></i>Prostorije
+        </button>
     </li>
 </ul>
 <div class="tab-content" id="myTabContent">
     <div class="tab-pane fade show" id="building" role="tabpanel" aria-labelledby="building-tab">
-        <a class="btn btn-secondary sec-nazad" href="javascript:history.back()">Nazad</a>
-        {% if current_user.authorization == 'admin' %}
-            {% if active_inventory_list %}
-                <button type="button" class="btn btn-primary mb-4" data-bs-toggle="modal" data-bs-target="#newBuilding" disabled>Dodajte novu zgradu</button>
+        <div class="action-buttons">
+            <a class="btn btn-secondary" href="javascript:history.back()">
+                <i class="fa fa-arrow-left"></i>
+                <span>Nazad</span>
+            </a>
+            {% if current_user.authorization == 'admin' %}
+                {% if active_inventory_list %}
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newBuilding" disabled>
+                        <i class="fa fa-plus"></i>
+                        <span>Dodajte novu zgradu</span>
+                    </button>
                 {% else %}
-                <button type="button" class="btn btn-primary mb-4" data-bs-toggle="modal" data-bs-target="#newBuilding">Dodajte novu zgradu</button>
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newBuilding">
+                        <i class="fa fa-plus"></i>
+                        <span>Dodajte novu zgradu</span>
+                    </button>
+                {% endif %}
             {% endif %}
-        {% endif %}
+        </div>
         <table id="data_1" border="1" class="table table-striped userlist">
             <thead>
                 <tr>
@@ -39,7 +78,15 @@
                     <td>{{ building.address }}</td>
                     <td>{{ building.city }}</td>
                     {% if not active_inventory_list %}
-                        <td><a href="#" class="btn-x btn-primary-x" data-bs-toggle="modal" data-bs-target="#myBuilding" onclick="openBuildingModal('{{ building.id }}', '{{ building.name }}', '{{ building.address }}', '{{ building.city }}')" title="Izmena podataka zgrade: {{ building.name }}"><i class="fa fa-building awesomeedit" aria-hidden="true"></i></a></td>
+                    <td class="text-end">
+                        <div class="d-flex gap-2 justify-content-end">
+                            <button class="btn-x" data-bs-toggle="modal" data-bs-target="#myBuilding" 
+                                    onclick="openBuildingModal('{{building.id}}', '{{building.name}}', '{{building.address}}', '{{building.city}}')" 
+                                    title="Izmena podataka zgrade">
+                                <i class="fa fa-building awesomeedit"></i>
+                            </button>
+                        </div>
+                    </td>
                     {% endif %}
                 </tr>
                 {% endfor %}
@@ -47,14 +94,25 @@
         </table>
     </div>
     <div class="tab-pane fade show active" id="room" role="tabpanel" aria-labelledby="room-tab">
-        <a class="btn btn-secondary sec-nazad" href="javascript:history.back()">Nazad</a>
-        {% if current_user.authorization == 'admin' %}
-            {% if active_inventory_list %}
-                <button type="button" class="btn btn-primary mb-4" data-bs-toggle="modal" data-bs-target="#newRoom" disabled>Dodajte novu prostoriju</button>
-            {% else %}
-                <button type="button" class="btn btn-primary mb-4" data-bs-toggle="modal" data-bs-target="#newRoom">Dodajte novu prostoriju</button>
+        <div class="action-buttons">
+            <a class="btn btn-secondary" href="javascript:history.back()">
+                <i class="fa fa-arrow-left"></i>
+                <span>Nazad</span>
+            </a>
+            {% if current_user.authorization == 'admin' %}
+                {% if active_inventory_list %}
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newRoom" disabled>
+                        <i class="fa fa-plus"></i>
+                        <span>Dodajte novu prostoriju</span>
+                    </button>
+                {% else %}
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newRoom">
+                        <i class="fa fa-plus"></i>
+                        <span>Dodajte novu prostoriju</span>
+                    </button>
+                {% endif %}
             {% endif %}
-        {% endif %}
+        </div>
         <table id="data_2" border="1" class="table table-striped userlist">
             <thead>
                 <tr>
@@ -70,8 +128,8 @@
             <tbody>
                 {% for room in rooms %}
                 <tr>
-                    <td>{{ room.room_building.name }}</td>
-                    <td>{{ room.room_building.city }}</td>
+                    <td>{{ room.building.name if room.building else 'Nema zgrade' }}</td>
+                    <td>{{ room.building.city if room.building else 'Nema zgrade' }}</td>
                     <td>{{room.name}}</td>
                     <td>{{room.dynamic_name}}</td>
                     {% if not active_inventory_list %}
@@ -79,7 +137,7 @@
                             <td></td>
                         {% else %}
                             <td>
-                                <a href="#" class="btn-x btn-primary-x" data-bs-toggle="modal" data-bs-target="#myBuilding" onclick="openBuildingModal('{{ room.building_id }}', '{{ room.room_building.name }}', '{{ room.room_building.address }}', '{{ room.room_building.city }}')" title="Izmena podataka zgrade: {{ room.building_id }} - {{ room.room_building.name }}"><i class="fa fa-building awesomeedit" aria-hidden="true"></i></a>
+                                <a href="#" class="btn-x btn-primary-x" data-bs-toggle="modal" data-bs-target="#myBuilding" onclick="openBuildingModal('{{ room.building_id }}', '{{ room.building.name }}', '{{ room.building.address }}', '{{ room.building.city }}')" title="Izmena podataka zgrade: {{ room.building_id }} - {{ room.building.name }}"><i class="fa fa-building awesomeedit" aria-hidden="true"></i></a>
                                 <a href="#" class="btn-x btn-primary-x" data-bs-toggle="modal" data-bs-target="#myRoom" onclick="openRoomModal('{{ room.id }}', '{{ room.name }}', '{{ room.dynamic_name }}', '{{ room.building_id }}')" title="Izmena podataka prostorije: {{room.name}} - {{room.dynamic_name}}"><i class="fa fa-door-closed awesomeedit" aria-hidden="true"></i></a>
                             </td>
                         {% endif %}
@@ -90,129 +148,143 @@
         </table>
     </div>
 </div>
-<div class="modal fade" id="newBuilding" tabindex="-1" role="dialog" aria-labelledby="newBuildingLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
+<div class="modal fade" id="newBuilding" tabindex="-1" aria-labelledby="newBuildingLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="newBuildingLabel">Dodavanje nove zgrade</h5>
+                <h5 class="modal-title" id="newBuildingLabel">
+                    <i class="fa fa-plus-circle me-2"></i>Nova zgrada
+                </h5>
                 <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
             <form method="post" action="{{ url_for('schools.add_building')}}">
-            <div class="modal-body">
-                <div class="col form-group">
-                    {{ building_form.name.label(class="form-control-label") }}
-                    {% if building_form.name.errors %}
-                        {{ building_form.name(class="form-control form-control-lg is-invalid") }}
-                        <div class="invalid-feedback">
-                            {% for error in building_form.name.errors %}
-                                <span>{{ error }}</span>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        {{ building_form.name(class="form-control form-control-lg") }}
-                    {% endif %}
-                </div>
-                <div class="col form-group">
-                    {{ building_form.address.label(class="form-control-label") }}
-                    {% if building_form.address.errors %}
-                        {{ building_form.address(class="form-control form-control-lg is-invalid") }}
-                        <div class="invalid-feedback">
-                            {% for error in building_form.address.errors %}
-                                <span>{{ error }}</span>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        {{ building_form.address(class="form-control form-control-lg") }}
-                    {% endif %}
-                </div>
-                <div class="col form-group">
-                    {{ building_form.city.label(class="form-control-label") }}
-                    {% if building_form.city.errors %}
-                        {{ building_form.city(class="form-control form-control-lg is-invalid") }}
-                        <div class="invalid-feedback">
-                            {% for error in building_form.city.errors %}
-                                <span>{{ error }}</span>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        {{ building_form.city(class="form-control form-control-lg") }}
-                    {% endif %}
-                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        {{ building_form.name.label(class="form-control-label") }}
+                        {% if building_form.name.errors %}
+                            {{ building_form.name(class="form-control is-invalid") }}
+                            <div class="invalid-feedback">
+                                {% for error in building_form.name.errors %}
+                                    <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            {{ building_form.name(class="form-control", placeholder="Unesite naziv zgrade") }}
+                        {% endif %}
+                    </div>
+                    <div class="form-group">
+                        {{ building_form.address.label(class="form-control-label") }}
+                        {% if building_form.address.errors %}
+                            {{ building_form.address(class="form-control is-invalid") }}
+                            <div class="invalid-feedback">
+                                {% for error in building_form.address.errors %}
+                                    <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            {{ building_form.address(class="form-control", placeholder="Unesite adresu") }}
+                        {% endif %}
+                    </div>
+                    <div class="form-group">
+                        {{ building_form.city.label(class="form-control-label") }}
+                        {% if building_form.city.errors %}
+                            {{ building_form.city(class="form-control is-invalid") }}
+                            <div class="invalid-feedback">
+                                {% for error in building_form.city.errors %}
+                                    <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            {{ building_form.city(class="form-control", placeholder="Unesite mesto") }}
+                        {% endif %}
+                    </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Otkažite</button>
-                    <button type="submit" class="btn btn-primary">Dodajte</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fa fa-times me-2"></i>Otkaži
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa fa-check me-2"></i>Dodaj
+                    </button>
                 </div>
             </form>
         </div>
     </div>
 </div>
-<div class="modal fade" id="newRoom" tabindex="-1" role="dialog" aria-labelledby="newRoomLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
+<div class="modal fade" id="newRoom" tabindex="-1" aria-labelledby="newRoomLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="newRoomLabel">Dodavanje nove prostorije</h5>
+                <h5 class="modal-title" id="newRoomLabel">
+                    <i class="fa fa-door-open me-2"></i>Nova prostorija
+                </h5>
                 <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
             <form method="post" action="{{ url_for('schools.add_room') }}">
-            <div class="modal-body">
-                <div class="col form-group">
-                    {{ room_form.name.label(class="form-control-label") }}
-                    {% if room_form.name.errors %}
-                        {{ room_form.name(class="form-control form-control-lg is-invalid") }}
-                        <div class="invalid-feedback">
-                            {% for error in room_form.name.errors %}
-                                <span>{{ error }}</span>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        {{ room_form.name(class="form-control form-control-lg") }}
-                    {% endif %}
-                </div>
-                <div class="col form-group">
-                    {{ room_form.dynamic_name.label(class="form-control-label") }}
-                    {% if room_form.dynamic_name.errors %}
-                        {{ room_form.dynamic_name(class="form-control form-control-lg is-invalid") }}
-                        <div class="invalid-feedback">
-                            {% for error in room_form.dynamic_name.errors %}
-                                <span>{{ error }}</span>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        {{ room_form.dynamic_name(class="form-control form-control-lg") }}
-                    {% endif %}
-                </div>
-                <div class="col form-group">
-                    {{ room_form.building_id.label(class="form-control-label") }}
-                    {% if room_form.building_id.errors %}
-                        {{ room_form.building_id(class="form-control form-control-lg is-invalid") }}
-                        <div class="invalid-feedback">
-                            {% for error in room_form.building_id.errors %}
-                                <span>{{ error }}</span>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        {{ room_form.building_id(class="form-select form-select-lg") }}
-                    {% endif %}
-                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        {{ room_form.name.label(class="form-control-label") }}
+                        {% if room_form.name.errors %}
+                            {{ room_form.name(class="form-control is-invalid") }}
+                            <div class="invalid-feedback">
+                                {% for error in room_form.name.errors %}
+                                    <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            {{ room_form.name(class="form-control", placeholder="Unesite naziv prostorije") }}
+                        {% endif %}
+                    </div>
+                    <div class="form-group">
+                        {{ room_form.dynamic_name.label(class="form-control-label") }}
+                        {% if room_form.dynamic_name.errors %}
+                            {{ room_form.dynamic_name(class="form-control is-invalid") }}
+                            <div class="invalid-feedback">
+                                {% for error in room_form.dynamic_name.errors %}
+                                    <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            {{ room_form.dynamic_name(class="form-control", placeholder="Unesite dinamički naziv") }}
+                        {% endif %}
+                    </div>
+                    <div class="form-group">
+                        {{ room_form.building_id.label(class="form-control-label") }}
+                        {% if room_form.building_id.errors %}
+                            {{ room_form.building_id(class="form-select is-invalid") }}
+                            <div class="invalid-feedback">
+                                {% for error in room_form.building_id.errors %}
+                                    <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            {{ room_form.building_id(class="form-select") }}
+                        {% endif %}
+                    </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Otkažite</button>
-                    <button type="submit" class="btn btn-primary">Dodajte</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fa fa-times me-2"></i>Otkaži
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa fa-check me-2"></i>Dodaj
+                    </button>
                 </div>
             </form>
         </div>
     </div>
 </div>
-<div class="modal fade" id="myBuilding" tabindex="-1" role="dialog" aria-labelledby="myBuildingLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
+<div class="modal fade" id="myBuilding" tabindex="-1" aria-labelledby="myBuildingLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="myBuildingLabel">Izmena podataka zgrade</h5>
+                <h5 class="modal-title" id="myBuildingLabel">
+                    <i class="fa fa-edit me-2"></i>Izmena zgrade
+                </h5>
                 <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -226,30 +298,36 @@
                     </div>
                     <div class="form-group">
                         <label class="form-control-label" for="edit_building_name">Naziv</label>
-                        <input class="form-control" type="text" id="edit_building_name" name="edit_building_name">
+                        <input class="form-control" type="text" id="edit_building_name" name="edit_building_name" placeholder="Unesite naziv zgrade">
                     </div>
                     <div class="form-group">
                         <label class="form-control-label" for="edit_building_address">Adresa</label>
-                        <input class="form-control" type="text" id="edit_building_address" name="edit_building_address">
+                        <input class="form-control" type="text" id="edit_building_address" name="edit_building_address" placeholder="Unesite adresu">
                     </div>
                     <div class="form-group">
                         <label class="form-control-label" for="edit_building_city">Mesto</label>
-                        <input class="form-control" type="text" id="edit_building_city" name="edit_building_city">
+                        <input class="form-control" type="text" id="edit_building_city" name="edit_building_city" placeholder="Unesite mesto">
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Otkažite</button>
-                        <button type="submit" class="btn btn-primary" >Sačuvajte</button>
-                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fa fa-times me-2"></i>Otkaži
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa fa-save me-2"></i>Sačuvaj
+                    </button>
                 </div>
             </form>
         </div>
     </div>
 </div>
-<div class="modal fade" id="myRoom" tabindex="-1" role="dialog" aria-labelledby="myRoomLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
+<div class="modal fade" id="myRoom" tabindex="-1" aria-labelledby="myRoomLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="myRoomLabel">Izmena podataka prostorije</h5>
+                <h5 class="modal-title" id="myRoomLabel">
+                    <i class="fa fa-edit me-2"></i>Izmena prostorije
+                </h5>
                 <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -259,28 +337,46 @@
                 <div class="modal-body">
                     <div class="form-group">
                         <label class="form-control-label" for="edit_room_id">ID</label>
-                        <input class="form-control" type="text" id="edit_room_id" name="edit_room_id" readonly>
+                        <input class="form-control" 
+                               type="text" 
+                               id="edit_room_id" 
+                               name="edit_room_id" 
+                               readonly>
                     </div>
                     <div class="form-group">
                         <label class="form-control-label" for="edit_room_name">Naziv</label>
-                        <input class="form-control" type="text" id="edit_room_name" name="edit_room_name">
+                        <input class="form-control" 
+                               type="text" 
+                               id="edit_room_name" 
+                               name="edit_room_name" 
+                               placeholder="Unesite naziv prostorije">
                     </div>
                     <div class="form-group">
                         <label class="form-control-label" for="edit_room_dynamic_name">Naziv prostorije (dinamički)</label>
-                        <input class="form-control" type="text" id="edit_room_dynamic_name" name="edit_room_dynamic_name">
+                        <input class="form-control" 
+                               type="text" 
+                               id="edit_room_dynamic_name" 
+                               name="edit_room_dynamic_name" 
+                               placeholder="Unesite dinamički naziv prostorije">
                     </div>
                     <div class="form-group">
-                        <label for="edit_room_building" class="form-control-label">Zgrada</label>
-                        <select class="form-select" name="edit_room_building_id" id="edit_room_building_id">
+                        <label for="edit_room_building_id" class="form-control-label">Zgrada</label>
+                        <select class="form-select" 
+                                name="edit_room_building_id" 
+                                id="edit_room_building_id">
                             {% for building in buildings %}
                                 <option value="{{ building.id }}">{{ building.name }}</option>
                             {% endfor %}
                         </select>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Otkažite</button>
-                        <button type="submit" class="btn btn-primary" >Sačuvajte</button>
-                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fa fa-times me-2"></i>Otkaži
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa fa-save me-2"></i>Sačuvaj
+                    </button>
                 </div>
             </form>
         </div>

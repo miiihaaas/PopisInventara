@@ -1,478 +1,1139 @@
 {% extends "layout.html" %}
 {% block content %}
 <div class="h1">Pregled svih predmeta</div>
-<div class="form-group mb-4">
-    <a class="btn btn-secondary" href="javascript:history.back()">Nazad</a>
-    {% if current_user.authorization == 'admin' %}
-        {% if active_inventory_list %}
-        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newSingleItem" disabled>Dodajte novi predmet</button>
-        <a class="btn btn-danger disabled" href="{{ url_for('single_items.update_price') }}">Preračunaj sadašnju vrednost za svaki predmet</a>
-        {% else %}
-        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newSingleItem">Dodajte novi predmet</button>
-        <a class="btn btn-danger" href="{{ url_for('single_items.update_price') }}">Preračunaj sadašnju vrednost za svaki predmet</a>
-        {% endif %}
-    {% endif %}
-    <div class="d-flex justify-content-between align-items-center">
-        <div class="form-group select2widthmax">
-            <label class="form-control-label" for="room_select">Filter po prostoriji</label>
-            <select class="form-select" name="room_select" id="room_select">
-                <option value="">Sve prostorije</option>
-                {% for room in room_list %}
-                <option value="{{room.id}}">({{room.name}}) {{room.dynamic_name}}</option>
-                {% endfor %}
-            </select>
+
+<!-- Main Controls Card -->
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <!-- Action Buttons -->
+        <div class="action-buttons mb-4">
+            <a class="btn btn-secondary" href="javascript:history.back()">
+                <i class="fa fa-arrow-left me-2"></i>Nazad
+            </a>
+            {% if current_user.authorization == 'admin' %}
+                {% if active_inventory_list %}
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newSingleItem" disabled>
+                        <i class="fa fa-plus me-2"></i>Dodajte novi predmet
+                    </button>
+                    <a class="btn btn-danger disabled" href="{{ url_for('single_items.update_price') }}">
+                        <i class="fa fa-calculator me-2"></i>Preračunaj sadašnju vrednost
+                    </a>
+                {% else %}
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newSingleItem">
+                        <i class="fa fa-plus me-2"></i>Dodajte novi predmet
+                    </button>
+                    <a class="btn btn-danger" href="{{ url_for('single_items.update_price') }}">
+                        <i class="fa fa-calculator me-2"></i>Preračunaj sadašnju vrednost
+                    </a>
+                {% endif %}
+            {% endif %}
         </div>
-        <div class="form-check form-switch">
-            <input type="checkbox" class="form-check-input" id="current_year_procurement" name="current_year_procurement">
-            <label class="form-check-label" for="current_year_procurement">Nabavke u tekućoj godini</label>
-        </div>
-    </div>
-</div>
-<div class="modal fade" id="newSingleItem" tabindex="-1" role="dialog" aria-labelledby="newSingleItemLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="newSingleItemLabel">Dodavanje novih pojedinačnih predmeta</h5>
-                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <form method="POST" action="{{ url_for('single_items.add_single_item') }}">
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label class="form-control-label" for="add_single_item_item_id">Tip predmeta</label>
-                        <select class="form-select" name="add_single_item_item_id" id="add_single_item_item_id">
-                            <option value=""></option>
-                            {% for item in item_list %}
-                            <option value="{{item.id}}">{{item.name}} ({{item.item_category.category_number}}-{{item.item_category.name}} / {{item.item_depreciation_rate.name}}: {{item.item_depreciation_rate.rate}}%)</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-control-label" for="add_single_item_name">Naziv</label>
-                        <input class="form-control" type="text" id="add_single_item_name" name="add_single_item_name">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-control-label" for="add_single_item_room">Prostorija</label>
-                        <select class="form-select" name="add_single_item_room" id="add_single_item_room">
-                            <option value=""></option>
-                            {% for room in room_list %}
-                            <option value="{{room.id}}">({{room.name}}) {{room.dynamic_name}}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-control-label" for="add_single_item_quantity">Količina</label>
-                        <input class="form-control" type="number" id="add_single_item_quantity" name="add_single_item_quantity">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-control-label" for="add_single_item_initial_price">Nabavna cena (svih predmeta)</label>
-                        <input class="form-control" type="number" id="add_single_item_initial_price" name="add_single_item_initial_price" step="0.01" inputmode="decimal" placeholder="0.00">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-control-label" for="add_single_item_date">Datum nabavke</label>
-                        <input class="form-control" type="date" id="add_single_item_date" name="add_single_item_date">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-control-label" for="add_single_item_supplier">Dobavljač (opciono)</label>
-                        <input class="form-control" type="text" id="add_single_item_supplier" name="add_single_item_supplier">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-control-label" for="add_single_item_invoice_number">Broj fakture (opciono)</label>
-                        <input class="form-control" type="text" id="add_single_item_invoice_number" name="add_single_item_invoice_number">
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Otkažite</button>
-                        <button type="submit" class="btn btn-primary" id="add_single_item_submit_button">Sačuvajte</button>
-                    </div>
+
+        <!-- Filters Section -->
+        <div class="row g-3 align-items-end">
+            <div class="col-md-8">
+                <div class="form-group mb-0">
+                    <label class="form-control-label" for="room_select">Filter po prostoriji</label>
+                    <select class="form-select" name="room_select" id="room_select">
+                        <option value="">Sve prostorije</option>
+                        {% for room in room_list %}
+                        <option value="{{room.id}}">({{room.name}}) {{room.dynamic_name}}</option>
+                        {% endfor %}
+                    </select>
                 </div>
-            </form>
-        </div>
-    </div>
-</div>
-<div class="modal fade" id="editSingleItem" tabindex="-1" role="dialog" aria-labelledby="editSingleItemLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="editSingleItemLabel">Izmena serije predmeta</h5>
-                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
             </div>
-            <form method="POST" action="{{ url_for('single_items.edit_single_item') }}">
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label class="form-control-label" for="edit_single_item_serial">Serija</label>
-                        <input class="form-control" type="text" id="edit_single_item_serial" name="edit_single_item_serial" readonly>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-control-label" for="edit_single_item_item_id">Tip predmeta</label>
-                        <select class="form-select" name="edit_single_item_item_id" id="edit_single_item_item_id">
-                            <option value=""></option>
-                            {% for item in item_list %}
-                            <option value="{{item.id}}">{{item.name}} ({{item.item_category.category_number}}-{{item.item_category.name}} / {{item.item_depreciation_rate.name}}: {{item.item_depreciation_rate.rate}}%)</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-control-label" for="edit_single_item_name">Naziv</label>
-                        <input class="form-control" type="text" id="edit_single_item_name" name="edit_single_item_name">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-control-label" for="edit_single_item_quantity">Količina</label>
-                        <input class="form-control" type="number" id="edit_single_item_quantity" name="edit_single_item_quantity">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-control-label" for="edit_single_item_initial_price">Nabavna cena (svih predmeta)</label>
-                        <input class="form-control" type="number" id="edit_single_item_initial_price" name="edit_single_item_initial_price" step="0.01" inputmode="decimal" placeholder="0.00">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-control-label" for="edit_single_item_date">Datum nabavke</label>
-                        <input class="form-control" type="date" id="edit_single_item_date" name="edit_single_item_date">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-control-label" for="edit_single_item_supplier">Dobavljač (opciono)</label>
-                        <input class="form-control" type="text" id="edit_single_item_supplier" name="edit_single_item_supplier">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-control-label" for="edit_single_item_invoice_number">Broj fakture (opciono)</label>
-                        <input class="form-control" type="text" id="edit_single_item_invoice_number" name="edit_single_item_invoice_number">
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Otkažite</button>
-                        <button type="submit" class="btn btn-primary" id="edit_single_item_submit_button">Sačuvajte</button>
-                    </div>
+            <div class="col-md-4">
+                <div class="form-check form-switch">
+                    <input type="checkbox" class="form-check-input" id="current_year_procurement" name="current_year_procurement">
+                    <label class="form-check-label" for="current_year_procurement">
+                        <i class="fa fa-calendar me-2"></i>Nabavke u tekućoj godini
+                    </label>
                 </div>
-            </form>
-        </div>
-    </div>
-</div>
-<div class="modal fade" id="changeRoom" tabindex="-1" role="dialog" aria-labelledby="changeRoomLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="changeRoomLabel">Promena prostorije</h5>
-                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
             </div>
-            <form method="POST" action="{{ url_for('single_items.move_single_item_to_room') }}">
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label class="form-control-label" for="single_item_name">Naziv predmeta</label>
-                        <input class="form-control" type="text" id="single_item_name" name="single_item_name" disabled>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-control-label" for="single_item_id">ID pojedinačnog predmeta</label>
-                        <input class="form-control" type="text" id="single_item_id" name="single_item_id" readonly>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-control-label" for="single_item_inventory_number">Inventarski broj</label>
-                        <input class="form-control" type="text" id="single_item_inventory_number" name="single_item_inventory_number" disabled>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-control-label" for="edit_single_item_room">Premestiti u prostoriju</label>
-                        <select class="form-select" name="edit_single_item_room" id="edit_single_item_room">
-                            <option value=""></option>
-                            {% for room in room_list %}
-                            <option value="{{room.id}}">({{room.name}}) {{room.dynamic_name}}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Otkažite</button>
-                        <button type="submit" class="btn btn-primary">Sačuvajte</button>
-                    </div>
-                </div>
-            </form>
         </div>
     </div>
 </div>
-<div class="modal fade" id="expeditureSingleItem" tabindex="-1" role="dialog" aria-labelledby="expeditureSingleItemLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="expeditureSingleItemLabel">Rashodovanje predmeta</h5>
-                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <form method="POST" action="{{ url_for('single_items.expediture_single_item') }}">
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label class="form-control-label" for="single_item_id_expediture">ID pojedinačnog predmeta</label>
-                        <input class="form-control" type="text" id="single_item_id_expediture" name="single_item_id_expediture" readonly>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-control-label" for="single_item_name_expediture">Naziv predmeta</label>
-                        <input class="form-control" type="text" id="single_item_name_expediture" name="single_item_name_expediture" disabled>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-control-label" for="single_item_inventory_number_expediture">Inventarski broj</label>
-                        <input class="form-control" type="text" id="single_item_inventory_number_expediture" name="single_item_inventory_number_expediture" disabled>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-control-label" for="single_item_expediture_date_expediture">Datum rashoda</label>
-                        <input class="form-control" type="date" id="single_item_expediture_date_expediture" name="single_item_expediture_date_expediture">
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Otkažite</button>
-                        <button type="submit" class="btn btn-danger">Rashodujte predmet</button>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-<div class="modal fade" id="expeditureSerial" tabindex="-1" role="dialog" aria-labelledby="expeditureSerialLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="expeditureSerialLabel">Rashodovanje serije predmeta</h5>
-                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <form method="POST" action="{{ url_for('single_items.expediture_serial') }}">
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label class="form-control-label" for="item_id_expediture">ID tipa predmeta</label>
-                        <input class="form-control" type="text" id="item_id_expediture" name="item_id_expediture" readonly>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-control-label" for="item_name_expediture">Naziv predmeta</label>
-                        <input class="form-control" type="text" id="item_name_expediture" name="item_name_expediture" disabled>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-control-label" for="serial_expediture">Serija</label>
-                        <input class="form-control" type="text" id="serial_expediture" name="serial_expediture" readonly>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-control-label" for="serial_expediture_date_expediture">Datum rashoda</label>
-                        <input class="form-control" type="date" id="serial_expediture_date_expediture" name="serial_expediture_date_expediture">
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Otkažite</button>
-                        <button type="submit" class="btn btn-danger">Rashodujte seriju predmeta</button>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-<div class="modal fade" id="undoExpeditureSerial" tabindex="-1" role="dialog" aria-labelledby="undoExpeditureSerialLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="undoExpeditureSerialLabel">Rashodovanje serije predmeta - Storno</h5>
-                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <form method="POST" action="{{ url_for('single_items.undo_expediture_serial') }}">
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label class="form-control-label" for="item_id_expediture_undo">ID tipa predmeta</label>
-                        <input class="form-control" type="text" id="item_id_expediture_undo" name="item_id_expediture_undo" readonly>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-control-label" for="item_name_expediture_undo">Naziv predmeta</label>
-                        <input class="form-control" type="text" id="item_name_expediture_undo" name="item_name_expediture_undo" disabled>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-control-label" for="serial_expediture_undo">Serija</label>
-                        <input class="form-control" type="text" id="serial_expediture_undo" name="serial_expediture_undo" readonly>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Otkažite</button>
-                        <button type="submit" class="btn btn-danger">Storno</button>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-<div class="modal fade" id="undoExpeditureSingleItem" tabindex="-1" role="dialog" aria-labelledby="undoExpeditureSingleItemLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="undoExpeditureSingleItemLabel">Rashodovanje predmeta - Storno</h5>
-                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <form method="POST" action="{{ url_for('single_items.undo_expediture_single_item') }}">
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label class="form-control-label" for="single_item_id_expediture_undo">ID pojedinačnog predmeta</label>
-                        <input class="form-control" type="text" id="single_item_id_expediture_undo" name="single_item_id_expediture_undo" readonly>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-control-label" for="single_item_name_expediture_undo">Naziv predmeta</label>
-                        <input class="form-control" type="text" id="single_item_name_expediture_undo" name="single_item_name_expediture_undo" disabled>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-control-label" for="single_item_inventory_number_expediture_undo">Inventarski broj</label>
-                        <input class="form-control" type="text" id="single_item_inventory_number_expediture_undo" name="single_item_inventory_number_expediture_undo" disabled>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Otkažite</button>
-                        <button type="submit" class="btn btn-danger">Storno</button>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-<div class="modal fade" id="reverseSingleItem" tabindex="-1" role="dialog" aria-labelledby="reverseSingleItemLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="reverseSingleItemLabel">Izdavanje predmeta na revers</h5>
-                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <form method="POST" action="{{ url_for('single_items.reverse_single_item') }}">
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label class="form-control-label" for="single_item_id_reverse">ID pojedinačnog predmeta</label>
-                        <input class="form-control" type="text" id="single_item_id_reverse" name="single_item_id_reverse" readonly>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-control-label" for="single_item_name_reverse">Naziv predmeta</label>
-                        <input class="form-control" type="text" id="single_item_name_reverse" name="single_item_name_reverse" disabled>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-control-label" for="single_item_inventory_number_reverse">Inventarski broj</label>
-                        <input class="form-control" type="text" id="single_item_inventory_number_reverse" name="single_item_inventory_number_reverse" disabled>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-control-label" for="single_item_reverse_date_reverse">Datum izdavanja reversa</label>
-                        <input class="form-control" type="date" id="single_item_reverse_date_reverse" name="single_item_reverse_date_reverse">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-control-label" for="single_item_reverse_person_reverse">Ime i prezime</label>
-                        <input class="form-control" type="text" id="single_item_reverse_person_reverse" name="single_item_reverse_person_reverse">
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Otkažite</button>
-                        <button type="submit" class="btn btn-danger">Izdajte revers</button>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-<div class="modal fade" id="returnReverseSingleItem" tabindex="-1" role="dialog" aria-labelledby="returnReverseSingleItemLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="returnReverseSingleItemLabel">Povraćaj predmeta sa reversa</h5>
-                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <form method="POST" action="{{ url_for('single_items.return_reverse_single_item') }}">
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label class="form-control-label" for="single_item_id_reverse_return">ID pojedinačnog predmeta</label>
-                        <input class="form-control" type="text" id="single_item_id_reverse_return" name="single_item_id_reverse_return" readonly>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-control-label" for="single_item_name_reverse_return">Naziv predmeta</label>
-                        <input class="form-control" type="text" id="single_item_name_reverse_return" name="single_item_name_reverse_return" disabled>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-control-label" for="single_item_inventory_number_reverse_return">Inventarski broj</label>
-                        <input class="form-control" type="text" id="single_item_inventory_number_reverse_return" name="single_item_inventory_number_reverse_return" disabled>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-control-label" for="single_item_reverse_person_reverse_return">Ime i prezime</label>
-                        <input class="form-control" type="text" id="single_item_reverse_person_reverse_return" name="single_item_reverse_person_reverse_return" disabled>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Otkažite</button>
-                        <button type="submit" class="btn btn-primary" name="action" value="print_reverse">Štampa reversa</button>
-                        <button type="submit" class="btn btn-danger" name="action" value="return_reverse">Povraćaj reversa</button>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-<ul class="nav nav-tabs justify-content-center mb-4" id="myTab" role="tablist">
+<!-- Tab Navigation -->
+<ul class="nav nav-tabs nav-fill mb-4" id="myTab" role="tablist">
     <li class="nav-item" role="presentation">
-        <button class="nav-link" id="single_item-tab" data-bs-toggle="tab" data-bs-target="#single_item" type="button" role="tab" aria-controls="single_item" aria-selected="false">Pojedinačni predmeti</button>
+        <button class="nav-link" id="single_item-tab" data-bs-toggle="tab" data-bs-target="#single_item">
+            <i class="fa fa-box me-2"></i>Pojedinačni predmeti
+        </button>
     </li>
     <li class="nav-item" role="presentation">
-        <button class="nav-link active" id="serial-tab" data-bs-toggle="tab" data-bs-target="#serial" type="button" role="tab" aria-controls="serial" aria-selected="true">Kumulativno po seriji</button>
-    </li>
-    <li class="nav-item" role="presentation">
-        <button class="nav-link" id="item-tab" data-bs-toggle="tab" data-bs-target="#item" type="button" role="tab" aria-controls="item" aria-selected="false">Kumulativno po tipu predmeta</button>
+        <button class="nav-link active" id="serial-tab" data-bs-toggle="tab" data-bs-target="#serial">
+            <i class="fa fa-boxes me-2"></i>Kumulativno po seriji
+        </button>
     </li>
 </ul>
-<div class="tab-content" id="myTabContent">
-    <div class="tab-pane fade show" id="single_item" role="tabpanel" aria-labelledby="single_item-tab">
-        <table id="data_1" border="1" class="table table-striped userlist">
-            <div class="form-group">
+
+<div class="modal fade" id="newSingleItem" tabindex="-1" role="dialog" aria-labelledby="newSingleItemLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <!-- Modal Header -->
+            <div class="modal-header">
+                <h5 class="modal-title" id="newSingleItemLabel">
+                    <i class="fa fa-plus-circle me-2"></i>Dodavanje novih pojedinačnih predmeta
+                </h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
             </div>
-            <thead>
-                <tr>
-                    <th>ID pojedinačnog predmeta</th>
-                    <th>Inventarski broj</th>
-                    <th>Naziv</th>
-                    <th>Nabavna vrednost</th>
-                    <th>Otpis do tekuće godine</th>
-                    <th>Vrednost na kraju godine</th>
-                    <th>Prostorija</th>
-                    <th>Datum nabavke</th>
-                    <th>Dobavljač</th>
-                    <th>Broj fakture</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-            </tbody>
-        </table>
+
+            <!-- Modal Form -->
+            <form method="POST" action="{{ url_for('single_items.add_single_item') }}">
+                <div class="modal-body">
+                    <!-- Klasifikacija -->
+                    <div class="section-title mb-3">Klasifikacija predmeta</div>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-control-label" for="add_single_item_category_id">
+                                    <i class="fa fa-folder me-2"></i>Konto
+                                </label>
+                                <select class="form-select" name="add_single_item_category_id" id="add_single_item_category_id" required>
+                                    <option value="">Izaberite konto</option>
+                                    {% for category in category_list %}
+                                    <option value="{{category.id}}">{{category.category_number}} - {{category.name}}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-control-label" for="add_single_item_depreciation_rate_id">
+                                    <i class="fa fa-percent me-2"></i>Amortizacija
+                                </label>
+                                <select class="form-select" name="add_single_item_depreciation_rate_id" id="add_single_item_depreciation_rate_id" required>
+                                    <option value="">Izaberite stopu amortizacije</option>
+                                    {% for rate in depreciation_rate_list %}
+                                    <option value="{{rate.id}}">{{rate.name}}: {{rate.rate}}%</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Osnovni podaci -->
+                    <div class="section-title mb-3">Osnovni podaci</div>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-control-label" for="add_single_item_name">
+                                    <i class="fa fa-tag me-2"></i>Naziv
+                                </label>
+                                <input class="form-control" type="text" id="add_single_item_name" 
+                                       name="add_single_item_name" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-control-label" for="add_single_item_room">
+                                    <i class="fa fa-door-open me-2"></i>Prostorija
+                                </label>
+                                <select class="form-select" name="add_single_item_room" id="add_single_item_room" required>
+                                    <option value="">Izaberite prostoriju</option>
+                                    {% for room in room_list %}
+                                    <option value="{{room.id}}">({{room.name}}) {{room.dynamic_name}}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-control-label" for="add_single_item_quantity">
+                                    <i class="fa fa-hashtag me-2"></i>Količina
+                                </label>
+                                <input class="form-control" type="number" id="add_single_item_quantity" 
+                                       name="add_single_item_quantity" min="1" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-control-label" for="add_single_item_initial_price">
+                                    <i class="fa fa-money-bill me-2"></i>Nabavna cena (svih predmeta)
+                                </label>
+                                <input class="form-control" type="number" id="add_single_item_initial_price" 
+                                       name="add_single_item_initial_price" step="0.01" inputmode="decimal" 
+                                       placeholder="0.00" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dodatni podaci -->
+                    <div class="section-title mb-3">Dodatni podaci</div>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-control-label" for="add_single_item_date">
+                                    <i class="fa fa-calendar me-2"></i>Datum nabavke
+                                </label>
+                                <input class="form-control" type="date" id="add_single_item_date" 
+                                       name="add_single_item_date" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-control-label" for="add_single_item_supplier">
+                                    <i class="fa fa-truck me-2"></i>Dobavljač (opciono)
+                                </label>
+                                <input class="form-control" type="text" id="add_single_item_supplier" 
+                                       name="add_single_item_supplier">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-control-label" for="add_single_item_invoice_number">
+                                    <i class="fa fa-file-invoice me-2"></i>Broj fakture (opciono)
+                                </label>
+                                <input class="form-control" type="text" id="add_single_item_invoice_number" 
+                                       name="add_single_item_invoice_number">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fa fa-times me-2"></i>Otkažite
+                    </button>
+                    <button type="submit" class="btn btn-primary" id="add_single_item_submit_button">
+                        <i class="fa fa-save me-2"></i>Sačuvajte
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
-    <div class="tab-pane fade show active" id="serial" role="tabpanel" aria-labelledby="serial-tab">
-        <table id="data_2" border="1" class="table table-striped userlist">
-            <thead>
-                <tr>
-                    <th>ID tipa predmeta</th>
-                    <th>Serija predmeta</th>
-                    <th>Naziv</th>
-                    <th>Količina</th>
-                    <th>Nabavna vrednost</th>
-                    <th>Otpis do tekuće godine</th>
-                    <!-- <th>Vrednost na kraju godine</th> -->
-                    <th>Datum nabavke</th>
-                    <th>Dobavljač</th>
-                    <th>Broj fakture</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-            </tbody>
-        </table>
+</div>
+
+<!-- Modal za izmenu -->
+<div class="modal fade" id="editSingleItem" tabindex="-1" role="dialog" aria-labelledby="editSingleItemLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <!-- Modal Header -->
+            <div class="modal-header">
+                <h5 class="modal-title" id="editSingleItemLabel">
+                    <i class="fa fa-edit me-2"></i>Izmena podataka serije predmeta
+                </h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+
+            <!-- Modal Form -->
+            <form method="POST" action="{{ url_for('single_items.edit_single_item') }}">
+                <div class="modal-body">
+                    <!-- Identifikacija serije -->
+                    <div class="section-title mb-3">Identifikacija serije</div>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="form-control-label" for="edit_single_item_serial">
+                                    <i class="fa fa-barcode me-2"></i>Serija
+                                </label>
+                                <input class="form-control" type="text" 
+                                       id="edit_single_item_serial" 
+                                       name="edit_single_item_serial" readonly>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Klasifikacija -->
+                    <div class="section-title mb-3">Klasifikacija predmeta</div>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-control-label" for="edit_single_item_category_id">
+                                    <i class="fa fa-folder me-2"></i>Konto
+                                </label>
+                                <select class="form-select" name="edit_single_item_category_id" 
+                                        id="edit_single_item_category_id" required>
+                                    <option value="">Izaberite konto</option>
+                                    {% for category in category_list %}
+                                    <option value="{{category.id}}">
+                                        {{category.category_number}} - {{category.name}}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-control-label" for="edit_single_item_depreciation_rate_id">
+                                    <i class="fa fa-percent me-2"></i>Amortizacija
+                                </label>
+                                <select class="form-select" name="edit_single_item_depreciation_rate_id" 
+                                        id="edit_single_item_depreciation_rate_id" required>
+                                    <option value="">Izaberite stopu amortizacije</option>
+                                    {% for rate in depreciation_rate_list %}
+                                    <option value="{{rate.id}}">{{rate.name}}: {{rate.rate}}%</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Osnovni podaci -->
+                    <div class="section-title mb-3">Osnovni podaci</div>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="form-control-label" for="edit_single_item_name">
+                                    <i class="fa fa-tag me-2"></i>Naziv
+                                </label>
+                                <input class="form-control" type="text" 
+                                       id="edit_single_item_name" 
+                                       name="edit_single_item_name" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-control-label" for="edit_single_item_quantity">
+                                    <i class="fa fa-hashtag me-2"></i>Količina
+                                </label>
+                                <input class="form-control" type="number" 
+                                       id="edit_single_item_quantity" 
+                                       name="edit_single_item_quantity" min="1" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-control-label" for="edit_single_item_initial_price">
+                                    <i class="fa fa-money-bill me-2"></i>Nabavna cena (svih predmeta)
+                                </label>
+                                <input class="form-control" type="number" 
+                                       id="edit_single_item_initial_price" 
+                                       name="edit_single_item_initial_price" 
+                                       step="0.01" inputmode="decimal" 
+                                       placeholder="0.00" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dodatni podaci -->
+                    <div class="section-title mb-3">Dodatni podaci</div>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-control-label" for="edit_single_item_date">
+                                    <i class="fa fa-calendar me-2"></i>Datum nabavke
+                                </label>
+                                <input class="form-control" type="date" 
+                                       id="edit_single_item_date" 
+                                       name="edit_single_item_date" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-control-label" for="edit_single_item_supplier">
+                                    <i class="fa fa-truck me-2"></i>Dobavljač (opciono)
+                                </label>
+                                <input class="form-control" type="text" 
+                                       id="edit_single_item_supplier" 
+                                       name="edit_single_item_supplier">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-control-label" for="edit_single_item_invoice_number">
+                                    <i class="fa fa-file-invoice me-2"></i>Broj fakture (opciono)
+                                </label>
+                                <input class="form-control" type="text" 
+                                       id="edit_single_item_invoice_number" 
+                                       name="edit_single_item_invoice_number">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fa fa-times me-2"></i>Otkažite
+                    </button>
+                    <button type="submit" class="btn btn-primary" id="edit_single_item_submit_button">
+                        <i class="fa fa-save me-2"></i>Sačuvajte
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
-    <div class="tab-pane fade" id="item" role="tabpanel" aria-labelledby="item-tab">
-        <table id="data_3" border="1" class="table table-striped userlist">
-            <thead>
-                <tr>
-                    <th>ID tipa predmeta</th>
-                    <th>Naziv tipa predmeta</th>
-                    <th>Količina</th>
-                    <th>Nabavna vrednost</th>
-                    <th>Otpis do tekuće godine</th>
-                    <!-- <th>Vrednost na kraju godine</th> -->
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-            </tbody>
-        </table>
+</div>
+
+
+<!-- Modal za promenu prostorije -->
+<div class="modal fade" id="changeRoom" tabindex="-1" role="dialog" aria-labelledby="changeRoomLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <!-- Modal Header -->
+            <div class="modal-header">
+                <h5 class="modal-title" id="changeRoomLabel">
+                    <i class="fa fa-people-carry-box me-2"></i>Promena prostorije
+                </h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+
+            <!-- Modal Form -->
+            <form method="POST" action="{{ url_for('single_items.move_single_item_to_room') }}">
+                <div class="modal-body">
+                    <!-- Informacije o predmetu -->
+                    <div class="section-title mb-3">Informacije o predmetu</div>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="form-control-label" for="single_item_name">
+                                    <i class="fa fa-tag me-2"></i>Naziv predmeta
+                                </label>
+                                <input class="form-control bg-light" type="text" 
+                                       id="single_item_name" name="single_item_name" disabled>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-control-label" for="single_item_id">
+                                    <i class="fa fa-hashtag me-2"></i>ID pojedinačnog predmeta
+                                </label>
+                                <input class="form-control" type="text" 
+                                       id="single_item_id" name="single_item_id" readonly>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-control-label" for="single_item_inventory_number">
+                                    <i class="fa fa-barcode me-2"></i>Inventarski broj
+                                </label>
+                                <input class="form-control bg-light" type="text" 
+                                       id="single_item_inventory_number" 
+                                       name="single_item_inventory_number" disabled>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Nova lokacija -->
+                    <div class="section-title mb-3">
+                        <i class="fa fa-map-marker-alt me-2"></i>Nova lokacija
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <div class="form-group">
+                                <label class="form-control-label" for="edit_single_item_room">
+                                    <i class="fa fa-door-open me-2"></i>Premestiti u prostoriju
+                                </label>
+                                <select class="form-select" name="edit_single_item_room" 
+                                        id="edit_single_item_room" required>
+                                    <option value="">Izaberite prostoriju</option>
+                                    {% for room in room_list %}
+                                        <option value="{{room.id}}">
+                                            ({{room.name}}) {{room.dynamic_name}}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                <div class="form-text text-muted">
+                                    <i class="fa fa-info-circle me-1"></i>
+                                    Izaberite prostoriju u koju želite da premestite predmet
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fa fa-times me-2"></i>Otkažite
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa fa-check me-2"></i>Sačuvajte
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<!-- Modal za rashodovanje predmeta -->
+<div class="modal fade" id="expeditureSingleItem" tabindex="-1" role="dialog" aria-labelledby="expeditureSingleItemLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <!-- Modal Header -->
+            <div class="modal-header bg-danger-subtle">
+                <h5 class="modal-title" id="expeditureSingleItemLabel">
+                    <i class="fa fa-trash-can me-2"></i>Rashodovanje predmeta
+                </h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+
+            <!-- Modal Form -->
+            <form method="POST" action="{{ url_for('single_items.expediture_single_item') }}">
+                <div class="modal-body">
+                    <!-- Upozorenje -->
+                    <div class="alert alert-warning mb-4">
+                        <i class="fa fa-exclamation-triangle me-2"></i>
+                        <strong>Pažnja:</strong> Rashodovanje predmeta je trajna akcija. 
+                        Molimo vas da proverite podatke pre potvrde.
+                    </div>
+
+                    <!-- Informacije o predmetu -->
+                    <div class="section-title mb-3">Informacije o predmetu</div>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-control-label" for="single_item_id_expediture">
+                                    <i class="fa fa-hashtag me-2"></i>ID predmeta
+                                </label>
+                                <input class="form-control" type="text" 
+                                       id="single_item_id_expediture" 
+                                       name="single_item_id_expediture" readonly>
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="form-group">
+                                <label class="form-control-label" for="single_item_name_expediture">
+                                    <i class="fa fa-tag me-2"></i>Naziv predmeta
+                                </label>
+                                <input class="form-control bg-light" type="text" 
+                                       id="single_item_name_expediture" 
+                                       name="single_item_name_expediture" disabled>
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="form-control-label" for="single_item_inventory_number_expediture">
+                                    <i class="fa fa-barcode me-2"></i>Inventarski broj
+                                </label>
+                                <input class="form-control bg-light" type="text" 
+                                       id="single_item_inventory_number_expediture" 
+                                       name="single_item_inventory_number_expediture" disabled>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Podaci o rashodovanju -->
+                    <div class="section-title mb-3">Podaci o rashodovanju</div>
+                    <div class="row g-3">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="form-control-label" for="single_item_expediture_date_expediture">
+                                    <i class="fa fa-calendar me-2"></i>Datum rashoda
+                                </label>
+                                <input class="form-control" type="date" 
+                                       id="single_item_expediture_date_expediture" 
+                                       name="single_item_expediture_date_expediture" required>
+                                <div class="form-text text-muted">
+                                    <i class="fa fa-info-circle me-1"></i>
+                                    Unesite datum kada je predmet rashodovan
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fa fa-times me-2"></i>Odustanite
+                    </button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fa fa-trash-can me-2"></i>Rashodujte predmet
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal za rashodovanje serije predmeta -->
+<div class="modal fade" id="expeditureSerial" tabindex="-1" role="dialog" aria-labelledby="expeditureSerialLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <!-- Modal Header -->
+            <div class="modal-header bg-danger-subtle">
+                <h5 class="modal-title" id="expeditureSerialLabel">
+                    <i class="fa fa-trash-can me-2"></i>Rashodovanje serije predmeta
+                </h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+
+            <!-- Modal Form -->
+            <form method="POST" action="{{ url_for('single_items.expediture_serial') }}">
+                <div class="modal-body">
+                    <!-- Upozorenje -->
+                    <div class="alert alert-warning mb-4">
+                        <i class="fa fa-exclamation-triangle me-2"></i>
+                        <strong>Važno upozorenje:</strong> 
+                        Rashodovanjem serije predmeta rashodujete SVE predmete iz iste serije.
+                    </div>
+
+                    <!-- Osnovni podaci -->
+                    <div class="section-title mb-3">Informacije o seriji</div>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-control-label" for="item_name_expediture">
+                                    <i class="fa fa-tag me-2"></i>Naziv predmeta
+                                </label>
+                                <input class="form-control bg-light" type="text" 
+                                       id="item_name_expediture" 
+                                       name="item_name_expediture" disabled>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-control-label" for="serial_expediture">
+                                    <i class="fa fa-barcode me-2"></i>Serija
+                                </label>
+                                <input class="form-control" type="text" 
+                                       id="serial_expediture" 
+                                       name="serial_expediture" readonly>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Klasifikacija -->
+                    <div class="section-title mb-3">Klasifikacija</div>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-control-label" for="category_name_expediture">
+                                    <i class="fa fa-folder me-2"></i>Konto
+                                </label>
+                                <input class="form-control bg-light" type="text" 
+                                       id="category_name_expediture" 
+                                       name="category_name_expediture" disabled>
+                                <input type="hidden" id="category_id_expediture" 
+                                       name="category_id_expediture">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-control-label" for="depreciation_rate_name_expediture">
+                                    <i class="fa fa-percent me-2"></i>Stopa amortizacije
+                                </label>
+                                <input class="form-control bg-light" type="text" 
+                                       id="depreciation_rate_name_expediture" 
+                                       name="depreciation_rate_name_expediture" disabled>
+                                <input type="hidden" id="depreciation_rate_id_expediture" 
+                                       name="depreciation_rate_id_expediture">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Podaci o rashodovanju -->
+                    <div class="section-title mb-3">Podaci o rashodovanju</div>
+                    <div class="row g-3">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="form-control-label" for="serial_expediture_date_expediture">
+                                    <i class="fa fa-calendar me-2"></i>Datum rashoda
+                                </label>
+                                <input class="form-control" type="date" 
+                                       id="serial_expediture_date_expediture" 
+                                       name="serial_expediture_date_expediture" required>
+                                <div class="form-text text-muted">
+                                    <i class="fa fa-info-circle me-1"></i>
+                                    Unesite datum kada je serija rashodovana
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="modal-footer border-top">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fa fa-times me-2"></i>Odustanite
+                    </button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fa fa-trash-can me-2"></i>Rashodujte seriju predmeta
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal za storno rashodovanja predmeta -->
+<div class="modal fade" id="undoExpeditureSerial" tabindex="-1" role="dialog" aria-labelledby="undoExpeditureSerialLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <!-- Modal Header -->
+            <div class="modal-header bg-warning-subtle">
+                <h5 class="modal-title" id="undoExpeditureSerialLabel">
+                    <i class="fa fa-trash-can-arrow-up me-2"></i>Rashodovanje serije predmeta - Storno
+                </h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+
+            <!-- Modal Form -->
+            <form method="POST" action="{{ url_for('single_items.undo_expediture_serial') }}">
+                <div class="modal-body">
+                    <!-- Upozorenje -->
+                    <div class="alert alert-info mb-4">
+                        <i class="fa fa-info-circle me-2"></i>
+                        <strong>Informacija:</strong> 
+                        Storniranjem rashodovanja vraćate sve predmete iz serije u prethodno stanje. 
+                        Predmeti će biti vraćeni u virtuelni magacin.
+                    </div>
+
+                    <!-- Informacije o predmetu -->
+                    <div class="section-title mb-3">Podaci o rashodovanoj seriji</div>
+                    <div class="row g-3 mb-4">
+                        <!-- ID i tip predmeta -->
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-control-label" for="item_id_expediture_undo">
+                                    <i class="fa fa-hashtag me-2"></i>ID tipa predmeta
+                                </label>
+                                <input class="form-control" type="text" 
+                                       id="item_id_expediture_undo" 
+                                       name="item_id_expediture_undo" readonly>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-control-label" for="serial_expediture_undo">
+                                    <i class="fa fa-barcode me-2"></i>Serija
+                                </label>
+                                <input class="form-control" type="text" 
+                                       id="serial_expediture_undo" 
+                                       name="serial_expediture_undo" readonly>
+                            </div>
+                        </div>
+                        <!-- Naziv predmeta -->
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="form-control-label" for="item_name_expediture_undo">
+                                    <i class="fa fa-tag me-2"></i>Naziv predmeta
+                                </label>
+                                <input class="form-control bg-light" type="text" 
+                                       id="item_name_expediture_undo" 
+                                       name="item_name_expediture_undo" disabled>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Potvrda -->
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" 
+                               id="confirm_undo" required>
+                        <label class="form-check-label" for="confirm_undo">
+                            Potvrđujem da želim da storniram rashodovanje ove serije predmeta
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fa fa-times me-2"></i>Odustanite
+                    </button>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="fa fa-trash-can-arrow-up me-2"></i>Stornirajte rashodovanje
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal za storniranje pojedinačnog predmeta -->
+<div class="modal fade" id="undoExpeditureSingleItem" tabindex="-1" role="dialog" aria-labelledby="undoExpeditureSingleItemLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <!-- Modal Header -->
+            <div class="modal-header bg-warning-subtle">
+                <h5 class="modal-title" id="undoExpeditureSingleItemLabel">
+                    <i class="fa fa-trash-can-arrow-up me-2"></i>Rashodovanje predmeta - Storno
+                </h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+
+            <!-- Modal Form -->
+            <form method="POST" action="{{ url_for('single_items.undo_expediture_single_item') }}">
+                <div class="modal-body">
+                    <!-- Upozorenje -->
+                    <div class="alert alert-info mb-4">
+                        <i class="fa fa-info-circle me-2"></i>
+                        <strong>Informacija:</strong> 
+                        Storniranjem rashodovanja vraćate predmet u virtuelni magacin.
+                    </div>
+
+                    <!-- Informacije o predmetu -->
+                    <div class="section-title mb-3">Podaci o rashodovanom predmetu</div>
+                    <div class="row g-3 mb-4">
+                        <!-- ID predmeta -->
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-control-label" for="single_item_id_expediture_undo">
+                                    <i class="fa fa-hashtag me-2"></i>ID pojedinačnog predmeta
+                                </label>
+                                <input class="form-control" type="text" 
+                                       id="single_item_id_expediture_undo" 
+                                       name="single_item_id_expediture_undo" readonly>
+                            </div>
+                        </div>
+                        <!-- Inventarski broj -->
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-control-label" for="single_item_inventory_number_expediture_undo">
+                                    <i class="fa fa-barcode me-2"></i>Inventarski broj
+                                </label>
+                                <input class="form-control bg-light" type="text" 
+                                       id="single_item_inventory_number_expediture_undo" 
+                                       name="single_item_inventory_number_expediture_undo" disabled>
+                            </div>
+                        </div>
+                        <!-- Naziv predmeta -->
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="form-control-label" for="single_item_name_expediture_undo">
+                                    <i class="fa fa-tag me-2"></i>Naziv predmeta
+                                </label>
+                                <input class="form-control bg-light" type="text" 
+                                       id="single_item_name_expediture_undo" 
+                                       name="single_item_name_expediture_undo" disabled>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Potvrda -->
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" 
+                               id="confirm_single_undo" required>
+                        <label class="form-check-label" for="confirm_single_undo">
+                            Potvrđujem da želim da storniram rashodovanje ovog predmeta
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fa fa-times me-2"></i>Odustanite
+                    </button>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="fa fa-trash-can-arrow-up me-2"></i>Stornirajte rashodovanje
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="reverseSingleItem" tabindex="-1" role="dialog" aria-labelledby="reverseSingleItemLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <!-- Modal Header -->
+            <div class="modal-header bg-primary-subtle">
+                <h5 class="modal-title" id="reverseSingleItemLabel">
+                    <i class="fa fa-file-lines me-2"></i>Izdavanje predmeta na revers
+                </h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+
+            <!-- Modal Form -->
+            <form method="POST" action="{{ url_for('single_items.reverse_single_item') }}">
+                <div class="modal-body">
+                    <!-- Informativna poruka -->
+                    <div class="alert alert-info mb-4">
+                        <i class="fa fa-info-circle me-2"></i>
+                        <strong>Informacija:</strong> 
+                        Izdavanjem predmeta na revers, predmet se privremeno izdaje na korišćenje uz obavezu vraćanja.
+                    </div>
+
+                    <!-- Podaci o predmetu -->
+                    <div class="section-title mb-3">Informacije o predmetu</div>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-control-label" for="single_item_id_reverse">
+                                    <i class="fa fa-hashtag me-2"></i>ID pojedinačnog predmeta
+                                </label>
+                                <input class="form-control" type="text" 
+                                       id="single_item_id_reverse" 
+                                       name="single_item_id_reverse" readonly>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-control-label" for="single_item_inventory_number_reverse">
+                                    <i class="fa fa-barcode me-2"></i>Inventarski broj
+                                </label>
+                                <input class="form-control bg-light" type="text" 
+                                       id="single_item_inventory_number_reverse" 
+                                       name="single_item_inventory_number_reverse" disabled>
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="form-control-label" for="single_item_name_reverse">
+                                    <i class="fa fa-tag me-2"></i>Naziv predmeta
+                                </label>
+                                <input class="form-control bg-light" type="text" 
+                                       id="single_item_name_reverse" 
+                                       name="single_item_name_reverse" disabled>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Podaci o reversu -->
+                    <div class="section-title mb-3">Podaci o reversu</div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-control-label" for="single_item_reverse_date_reverse">
+                                    <i class="fa fa-calendar me-2"></i>Datum izdavanja reversa
+                                </label>
+                                <input class="form-control" type="date" 
+                                       id="single_item_reverse_date_reverse" 
+                                       name="single_item_reverse_date_reverse" required>
+                                <div class="form-text text-muted">
+                                    <i class="fa fa-info-circle me-1"></i>
+                                    Datum kada se predmet izdaje na revers
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-control-label" for="single_item_reverse_person_reverse">
+                                    <i class="fa fa-user me-2"></i>Ime i prezime
+                                </label>
+                                <input class="form-control" type="text" 
+                                       id="single_item_reverse_person_reverse" 
+                                       name="single_item_reverse_person_reverse" 
+                                       required
+                                       placeholder="Unesite ime i prezime osobe kojoj se izdaje predmet">
+                                <div class="form-text text-muted">
+                                    <i class="fa fa-info-circle me-1"></i>
+                                    Osoba kojoj se izdaje predmet na revers
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fa fa-times me-2"></i>Otkažite
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa fa-file-lines me-2"></i>Izdajte revers
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal za povraćaj reversa -->
+<div class="modal fade" id="returnReverseSingleItem" tabindex="-1" role="dialog" aria-labelledby="returnReverseSingleItemLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <!-- Modal Header -->
+            <div class="modal-header bg-success-subtle">
+                <h5 class="modal-title" id="returnReverseSingleItemLabel">
+                    <i class="fa fa-file-circle-check me-2"></i>Povraćaj predmeta sa reversa
+                </h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+
+            <!-- Modal Form -->
+            <form method="POST" action="{{ url_for('single_items.return_reverse_single_item') }}">
+                <div class="modal-body">
+                    <!-- Informativna poruka -->
+                    <div class="alert alert-success mb-4">
+                        <i class="fa fa-info-circle me-2"></i>
+                        <strong>Informacija:</strong> 
+                        Povraćajem predmeta sa reversa, predmet se vraća u evidenciju škole.
+                    </div>
+
+                    <!-- Podaci o predmetu -->
+                    <div class="section-title mb-3">Informacije o predmetu</div>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-control-label" for="single_item_id_reverse_return">
+                                    <i class="fa fa-hashtag me-2"></i>ID pojedinačnog predmeta
+                                </label>
+                                <input class="form-control" type="text" 
+                                       id="single_item_id_reverse_return" 
+                                       name="single_item_id_reverse_return" readonly>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-control-label" for="single_item_inventory_number_reverse_return">
+                                    <i class="fa fa-barcode me-2"></i>Inventarski broj
+                                </label>
+                                <input class="form-control bg-light" type="text" 
+                                       id="single_item_inventory_number_reverse_return" 
+                                       name="single_item_inventory_number_reverse_return" disabled>
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="form-control-label" for="single_item_name_reverse_return">
+                                    <i class="fa fa-tag me-2"></i>Naziv predmeta
+                                </label>
+                                <input class="form-control bg-light" type="text" 
+                                       id="single_item_name_reverse_return" 
+                                       name="single_item_name_reverse_return" disabled>
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="form-control-label" for="single_item_reverse_person_reverse_return">
+                                    <i class="fa fa-user me-2"></i>Ime i prezime
+                                </label>
+                                <input class="form-control bg-light" type="text" 
+                                       id="single_item_reverse_person_reverse_return" 
+                                       name="single_item_reverse_person_reverse_return" disabled>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fa fa-times me-2"></i>Otkažite
+                    </button>
+                    <button type="submit" class="btn btn-success" name="action" value="print_reverse">
+                        <i class="fa fa-print me-2"></i>Štampa reversa
+                    </button>
+                    <button type="submit" class="btn btn-primary" name="action" value="return_reverse">
+                        <i class="fa fa-file-circle-check me-2"></i>Povraćaj reversa
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Tab Content -->
+<div class="tab-content" id="myTabContent">
+    <!-- Pojedinačni predmeti Tab -->
+    <div class="tab-pane fade show" id="single_item" role="tabpanel">
+        <div class="table-responsive">
+            <table id="data_1" class="table table-striped table-hover report-table">
+                <thead>
+                    <tr>
+                        <th class="text-center">
+                            <i class="fa fa-hashtag d-block mb-2"></i>
+                            <span>ID<br>predmeta</span>
+                        </th>
+                        <th class="text-center">
+                            <i class="fa fa-barcode d-block mb-2"></i>
+                            <span>Inventarski<br>broj</span>
+                        </th>
+                        <th class="text-center">
+                            <i class="fa fa-tag d-block mb-2"></i>
+                            <span>Naziv</span>
+                        </th>
+                        <th class="text-center">
+                            <i class="fa fa-money-bill d-block mb-2"></i>
+                            <span>Nabavna<br>vrednost</span>
+                        </th>
+                        <th class="text-center">
+                            <i class="fa fa-calculator d-block mb-2"></i>
+                            <span>Otpis do<br>tekuće godine</span>
+                        </th>
+                        <th class="text-center">
+                            <i class="fa fa-coins d-block mb-2"></i>
+                            <span>Vrednost na<br>kraju godine</span>
+                        </th>
+                        <th class="text-center">
+                            <i class="fa fa-door-closed d-block mb-2"></i>
+                            <span>Prostorija</span>
+                        </th>
+                        <th class="text-center">
+                            <i class="fa fa-calendar d-block mb-2"></i>
+                            <span>Datum<br>nabavke</span>
+                        </th>
+                        <th class="text-center">
+                            <i class="fa fa-truck d-block mb-2"></i>
+                            <span>Dobavljač</span>
+                        </th>
+                        <th class="text-center">
+                            <i class="fa fa-file-invoice d-block mb-2"></i>
+                            <span>Broj<br>fakture</span>
+                        </th>
+                        <th class="text-center">
+                            <i class="fa fa-cog d-block mb-2"></i>
+                            <span>Akcije</span>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Serijski prikaz Tab -->
+    <div class="tab-pane fade show active" id="serial" role="tabpanel">
+        <div class="table-responsive">
+            <table id="data_2" class="table table-striped table-hover report-table">
+                <thead>
+                    <tr>
+                        <th class="text-center">
+                            <i class="fa fa-barcode d-block mb-2"></i>
+                            <span>Serija<br>predmeta</span>
+                        </th>
+                        <th class="text-center">
+                            <i class="fa fa-tag d-block mb-2"></i>
+                            <span>Naziv</span>
+                        </th>
+                        <th class="text-center">
+                            <i class="fa fa-hashtag d-block mb-2"></i>
+                            <span>Količina</span>
+                        </th>
+                        <th class="text-center">
+                            <i class="fa fa-money-bill d-block mb-2"></i>
+                            <span>Nabavna<br>vrednost</span>
+                        </th>
+                        <th class="text-center">
+                            <i class="fa fa-calculator d-block mb-2"></i>
+                            <span>Otpis do<br>tekuće godine</span>
+                        </th>
+                        <th class="text-center">
+                            <i class="fa fa-calendar d-block mb-2"></i>
+                            <span>Datum<br>nabavke</span>
+                        </th>
+                        <th class="text-center">
+                            <i class="fa fa-truck d-block mb-2"></i>
+                            <span>Dobavljač</span>
+                        </th>
+                        <th class="text-center">
+                            <i class="fa fa-file-invoice d-block mb-2"></i>
+                            <span>Broj<br>fakture</span>
+                        </th>
+                        <th class="text-center">
+                            <i class="fa fa-cog d-block mb-2"></i>
+                            <span>Akcije</span>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
     </div>
 </div>
 
@@ -496,10 +1157,13 @@
         document.getElementById("single_item_id_expediture_undo").value = singleItemId
         document.getElementById("single_item_inventory_number_expediture_undo").value = inventoryNumber
     }
-    function expeditureSerial (itemId, itemName, serial) {
-        document.getElementById("item_id_expediture").value = itemId
-        document.getElementById("item_name_expediture").value = itemName
-        document.getElementById("serial_expediture").value = serial
+    function expeditureSerial(categoryId, categoryName, depreciationRateId, depreciationRateName, itemName, serial) {
+        document.getElementById("item_name_expediture").value = itemName;
+        document.getElementById("category_id_expediture").value = categoryId;
+        document.getElementById("category_name_expediture").value = categoryName;
+        document.getElementById("depreciation_rate_id_expediture").value = depreciationRateId;
+        document.getElementById("depreciation_rate_name_expediture").value = depreciationRateName;
+        document.getElementById("serial_expediture").value = serial;
     }
     function undoExpeditureSerial (itemId, itemName, serial) {
         document.getElementById("item_id_expediture_undo").value = itemId
@@ -517,7 +1181,7 @@
         document.getElementById("single_item_inventory_number_reverse_return").value = inventoryNumber
         document.getElementById("single_item_reverse_person_reverse_return").value = reverse_person
     }
-    function editSingleItem (singleItemSerial, singleItemItemId, singleItemName, singleItemQuantity, singleItemInitialPrice, singleItemDate, singleItemSupplier, singleItemInvoiceNumber) {
+    function editSingleItem (singleItemSerial, singleItemCategoryId, singleItemDepreciationRateId, singleItemName, singleItemQuantity, singleItemInitialPrice, singleItemDate, singleItemSupplier, singleItemInvoiceNumber) {
         if (singleItemSupplier === 'null') {
             singleItemSupplier = ''
         }
@@ -531,20 +1195,25 @@
         const day = date.getDate().toString().padStart(2, '0'); // Dodajemo nulu ispred dana ako je jednocifren
         const formattedDate = `${year}-${month}-${day}`;
         console.log('datum: ', year, month, day)
-        console.log(`kliknuto je dugme editSingleItem: singleItemItemId=${singleItemItemId}, singleItemName=${singleItemName}, singleItemQuantity=${singleItemQuantity}, singleItemInitialPrice=${singleItemInitialPrice}, singleItemDate=${singleItemDate}, singleItemSupplier=${singleItemSupplier}, singleItemInvoiceNumber=${singleItemInvoiceNumber}`);
-        $("#edit_single_item_item_id").val(singleItemItemId).trigger("change"); // drugačije je da bi radilo na select2
-        document.getElementById("edit_single_item_serial").value = singleItemSerial
-        document.getElementById("edit_single_item_name").value = singleItemName
-        document.getElementById("edit_single_item_quantity").value = singleItemQuantity
-        document.getElementById("edit_single_item_initial_price").value = singleItemInitialPrice
-        document.getElementById("edit_single_item_date").value = formattedDate
-        document.getElementById("edit_single_item_supplier").value = singleItemSupplier
-        document.getElementById("edit_single_item_invoice_number").value = singleItemInvoiceNumber
-        var correction = parseInt("{{ correction }}", 10)
-        console.log('vrednost korekcije: ', correction)
-        if (year + correction < new Date().getFullYear()) { 
-            console.log('datum nabavke je baš davno')
-            document.getElementById("edit_single_item_item_id").disabled = true;
+        console.log(`kliknuto je dugme editSingleItem: singleItemCategoryId=${singleItemCategoryId}, singleItemName=${singleItemName}, singleItemQuantity=${singleItemQuantity}, singleItemInitialPrice=${singleItemInitialPrice}, singleItemDate=${singleItemDate}, singleItemSupplier=${singleItemSupplier}, singleItemInvoiceNumber=${singleItemInvoiceNumber}`);
+        
+        // Postavljanje vrednosti u formu
+        document.getElementById("edit_single_item_serial").value = singleItemSerial;
+        $("#edit_single_item_category_id").val(singleItemCategoryId).trigger("change");
+        $("#edit_single_item_depreciation_rate_id").val(singleItemDepreciationRateId).trigger("change");
+        document.getElementById("edit_single_item_name").value = singleItemName;
+        document.getElementById("edit_single_item_quantity").value = singleItemQuantity;
+        document.getElementById("edit_single_item_initial_price").value = singleItemInitialPrice;
+        document.getElementById("edit_single_item_date").value = formattedDate;
+        document.getElementById("edit_single_item_supplier").value = singleItemSupplier;
+        document.getElementById("edit_single_item_invoice_number").value = singleItemInvoiceNumber;
+
+        // Provera starosti unosa za zaključavanje polja
+        var correction = parseInt("{{ correction }}", 10);
+        if (year + correction < new Date().getFullYear()) {
+            console.log('datum nabavke je baš davno');
+            document.getElementById("edit_single_item_category_id").disabled = true;
+            document.getElementById("edit_single_item_depreciation_rate_id").disabled = true;
             document.getElementById("edit_single_item_name").disabled = true;
             document.getElementById("edit_single_item_quantity").disabled = true;
             document.getElementById("edit_single_item_initial_price").disabled = true;
@@ -553,8 +1222,9 @@
             document.getElementById("edit_single_item_invoice_number").disabled = true;
             document.getElementById("edit_single_item_submit_button").hidden = true;
         } else {
-            console.log('može da se menja...')
-            document.getElementById("edit_single_item_item_id").disabled = false;
+            console.log('može da se menja...');
+            document.getElementById("edit_single_item_category_id").disabled = false;
+            document.getElementById("edit_single_item_depreciation_rate_id").disabled = false;
             document.getElementById("edit_single_item_name").disabled = false;
             document.getElementById("edit_single_item_quantity").disabled = false;
             document.getElementById("edit_single_item_initial_price").disabled = false;
@@ -657,8 +1327,8 @@
                         if (row.room_id) {
                             console.log(row)
                             // Koristi podatke iz reda da konstruiraš hyperlink
-                            var url = '{{ url_for("single_items.single_item_rooms", item_id=1) }}';
-                            url = url.replace(1, row.item_id);
+                            var url = '{{ url_for("single_items.single_item_rooms", serial=1) }}';
+                            url = url.replace(1, row.serial);
                             // Kreiraj funkciju za dinamičko generisanje HTML-a unutar onclick
                             var editSingleItemRoomFunction = 'editSingleItemRoom(\'' + row.id + '\', \'' + row.inventory_number + '\', \'' + row.name + '\')';
                             var expeditureSingleItemFunction = 'expeditureSingleItem(\'' + row.id + '\', \'' + row.inventory_number + '\', \'' + row.name + '\')';
@@ -702,7 +1372,6 @@
             // Osveži DataTables sa novim podacima
             data_1.ajax.reload();
             data_2.ajax.reload();
-            data_3.ajax.reload();
         });
         $('#current_year_procurement').on('change', function () {
             var isChecked = $(this).prop('checked');
@@ -710,7 +1379,6 @@
             // Osveži DataTables sa novim podacima
             data_1.ajax.reload();
             data_2.ajax.reload();
-            data_3.ajax.reload();
         });
         ////////////////////////////////
         var data_2 = $("#data_2").DataTable({
@@ -724,7 +1392,7 @@
             },
             serverSide: true,
             columns:  [
-                { data: 'item_id' },
+                // { data: 'item_id' },
                 { data: 'series' },
                 { data: 'name' },
                 { data: 'quantity' },
@@ -798,8 +1466,8 @@
                         // Generiše HTML za novu kolonu
                         if (row.room_id === 2) { // ako je predmet rashodovan, room_id = 2 magacin rashodovanih premdeta
                             // Koristi podatke iz reda da konstruiraš hyperlink
-                            var url = '{{ url_for("single_items.single_item_rooms", item_id=1) }}';
-                            url = url.replace(1, row.item_id);
+                            var url = '{{ url_for("single_items.single_item_rooms", serial=1) }}';
+                            url = url.replace(1, row.series);
                             // Kreiraj funkciju za dinamičko generisanje HTML-a unutar onclick
                             // editSingleItem (singleItemName, singleItemQuantity, singleItemInitialPrice, singleItemDate, singleItemSupplier, singleItemInvoiceNumber)
                             var undoExpeditureSerialFunction = 'undoExpeditureSerial(\'' + row.item_id + '\', \'' + row.name + '\', \'' + row.series + '\')';
@@ -810,12 +1478,12 @@
                             return html;
                         } else {
                             // Koristi podatke iz reda da konstruiraš hyperlink
-                            var url = '{{ url_for("single_items.single_item_rooms", item_id=1) }}';
-                            url = url.replace(1, row.item_id);
+                            var url = '{{ url_for("single_items.single_item_rooms", serial=1) }}';
+                            url = url.replace(1, row.series);
                             // Kreiraj funkciju za dinamičko generisanje HTML-a unutar onclick
                             // editSingleItem (singleItemName, singleItemQuantity, singleItemInitialPrice, singleItemDate, singleItemSupplier, singleItemInvoiceNumber)
-                            var editSingleItemFunction = 'editSingleItem(\'' + row.series + '\', \'' + row.item_id + '\', \'' + row.name + '\', \'' + row.quantity + '\', \'' + row.initial_price + '\', \'' + row.purchase_date + '\', \'' + row.supplier + '\', \'' + row.invoice_number + '\')';
-                            var expeditureSerialFunction = 'expeditureSerial(\'' + row.item_id + '\', \'' + row.name + '\', \'' + row.series + '\')';
+                            var editSingleItemFunction = 'editSingleItem(\'' + row.series + '\', \'' + row.category_id + '\', \'' + row.depreciation_rate_id + '\', \'' + row.name + '\', \'' + row.quantity + '\', \'' + row.initial_price + '\', \'' + row.purchase_date + '\', \'' + row.supplier + '\', \'' + row.invoice_number + '\')';
+                            var expeditureSerialFunction = 'expeditureSerial(\'' + row.category_id + '\', \'' + row.category_name + '\', \'' + row.depreciation_rate_id + '\', \'' + row.depreciation_rate_name + '\', \'' + row.name + '\', \'' + row.series + '\')';
 
                             var html = '<td>' + 
                                             '<a class="btn-x btn-primary-x" href="' + url + '" title="Pregled predmeta po prostorijama"><i class="fa fa-door-closed awesomeedit" aria-hidden="true"></i></a>' + 
@@ -832,87 +1500,7 @@
                 stateSave: true
             },
         })
-        var data_3 = $('#data_3').DataTable({
-            ajax: {
-                url: '{{url_for("single_items.api_item")}}',
-                type: 'GET',
-                data: function (d) {
-                    d.room_select = $('#room_select').val();
-                    d.current_year_procurement = $('#current_year_procurement').val();
-                }
-            },
-            serverSide: true,
-            columns: [
-                { data: 'item_id' },
-                { data: 'name' },
-                { data: 'quantity' },
-                { 
-                    data: 'initial_price',
-                    render: function (data, type, row) {
-                        // Ako je tip prikaza podataka ili tip sortiranja, vraćamo zaokruženu vrednost
-                        if (type === 'display' || type === 'type') {
-                            f = new Intl.NumberFormat('sr-RS', { 
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 2
-                            })
-                            return f.format(parseFloat(data).toFixed(2));
-                        }
-                        // Inače, vraćamo nenumeroisanu vrednost za druge tipove
-                        return data
-                    }
-                },
-                { 
-                    data: 'write_off',
-                    render: function (data, type, row) {
-                        // Ako je tip prikaza podataka ili tip sortiranja, vraćamo zaokruženu vrednost
-                        if (type === 'display' || type === 'type') {
-                            f = new Intl.NumberFormat('sr-RS', { 
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 2
-                            })
-                            return f.format(parseFloat(data).toFixed(2));
-                        }
-                        // Inače, vraćamo nenumeroisanu vrednost za druge tipove
-                        return data;
-                    }
-                },
-                // { 
-                //     data: 'current_price',
-                //     render: function (data, type, row) {
-                //         // Ako je tip prikaza podataka ili tip sortiranja, vraćamo zaokruženu vrednost
-                //         if (type === 'display' || type === 'type') {
-                //             f = new Intl.NumberFormat('sr-RS', { 
-                //                 minimumFractionDigits: 2,
-                //                 maximumFractionDigits: 2
-                //             })
-                //             return f.format(parseFloat(data).toFixed(2));
-                //         }
-                //         // Inače, vraćamo nenumeroisanu vrednost za druge tipove
-                //         return data;
-                //     }
-                // },
-                {
-                    data: null,
-                    render: function (data, type, row) {
-                        if (row.item_id) {
-                            var url = '{{ url_for("single_items.single_item_rooms", item_id=1) }}';
-                            url = url.replace(1, row.item_id);
-                            var html = '<td>' + 
-                                            '<a class="btn-x btn-primary-x" href="' + url + '" title="Pregled predmeta po prostorijama"><i class="fa fa-door-closed awesomeedit" aria-hidden="true"></i></a>' + 
-                                        '</td>';
-                            return html;
-                        } else {
-                            return ''; // Vraća prazan string ako nema item_id
-                        }
-                    }
-                }
-,
-            ],
-            language: {
-                url: "//cdn.datatables.net/plug-ins/1.12.1/i18n/sr-SP.json",
-                stateSave: true
-            },
-        })
+
         $('#edit_single_item_item_id').select2({
             dropdownParent: $('#editSingleItem'),
             placeholder: 'Izaberite opciju',
@@ -945,6 +1533,43 @@
             tags: false,
             closeOnSelect: true,
         })
+        $('#add_single_item_category_id').select2({
+            dropdownParent: $('#newSingleItem'),
+            placeholder: 'Izaberite konto',
+            allowClear: true,
+            width: '100%',
+            tags: false,
+            closeOnSelect: true,
+        });
+
+        $('#add_single_item_depreciation_rate_id').select2({
+            dropdownParent: $('#newSingleItem'),
+            placeholder: 'Izaberite stopu amortizacije',
+            allowClear: true,
+            width: '100%',
+            tags: false,
+            closeOnSelect: true,
+        });
+        // Inicijalizacija Select2 za nove select elemente
+        $(document).ready(function() {
+            $('#edit_single_item_category_id').select2({
+                dropdownParent: $('#editSingleItem'),
+                placeholder: 'Izaberite konto',
+                allowClear: true,
+                width: '100%',
+                tags: false,
+                closeOnSelect: true,
+            });
+
+            $('#edit_single_item_depreciation_rate_id').select2({
+                dropdownParent: $('#editSingleItem'),
+                placeholder: 'Izaberite stopu amortizacije',
+                allowClear: true,
+                width: '100%',
+                tags: false,
+                closeOnSelect: true,
+            });
+        });
         $(document).on('select2:open', () => {
             document.querySelector('.select2-search__field').focus();
         });

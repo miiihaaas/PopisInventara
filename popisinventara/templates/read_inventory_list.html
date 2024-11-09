@@ -1,96 +1,171 @@
 {% extends "layout.html" %}
 {% block content %}
 <div class="h1">{{ title }}</div>
-<div class="form-group mb-4">
-    <a class="btn btn-secondary" href="javascript:history.back()">Nazad</a>
-</div>
-<div class="form-group" style="margin-bottom: 250px;">
-    <table id="data_1" border="1" class="table table-striped userlist">
-        <thead>
-            <tr>
-                <th>id</th>
-                <th>Datum</th>
-                <th>Opis</th>
-                <th>Opcije</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for list in inventory_lists %}
-            <tr>
-                <td>{{ list.id }}</td>
-                <td>{{ list.date }}</td>
-                <td>{{ list.description }}</td>
-                {% if list.status == 'finished' %}
+
+<div class="page-content">
+    <!-- Action Buttons -->
+    <div class="action-buttons mb-4">
+        <a class="btn btn-secondary" href="javascript:history.back()">
+            <i class="fa fa-arrow-left me-2"></i>Nazad
+        </a>
+    </div>
+
+    <!-- Inventories Table -->
+    <div class="table-responsive">
+        <table id="data_1" class="table table-striped report-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Datum</th>
+                    <th>Opis</th>
+                    <th class="text-end">Akcije</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for list in inventory_lists %}
+                <tr>
+                    <td>{{ list.id }}</td>
+                    <td>{{ list.date }}</td>
+                    <td>{{ list.description }}</td>
                     <td>
-                        <a href="{{url_for('inventory.edit_inventory_list', inventory_id=list.id)}}" class="btn btn-primary">Pregled listi</a>  
-                        <a href="{{url_for('inventory.compare_inventory_list', inventory_id=list.id)}}" class="btn btn-primary">Poređenje rezultata</a>
-                        <div class="btn-group">
-                            <button type="button" class="btn btn-danger dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                                Izveštaji
-                            </button>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="{{ url_for('reports.category_reports_expediture', inventory_id=list.id) }}">Rekapitulacija rashoda po kontima</a></li>
-                                <li><a class="dropdown-item" href="{{ url_for('reports.category_reports_expediture_item', inventory_id=list.id) }}">Rekapitulacija rashodovanih predmeta po kontima</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="{{ url_for('reports.category_reports_new_purchases_past', inventory_id=list.id) }}">Rekapitulacija novih nabavki po kontima</a></li>
-                                <li><a class="dropdown-item" href="{{ url_for('reports.category_reports_new_purchases_item', inventory_id=list.id) }}">Rekapitulacija nabavljenih predmeta po kontima</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="#">Obračun amortizacije osnovnih sredstava pregled po prostorijama i po predmetima </a></li>
-                                <li><a class="dropdown-item" href="#">Rekapitulacija obračuna amortizacije po prostorijama </a></li>
-                                <li><a class="dropdown-item" href="{{ url_for('reports.single_item_working', inventory_id=list.id) }}">Stanje inventara</a></li>
-                                <!-- <li><a class="dropdown-item" href="#">Knjiga osnovnih sredstava #</a></li> -->
-                                <li><a class="dropdown-item" href="{{ url_for('reports.category_reports_past', inventory_id=list.id) }}">Izveštaj po kontima</a></li>
-                            </ul>
+                        <div class="d-flex gap-2 justify-content-end">
+                            {% if list.status == 'finished' %}
+                            <a href="{{url_for('inventory.edit_inventory_list', inventory_id=list.id)}}" 
+                                class="btn btn-sm btn-outline-primary">
+                                <i class="fa fa-list me-1"></i>Pregled
+                            </a>  
+                            <a href="{{url_for('inventory.compare_inventory_list', inventory_id=list.id)}}" 
+                                class="btn btn-sm btn-outline-primary">
+                                <i class="fa fa-balance-scale me-1"></i>Poređenje
+                            </a>
+                            {% endif %}
+                            
+                            <div class="dropdown">
+                                <button type="button" class="btn btn-sm btn-outline-danger dropdown-toggle" 
+                                        data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fa fa-file-alt me-1"></i>Izveštaji
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li class="dropdown-header">Rashodi</li>
+                                    <li>
+                                        <a class="dropdown-item" href="{{ url_for('reports.category_reports_expediture', inventory_id=list.id) }}">
+                                            <i class="fa fa-chart-bar me-2"></i>Rekapitulacija po kontima
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="{{ url_for('reports.category_reports_expediture_item', inventory_id=list.id) }}">
+                                            <i class="fa fa-list-alt me-2"></i>Rekapitulacija po predmetima
+                                        </a>
+                                    </li>
+                                    
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li class="dropdown-header">Nove nabavke</li>
+                                    <li>
+                                        <a class="dropdown-item" href="{{ url_for('reports.category_reports_new_purchases_past', inventory_id=list.id) }}">
+                                            <i class="fa fa-shopping-cart me-2"></i>Rekapitulacija po kontima
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="{{ url_for('reports.category_reports_new_purchases_item', inventory_id=list.id) }}">
+                                            <i class="fa fa-list-ul me-2"></i>Rekapitulacija po predmetima
+                                        </a>
+                                    </li>
+                                    
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li class="dropdown-header">Amortizacija</li>
+                                    <li>
+                                        <a class="dropdown-item" href="#">
+                                            <i class="fa fa-calculator me-2"></i>Pregled po prostorijama
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="#">
+                                            <i class="fa fa-table me-2"></i>Rekapitulacija po prostorijama
+                                        </a>
+                                    </li>
+                                    
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <a class="dropdown-item" href="{{ url_for('reports.single_item_working', inventory_id=list.id) }}">
+                                            <i class="fa fa-boxes me-2"></i>Stanje inventara
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="{{ url_for('reports.category_reports_past', inventory_id=list.id) }}">
+                                            <i class="fa fa-folder me-2"></i>Izveštaj po kontima
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
                         </div>
                     </td>
-                {% else %}
-                    <td>
-                        <!-- <a href="{{url_for('inventory.edit_inventory_list', inventory_id=list.id)}}" class="btn btn-primary">Pregled listi</a>  
-                        <a href="{{url_for('inventory.compare_inventory_list', inventory_id=list.id)}}" class="btn btn-primary">Poređenje rezultata</a> -->
-                        <div class="btn-group">
-                            <button type="button" class="btn btn-danger dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                                Izveštaji
-                            </button>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="{{ url_for('reports.category_reports_expediture', inventory_id=list.id) }}">Rekapitulacija po kontu - rashod</a></li>
-                                <li><a class="dropdown-item" href="{{ url_for('reports.category_reports_expediture_item', inventory_id=list.id) }}">Rekapitulacija po kontu - rashod po predmetima</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="{{ url_for('reports.category_reports_new_purchases_past', inventory_id=list.id) }}">Rekapitulacija po kontima - nove nabavke</a></li>
-                                <li><a class="dropdown-item" href="{{ url_for('reports.category_reports_new_purchases_item', inventory_id=list.id) }}">Rekapitulacija po kontima - nove nabavke po predmetima</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="#">Obračun amortizacije osnovnih sredstava pregled po prostorijama i po predmetima #</a></li>
-                                <li><a class="dropdown-item" href="#">Rekapitulacija obračuna amortizacije po prostorijama #</a></li>
-                                <li><a class="dropdown-item" href="#">Knjiga osnovnih sredstava #</a></li>
-                                <li><a class="dropdown-item" href="{{ url_for('reports.category_reports_past', inventory_id=list.id) }}">Izveštaj po kontima</a></li>
-                            </ul>
-                        </div>
-                    </td>
-                {% endif %}
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
-{% endblock content%}
+{% endblock content %}
 
 {% block scripts %}
 <script>
-    $(document).ready(function () {
-        $("#data_1").DataTable({
-            order: [[1, "asc"]],
-            language: {
-                url: "//cdn.datatables.net/plug-ins/1.12.1/i18n/sr-SP.json",
-            },
-            paging: false, // Isključivanje paginacije
-        });
-        $('#add_item_rate, #add_item_category').select2({
-            dropdownParent: $('#newItem'),
-            placeholder: 'Izaberite opciju',
-            allowClear: true,
-            width: '100%',
-            tags: false,
-            closeOnSelect: true,
-        });
+$(document).ready(function () {
+    $("#data_1").DataTable({
+        order: [[1, "desc"]],
+        language: {
+            url: "//cdn.datatables.net/plug-ins/1.12.1/i18n/sr-SP.json"
+        },
+        pageLength: 25,
+        paging: false,
+        stateSave: true,
+        responsive: true
     });
+});
 </script>
+
+<style>
+/* Table Styles */
+.report-table td {
+   vertical-align: middle;
+}
+
+/* Dropdown Menu */
+.dropdown-menu {
+   padding: 0.5rem 0;
+   box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.dropdown-header {
+   font-size: 0.75rem;
+   font-weight: 600;
+   text-transform: uppercase;
+   letter-spacing: 0.5px;
+   color: var(--color-text-light);
+}
+
+.dropdown-item {
+   padding: 0.5rem 1rem;
+   font-size: 0.875rem;
+}
+
+.dropdown-item:hover {
+   background-color: rgba(0,0,0,0.05);
+}
+
+.dropdown-item i {
+   width: 1.25rem;
+   color: var(--color-text-light);
+}
+
+/* Action Buttons */
+.btn-sm {
+   padding: 0.25rem 0.5rem;
+   font-size: 0.875rem;
+}
+
+.btn-outline-primary:hover,
+.btn-outline-danger:hover {
+   color: white;
+}
+</style>
 {% endblock %}

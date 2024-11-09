@@ -1,22 +1,61 @@
 {% extends "layout.html" %}
 {% block content %}
 <div class="h1">{{ title }}</div>
-<div class="form-group">
-    <a class="btn btn-secondary sec-nazad" href="javascript:history.back()">Nazad</a>
-    <button type="button" class="btn btn-primary mb-4" data-bs-toggle="modal" data-bs-target="#newCategory">Dodajte novi konto</button>
-</div>
 
-<div class="modal fade" id="myCategory" tabindex="-1" role="dialog" aria-labelledby="myCategoryLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="myCategoryLabel">Izmena podataka konta</h5>
-                <button type="button" clsass="close" data-bs-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <form method="POST" action="{{ url_for('items.edit_category') }}">
-                <form action="">
+<div class="page-content">
+    <!-- Action Buttons -->
+    <div class="action-buttons">
+        <a class="btn btn-secondary" href="javascript:history.back()">
+            <i class="fa fa-arrow-left me-2"></i>Nazad
+        </a>
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newCategory">
+            <i class="fa fa-plus me-2"></i>Dodaj konto
+        </button>
+    </div>
+
+    <!-- Data Table -->
+    <div class="table-responsive mt-4">
+        <table id="data" class="table table-striped report-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Broj konta</th>
+                    <th>Opis</th>
+                    <th class="text-end">Akcije</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for category in categories %}
+                <tr>
+                    <td>{{ category.id }}</td>
+                    <td>{{ category.category_number }}</td>
+                    <td>{{ category.name }}</td>
+                    <td class="text-end">
+                        <button class="btn-x" data-bs-toggle="modal" data-bs-target="#myCategory" 
+                                onclick="editCategory('{{category.id}}', '{{category.category_number}}', '{{category.name}}')" 
+                                title="Izmena konta">
+                            <i class="fa fa-edit awesomeedit"></i>
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Edit Modal -->
+    <div class="modal fade" id="myCategory" tabindex="-1" aria-labelledby="myCategoryLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="myCategoryLabel">
+                        <i class="fa fa-edit me-2"></i>Izmena konta
+                    </h5>
+                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form method="POST" action="{{ url_for('items.edit_category') }}">
                     <div class="modal-body">
                         <div class="form-group">
                             <label class="form-control-label" for="edit_category_id">ID</label>
@@ -24,71 +63,67 @@
                         </div>
                         <div class="form-group">
                             <label class="form-control-label" for="edit_category_number">Broj konta</label>
-                            <input class="form-control" type="text" id="edit_category_number" name="edit_category_number">
+                            <input class="form-control" type="text" id="edit_category_number" 
+                                    name="edit_category_number" placeholder="Unesite broj konta">
                         </div>
                         <div class="form-group">
                             <label class="form-control-label" for="edit_category_name">Naziv</label>
-                            <input class="form-control" type="text" id="edit_category_name" name="edit_category_name">
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Otkažite</button>
-                            <button type="submit" class="btn btn-primary" >Sačuvajte</button>
+                            <input class="form-control" type="text" id="edit_category_name" 
+                                    name="edit_category_name" placeholder="Unesite naziv konta">
                         </div>
                     </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="fa fa-times me-2"></i>Otkaži
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fa fa-save me-2"></i>Sačuvaj
+                        </button>
+                    </div>
                 </form>
-            </form>
+            </div>
         </div>
     </div>
-</div>
-<div class="modal fade" id="newCategory" tabindex="-1" role="dialog" aria-labelledby="newCategoryLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="newCategoryLabel">Izmena podataka konta</h5>
-                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <form method="POST" action="{{ url_for('items.add_category') }}">
+
+    <!-- Add New Modal -->
+    <div class="modal fade" id="newCategory" tabindex="-1" aria-labelledby="newCategoryLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="newCategoryLabel">
+                        <i class="fa fa-plus me-2"></i>Novi konto
+                    </h5>
+                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form method="POST" action="{{ url_for('items.add_category') }}">
                     <div class="modal-body">
                         <div class="form-group">
                             <label class="form-control-label" for="add_category_number">Broj konta</label>
-                            <input class="form-control" type="text" id="add_category_number" name="add_category_number">
+                            <input class="form-control" type="text" id="add_category_number" 
+                                    name="add_category_number" placeholder="Unesite broj konta">
                         </div>
                         <div class="form-group">
                             <label class="form-control-label" for="add_category_name">Naziv</label>
-                            <input class="form-control" type="text" id="add_category_name" name="add_category_name">
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Otkažite</button>
-                            <button type="submit" class="btn btn-primary" >Sačuvajte</button>
+                            <input class="form-control" type="text" id="add_category_name" 
+                                    name="add_category_name" placeholder="Unesite naziv konta">
                         </div>
                     </div>
-            </form>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="fa fa-times me-2"></i>Otkaži
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fa fa-plus me-2"></i>Dodaj
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 </div>
-<table id="data" border="1" class="table table-striped userlist">
-    <thead>
-        <tr>
-            <th>ID</th>
-            <th>Broj konta</th>
-            <th>Opis</th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for category in categories %}
-        <tr>
-            <td>{{ category.id }}</td>
-            <td>{{ category.category_number }}</td>
-            <td>{{ category.name }}</td>
-            <td><a href="#" class="btn-x btn-primary-x" data-bs-toggle="modal" data-bs-target="#myCategory" onclick="editCategory('{{category.id}}', '{{category.category_number}}', '{{category.name}}')" title="Editovanje konta: {{ category.category_number }}"><i class="fa fa-edit awesomeedit" aria-hidden="true"></i></a></td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-{% endblock content%}
+{% endblock content %}
 
 {% block scripts %}
 <script>
@@ -97,13 +132,19 @@
         document.getElementById("edit_category_number").value = categoryNumber;
         document.getElementById("edit_category_name").value = categoryName;
     }
+    
     $(document).ready(function () {
-    $("#data").DataTable({
-        order: [[1, "asc"]],
-        language: {
-            url: "//cdn.datatables.net/plug-ins/1.12.1/i18n/sr-SP.json",
-            stateSave: true
-        },
+        $("#data").DataTable({
+            order: [[1, "asc"]],
+            language: {
+                url: "//cdn.datatables.net/plug-ins/1.12.1/i18n/sr-SP.json"
+            },
+            pageLength: 25,
+            responsive: true,
+            stateSave: true,
+            columnDefs: [
+                { orderable: false, targets: [3] }
+            ]
         });
     });
 </script>

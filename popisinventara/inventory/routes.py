@@ -32,75 +32,83 @@ def create_inventory_list():
     if current_user.authorization != 'admin':
         flash('Nemate dozvolu za da pristupite ovoj stranici.', 'danger')
         return redirect(url_for('main.home'))
+    
     virtual_warehouse = SingleItem.query.filter_by(room_id=1).count()
     if virtual_warehouse:
         flash('Pre kreiranja popisnih listi treba premestiti sve predmete iz virtuelnog magacina.', 'danger')
         return redirect(url_for('main.home'))
+        
     active_inventory_list = Inventory.query.filter_by(status='active').first()
-    print(f'{active_inventory_list=}')
     if active_inventory_list:
         flash(f'Da bi ste kreirali novu popisnu listu, morate prvo završiti aktivnu popisnu listu koja je započeta: {active_inventory_list.date}.', 'danger')
         return redirect(url_for('main.home'))
+    
+    route_name = request.endpoint
+    
     all_room_list = Room.query.all()
-    rooms = [room for room in all_room_list if room.id not in [1, 2, 4]] #! 1 - virtuelni magacin se ne popisuje; 2 - magacin rashodovanih predmeta se ne popisuje; 4 - magacin manjkova se ne popisuje
-    # debug_room_ids = [room.id for room in rooms]
-    # # return f"{debug_room_ids=}"
+    rooms = [room for room in all_room_list if room.id not in [1, 2, 4]]
     users = User.query.filter_by(authorization='user').all()
+    
     this_year = date.today().year
     years = [this_year - 1, this_year]
     
     inventory_years = [inventory.date for inventory in Inventory.query.all()]
-    print(f'{inventory_years=}')
-    inventory_at_the_end_of_current_year = False
-    inventory_at_the_end_of_last_year = False
-    if date((date.today().year -1), 12, 31) in inventory_years:
-        inventory_at_the_end_of_last_year = True
-    if date((date.today().year), 12, 31) in inventory_years:
-        inventory_at_the_end_of_current_year = True
-    
+    inventory_at_the_end_of_current_year = date(this_year, 12, 31) in inventory_years
+    inventory_at_the_end_of_last_year = date(this_year - 1, 12, 31) in inventory_years
+
     if request.method == 'POST':
         description = request.form.get('description')
         single_items = SingleItem.query.all()
-        
         
         year = request.form.get('inventry_types')
         if year != '':
             datum = date(int(year), 12, 31)
         else:
-            year = None #! zato što mi ne treba godina koja je opcioni input u funkciji write_off_until_current_year()
+            year = None
             datum = date.today()
         
+        # Kalkulacija trenutne cene sa novim modelom
         for single_item in single_items:
             if single_item.expediture_date is None:
-                print(f'start -- pre izmene: {single_item.current_price=}')
-                single_item.current_price, _ = current_price_calculation(single_item.initial_price, single_item.single_item_item.item_depreciation_rate.rate, single_item.purchase_date, single_item.expediture_date, year, single_item.input_in_app_date, single_item.deprecation_value)
-                print(f'posle izmene: {single_item.current_price=}')
-                print('------------------------------------------------------')
+                single_item.current_price, _ = current_price_calculation(
+                    single_item.initial_price,
+                    single_item.depreciation_rate.rate,
+                    single_item.purchase_date,
+                    single_item.expediture_date,
+                    year,
+                    single_item.input_in_app_date,
+                    single_item.deprecation_value
+                )
         db.session.commit()
         
         room_ids = request.form.getlist('room_id[]')
         user_ids = request.form.getlist('user_id[]')
         if any(item == '' for item in user_ids):
-            flash('Morate dodeliti predsednika popisne komisije za svaku prostoriju. Kliknite na dugme NAZAD da povratite podatke', 'danger')
+            flash('Morate dodeliti predsednika popisne komisije za svaku prostoriju.', 'danger')
             return redirect(url_for('inventory.create_inventory_list'))
         room_user_ids = list(zip(room_ids, user_ids))
-        print(f'{room_ids=}; {user_ids=}')
-        print(f'{room_user_ids=}')
-        inventory_initial_data = []
         
+        # Kreiranje inventory_initial_data sa novom strukturom
+        inventory_initial_data = []
         for room in rooms:
             room_id = room.id
             user_id = [int(u_id) for (r_id, u_id) in room_user_ids if r_id == str(room_id)][0]
             single_items_in_room = SingleItem.query.filter_by(room_id=room_id).all()
             items = []
+            
             for single_item in single_items_in_room:
                 item = {
-                        'serial': int(single_item.inventory_number.split('-')[1]),
-                        'quantity': 1,
-                        'quantity_input': 0,
-                        'current_price': single_item.current_price,
-                        'total_value': single_item.current_price,
-                    }
+                    'serial': single_item.serial,
+                    'name': single_item.name,
+                    'category_number': single_item.category.category_number,
+                    'category_name': single_item.category.name,
+                    'depreciation_rate': single_item.depreciation_rate.rate,
+                    'quantity': 1,
+                    'quantity_input': 0,
+                    'current_price': single_item.current_price,
+                    'total_value': single_item.current_price,
+                    'comment': ''
+                }
                 if not items:
                     items.append(item)
                 else:
@@ -113,93 +121,48 @@ def create_inventory_list():
                             break
                     if not found:
                         items.append(item)
-                        found = True
-            new_data = {
+            
+            inventory_initial_data.append({
                 'room_id': room_id,
                 'user_id': user_id,
                 'items': items
-            }
-            inventory_initial_data.append(new_data)
+            })
         
-        # for single_item in single_items:
-        #     if str(single_item.room_id) not in room_ids:
-        #         continue
-        #     new_data = {
-        #         'room_id': single_item.room_id,
-        #         'user_id': [int(user_id) for (room_id, user_id) in room_user_ids if room_id == str(single_item.room_id)][0],
-        #         'items': [
-        #             {
-        #                 # 'item_id': single_item.item_id,
-        #                 'serial': int(single_item.inventory_number.split('-')[1]),
-        #                 'quantity': 1, 
-        #                 'quantity_input': 0,
-        #                 'current_price': single_item.current_price,
-        #                 'total_value': single_item.current_price,
-        #             }
-        #         ]
-        #     }
-        #     if not inventory_initial_data:
-        #         inventory_initial_data.append(new_data)
-        #     else:
-        #         found = False
-        #         for existing_data in inventory_initial_data:
-        #             if existing_data['room_id'] == new_data['room_id']:
-        #                 for item in existing_data['items']:
-        #                     if item['serial'] == new_data['items'][0]['serial']:
-        #                         item['quantity'] += 1
-        #                         item['total_value'] += new_data['items'][0]['current_price']
-        #                         found = True
-        #                         break
-        #                 if not found:
-        #                     existing_data['items'].append(new_data['items'][0])
-        #                     found = True
-        #                 break
-        #         if not found:
-        #             inventory_initial_data.append(new_data)
-        # # print(f'{inventory_initial_data=}')
+        # Kreiranje inventory_working_data 
         inventory_working_data = []
-
         for room in inventory_initial_data:
             new_room = {'room_id': room['room_id'], 'user_id': room['user_id'], 'items': []}
             for item in room['items']:
-                new_item = {'serial': item['serial'], 'quantity': item['quantity'], 'quantity_input': 0, 'current_price': item['current_price'] , 'total_value': 0, 'comment': ''}
+                new_item = item.copy()  # Kopiramo sve podatke
+                new_item['quantity_input'] = 0
+                new_item['total_value'] = 0
                 new_room['items'].append(new_item)
             inventory_working_data.append(new_room)
-
-        # print(f'{inventory_working_data=}')
         
-
-        
-        
+        # Kreiranje single_items_list
         single_items_list = []
         for single_item in single_items:
-            write_off_til_current_year, price_at_end_of_year, depreciation_per_year = write_off_until_current_year(single_item, year) #! proveri ovu funkcionalnost (year)
+            write_off_til_current_year, price_at_end_of_year, depreciation_per_year = write_off_until_current_year(single_item, year)
+                
             new_single_item = {
                 'id': single_item.id,
                 'serial': single_item.serial,
-                'inventory_number': single_item.inventory_number,
                 'name': single_item.name,
-                'supplier': single_item.supplier,
-                'invoice_number': single_item.invoice_number,
+                'category_number': single_item.category.category_number,
+                'category_name': single_item.category.name,
+                'depreciation_rate': single_item.depreciation_rate.rate,
                 'initial_price': single_item.initial_price,
                 'current_price': single_item.current_price,
-                'expediture_price': single_item.expediture_price,
                 'purchase_date': single_item.purchase_date,
                 'expediture_date': single_item.expediture_date,
-                'reverse_person': single_item.reverse_person,
-                'reverse_date': single_item.reverse_date,
                 'room_id': single_item.room_id,
-                'item_id': single_item.item_id,
-                'category': single_item.single_item_item.item_category.category_number,
-                'depreciation_rate': single_item.single_item_item.item_depreciation_rate.rate,
                 'depreciation_per_year': depreciation_per_year,
                 'write_off_until_current_year': write_off_til_current_year,
                 'price_at_end_of_year': price_at_end_of_year if price_at_end_of_year > 0 else 0,
             }
-            print(f'new_single_item: {new_single_item["current_price"]=}')
             single_items_list.append(new_single_item)
         
-        
+        # Kreiranje i čuvanje popisne liste
         initial_data = {
             'inventory': inventory_initial_data,
             'single_items': single_items_list,
@@ -209,91 +172,288 @@ def create_inventory_list():
             'inventory': inventory_working_data,
             'single_items': single_items_list,
         }
-        # print(f'{initial_data=}')
-        # print(f'{working_data=}')
-        new_inventory_list = Inventory(description=description,
-                                        date=datum,
-                                        initial_data=json.dumps(initial_data, default=serialize_data),
-                                        working_data=json.dumps(working_data, default=serialize_data),
-                                        status='active')
+        
+        new_inventory_list = Inventory(
+            description=description,
+            date=datum,
+            initial_data=json.dumps(initial_data, default=serialize_data),
+            working_data=json.dumps(working_data, default=serialize_data),
+            status='active'
+        )
+        
         db.session.add(new_inventory_list)
         db.session.commit()
+        
         flash('Popis inventara je uspešno kreiran.', 'success')
         return redirect(url_for('main.home'))
-    return render_template('create_inventory_list.html', 
+        
+    return render_template('create_inventory_list.html',
                             title="Kreiranje popisne liste",
+                            route_name=route_name,
                             rooms=rooms,
                             users=users,
                             years=years,
                             inventory_at_the_end_of_last_year=inventory_at_the_end_of_last_year,
-                            inventory_at_the_end_of_current_year=inventory_at_the_end_of_current_year,)
-
+                            inventory_at_the_end_of_current_year=inventory_at_the_end_of_current_year)
 
 @inventory.route('/edit_inventory_list/<int:inventory_id>', methods=['GET', 'POST'])
 def edit_inventory_list(inventory_id):
     if not current_user.is_authenticated:
         flash('Da biste pristupili ovoj stranici treba da budete ulogovani.', 'success')
         return redirect(url_for('users.login'))
+        
     inventory = Inventory.query.get_or_404(inventory_id)
-    inventory_list_data = json.loads(inventory.initial_data)
-    # print(f'{inventory_list_data=}')
-    #! generiši filtrirane popisne liste za prostorije korisnika, tj sve popisne liste za admina
+    
+    try:
+        inventory_data = json.loads(inventory.working_data)
+        initial_data = json.loads(inventory.initial_data)
+    except json.JSONDecodeError:
+        flash('Greška pri učitavanju podataka popisa.', 'danger')
+        return redirect(url_for('main.home'))
+
+    all_rooms = Room.query.filter(
+        ~Room.id.in_([1, 2, 4])
+    ).order_by(
+        Room.building_id,
+        Room.name
+    ).all()
+
+    # Kreiranje mape user_id -> room_ids
+    user_room_map = {}
+    for room_data in inventory_data['inventory']:
+        user_id = room_data['user_id']
+        if user_id not in user_room_map:
+            user_room_map[user_id] = []
+        user_room_map[user_id].append(room_data['room_id'])
+
+    def calculate_room_summary(room_id, inventory_data):
+        """Izračunava rezime za sobu."""
+        room_items = next((room['items'] for room in inventory_data['inventory'] 
+                          if room['room_id'] == room_id), [])
+        
+        return {
+            'total_items': len(room_items),
+            'counted_items': sum(1 for item in room_items if item['quantity_input'] > 0),
+            'total_quantity': sum(item['quantity'] for item in room_items),
+            'counted_quantity': sum(item['quantity_input'] for item in room_items),
+            'categories': len(set(item.get('category_number') for item in room_items)),
+            'items_with_comments': sum(1 for item in room_items if item.get('comment')),
+        }
+
+    def get_room_inventory_status(room_id, inventory_data):
+        """Određuje detaljni status popisa za prostoriju."""
+        summary = calculate_room_summary(room_id, inventory_data)
+        
+        if summary['total_items'] == 0:
+            return {
+                'status': 'empty',
+                'label': 'Prazna prostorija',
+                'color': 'secondary',
+                'summary': summary
+            }
+        
+        if summary['counted_items'] == 0:
+            return {
+                'status': 'not_started',
+                'label': 'Nije započeto',
+                'color': 'danger',
+                'summary': summary
+            }
+            
+        if summary['counted_items'] < summary['total_items']:
+            progress = (summary['counted_items'] / summary['total_items']) * 100
+            return {
+                'status': 'in_progress',
+                'label': f'U toku ({progress:.1f}%)',
+                'color': 'warning',
+                'summary': summary
+            }
+            
+        differences = summary['counted_quantity'] != summary['total_quantity']
+        if differences:
+            return {
+                'status': 'differences',
+                'label': 'Završeno (razlike)',
+                'color': 'info',
+                'summary': summary
+            }
+            
+        return {
+            'status': 'completed',
+            'label': 'Završeno',
+            'color': 'success',
+            'summary': summary
+        }
+
+    # Priprema room_buttons liste
     room_buttons = []
-    # if current_user.authorization == 'admin':
-    #     for room_data in inventory_list_data['inventory']:
-    #         room = Room.query.get_or_404(room_data['room_id'])
-    #         new_room = {
-    #             'room_id': room_data['room_id'],
-    #             'name': room.name,
-    #             'dynamic_name': room.dynamic_name,
-    #             'building_name': room.room_building.name,
-    #         }
-    #         room_buttons.append(new_room)
-    # else:
-    #     for room_data in inventory_list_data['inventory']:
-    #         if room_data['user_id'] == current_user.id:
-    #             room = Room.query.get_or_404(room_data['room_id'])
-    #             new_room = {
-    #                 'room_id': room_data['room_id'],
-    #                 'name': room.name,
-    #                 'dynamic_name': room.dynamic_name,
-    #                 'building_name': room.room_building.name,
-    #             }
-    #             room_buttons.append(new_room)
-    all_rooms = Room.query.filter(~Room.id.in_([1, 2, 4])).all() #! ~Room.id.in_([1, 2, 4]) znači da nije u listi
     if current_user.authorization == 'admin':
         for room in all_rooms:
+            assigned_user = User.query.get(
+                next((rd['user_id'] for rd in inventory_data['inventory'] 
+                      if rd['room_id'] == room.id), None)
+            )
+
+            status = get_room_inventory_status(room.id, inventory_data)
+            
             new_room = {
                 'room_id': room.id,
                 'name': room.name,
                 'dynamic_name': room.dynamic_name,
-                'building_name': room.room_building.name,
+                'building_name': room.building.name,
+                'building_id': room.building_id,
+                'assigned_user': assigned_user.name if assigned_user else None,
+                'assigned_user_id': assigned_user.id if assigned_user else None,
+                'status': status,
             }
             room_buttons.append(new_room)
     else:
-        for room_data in inventory_list_data['inventory']:
-            if room_data['user_id'] == current_user.id:
-                room = Room.query.get_or_404(room_data['room_id'])
+        assigned_room_ids = user_room_map.get(current_user.id, [])
+        for room in all_rooms:
+            if room.id in assigned_room_ids:
+                status = get_room_inventory_status(room.id, inventory_data)
+                
                 new_room = {
-                    'room_id': room_data['room_id'],
+                    'room_id': room.id,
                     'name': room.name,
                     'dynamic_name': room.dynamic_name,
-                    'building_name': room.room_building.name,
+                    'building_name': room.building.name,
+                    'building_id': room.building_id,
+                    'assigned_user': current_user.name,
+                    'assigned_user_id': current_user.id,
+                    'status': status,
                 }
                 room_buttons.append(new_room)
-    # Sortiranje po 'building_name'
-    sorted_room_buttons = sorted(room_buttons, key=lambda x: (x['building_name'], x['name']))
-    room_buttons = sorted_room_buttons
-    print(f'{room_buttons=}')
+
+    # Sortiranje i grupisanje
+    room_buttons.sort(key=lambda x: (x['building_name'], x['name']))
     unique_building_names = sorted({room['building_name'] for room in room_buttons})
-    print(f'{unique_building_names}')
-    
-    #! generiši popisne liste
-    popisne_liste_gen()
-    return render_template('edit_inventory_list.html', title="Izmena popisnih listi",
-                            inventory_id=inventory_id,
-                            room_buttons=room_buttons,
-                            unique_building_names=unique_building_names)
+
+    # Ukupna statistika
+    def calculate_inventory_stats(inventory_data, room_buttons):
+        total_stats = {
+            'total_rooms': len(room_buttons),
+            'completed_rooms': 0,
+            'in_progress_rooms': 0,
+            'not_started_rooms': 0,
+            'empty_rooms': 0,
+            'rooms_with_differences': 0,
+            'total_items': 0,
+            'counted_items': 0,
+            'total_quantity': 0,
+            'counted_quantity': 0,
+            'total_categories': set(),
+            'items_with_comments': 0
+        }
+        
+        for room in room_buttons:
+            status = room['status']
+            summary = status['summary']
+            
+            if status['status'] == 'completed':
+                total_stats['completed_rooms'] += 1
+            elif status['status'] == 'in_progress':
+                total_stats['in_progress_rooms'] += 1
+            elif status['status'] == 'not_started':
+                total_stats['not_started_rooms'] += 1
+            elif status['status'] == 'empty':
+                total_stats['empty_rooms'] += 1
+            elif status['status'] == 'differences':
+                total_stats['rooms_with_differences'] += 1
+                
+            total_stats['total_items'] += summary['total_items']
+            total_stats['counted_items'] += summary['counted_items']
+            total_stats['total_quantity'] += summary['total_quantity']
+            total_stats['counted_quantity'] += summary['counted_quantity']
+            total_stats['items_with_comments'] += summary['items_with_comments']
+            
+            # Dodajemo kategorije u set
+            room_items = next((r['items'] for r in inventory_data['inventory'] 
+                             if r['room_id'] == room['room_id']), [])
+            categories = {item.get('category_number') for item in room_items}
+            total_stats['total_categories'].update(categories)
+            
+        total_stats['total_categories'] = len(total_stats['total_categories'])
+        total_stats['completion_percentage'] = (
+            (total_stats['counted_items'] / total_stats['total_items'] * 100) 
+            if total_stats['total_items'] > 0 else 0
+        )
+        
+        return total_stats
+
+    inventory_stats = calculate_inventory_stats(inventory_data, room_buttons)
+
+    return render_template(
+        'edit_inventory_list.html',
+        title="Izmena popisnih listi",
+        inventory_id=inventory_id,
+        room_buttons=room_buttons,
+        unique_building_names=unique_building_names,
+        inventory_stats=inventory_stats,
+        inventory=inventory
+    )
+
+def _get_room_inventory_status(room_id, inventory_data):
+    """
+    Određuje status popisa za datu prostoriju.
+    """
+    for room_data in inventory_data['inventory']:
+        if room_data['room_id'] == room_id:
+            total_items = len(room_data['items'])
+            items_counted = sum(1 for item in room_data['items'] if item['quantity_input'] > 0)
+            
+            if total_items == 0:
+                return {
+                    'status': 'empty',
+                    'label': 'Prazna prostorija',
+                    'color': 'secondary'
+                }
+            elif items_counted == 0:
+                return {
+                    'status': 'not_started',
+                    'label': 'Nije započeto',
+                    'color': 'danger'
+                }
+            elif items_counted < total_items:
+                return {
+                    'status': 'in_progress',
+                    'label': f'U toku ({items_counted}/{total_items})',
+                    'color': 'warning'
+                }
+            else:
+                return {
+                    'status': 'completed',
+                    'label': 'Završeno',
+                    'color': 'success'
+                }
+    return {
+        'status': 'error',
+        'label': 'Greška',
+        'color': 'danger'
+    }
+
+def _calculate_inventory_stats(inventory_data, room_buttons):
+    """
+    Izračunava statistiku popisa.
+    """
+    total_rooms = len(room_buttons)
+    completed_rooms = sum(1 for room in room_buttons 
+                         if room['status']['status'] == 'completed')
+    in_progress_rooms = sum(1 for room in room_buttons 
+                           if room['status']['status'] == 'in_progress')
+    not_started_rooms = sum(1 for room in room_buttons 
+                           if room['status']['status'] == 'not_started')
+    empty_rooms = sum(1 for room in room_buttons 
+                     if room['status']['status'] == 'empty')
+
+    return {
+        'total_rooms': total_rooms,
+        'completed_rooms': completed_rooms,
+        'in_progress_rooms': in_progress_rooms,
+        'not_started_rooms': not_started_rooms,
+        'empty_rooms': empty_rooms,
+        'completion_percentage': (completed_rooms / total_rooms * 100) if total_rooms > 0 else 0
+    }
 
 
 @inventory.route('/edit_inventory_list/<int:inventory_id>/<int:room_id>', methods=['GET', 'POST'])
@@ -301,125 +461,178 @@ def edit_inventory_room_list(inventory_id, room_id):
     if not current_user.is_authenticated:
         flash('Da biste pristupili ovoj stranici treba da budete ulogovani.', 'success')
         return redirect(url_for('users.login'))
+        
+    # Učitavanje osnovnih podataka
     inventory = Inventory.query.get_or_404(inventory_id)
     school = School.query.get_or_404(1)
-    # print(f'ovo tražim: {json.loads(inventory.working_data)=}')
-    inventory_list_data = json.loads(inventory.working_data)['inventory']
-    for entry in inventory_list_data:
-        if entry['room_id'] == room_id:
-            user_id = entry['user_id']
-            break
-        else:
-            user_id = None
-    print(f'test user_id za selektovani room_id: {room_id=}; {user_id=}')
-    if current_user.authorization != 'admin' and current_user.id != int(user_id):
+    room = Room.query.get_or_404(room_id)
+    
+    try:
+        working_data = json.loads(inventory.working_data)
+        initial_data = json.loads(inventory.initial_data)
+        inventory_list_data = working_data['inventory']
+    except json.JSONDecodeError:
+        flash('Greška pri učitavanju podataka popisa.', 'danger')
+        return redirect(url_for('inventory.edit_inventory_list', inventory_id=inventory_id))
+
+    # Provera autorizacije
+    user_id = next((entry['user_id'] for entry in inventory_list_data 
+                   if entry['room_id'] == room_id), None)
+                   
+    if current_user.authorization != 'admin' and current_user.id != user_id:
         flash('Nemate dozvolu za da pristupite ovoj stranici.', 'danger')
         return redirect(url_for('inventory.edit_inventory_list', inventory_id=inventory_id))
-    if request.method == 'POST':
-        print(f'save dugme iz sobe... nastavi kod')
-        inventory = Inventory.query.get_or_404(inventory_id)
-        working_inventory_list_data = json.loads(inventory.working_data)['inventory']
-        print(f'{working_inventory_list_data=}')
-        #! izvlači podakte o items u prostoriji koja se edituje
-        items_in_room = []
-        for room in working_inventory_list_data:
-            if room['room_id'] == room_id:
-                items_in_room = room['items']
-                break
-        print(f'debug items_in_room: {items_in_room=}')
 
-        print(f'{request.form=}')
-        for item_id in request.form:
-            print(f'{item_id=}')
-            if item_id.startswith('quantity_input_'):
-                serial = int(item_id.split("_")[-1])
-                quantity_input = int(request.form.get(item_id))
-                comment = request.form.get(f'comment_{item_id.split("_")[-1]}')
-                single_item = SingleItem.query.filter_by(serial=serial).first()
-                if serial in [int(item['serial']) for item in items_in_room]:
-                    for item in items_in_room:
-                        if item['serial'] == serial:
-                            item['quantity_input'] = quantity_input
-                            item['total_value'] = quantity_input * single_item.current_price
-                            item['comment'] = comment
-                            break
-                else:
-                    items_in_room.append({
-                                            'serial': serial,
-                                            'quantity': 0, #! 
-                                            'quantity_input': quantity_input,
-                                            'current_price': single_item.current_price,
-                                            'total_value': quantity_input * single_item.current_price,
-                                            'comment': comment
-                                        })
+    if request.method == 'POST':
+        # Dobavljanje postojećih podataka za sobu
+        items_in_room = next((room['items'] for room in inventory_list_data 
+                            if room['room_id'] == room_id), [])
+
+        # Kreiranje rečnika za grupisane stavke
+        grouped_items = {}
+        
+        # Obrada POST zahteva
+        for field_name, value in request.form.items():
+            if field_name.startswith('quantity_input_'):
+                serial = int(field_name.split("_")[-1])
+                quantity_input = int(value)
+                comment = request.form.get(f'comment_{serial}')
                 
-        print(f'{items_in_room=}')
-        for room in working_inventory_list_data:
-            if room['room_id'] == room_id:
-                room['items'] = items_in_room
+                single_item = SingleItem.query.filter_by(serial=serial).first()
+                if not single_item:
+                    continue
+
+                # Tražimo originalnu količinu iz initial_data
+                initial_room_data = next((room for room in initial_data['inventory'] 
+                                    if room['room_id'] == room_id), {})
+                initial_items = initial_room_data.get('items', [])
+                original_quantity = sum(item.get('quantity', 0) 
+                                    for item in initial_items 
+                                    if item['serial'] == serial)
+
+                grouped_items[serial] = {
+                    'serial': serial,
+                    'name': single_item.name,
+                    'category_number': single_item.category.category_number,
+                    'category_name': single_item.category.name,
+                    'depreciation_rate': single_item.depreciation_rate.rate,
+                    'quantity': original_quantity,
+                    'quantity_input': quantity_input,
+                    'comment': comment,
+                    'current_price': single_item.current_price
+                }
+
+        # Ažuriranje inventory podataka
+        for room_data in inventory_list_data:
+            if room_data['room_id'] == room_id:
+                room_data['items'] = list(grouped_items.values())
                 break
-        working_data = {
-            'inventory': working_inventory_list_data,
-            'single_items': json.loads(inventory.working_data)['single_items'],
-        }
+
+        # Čuvanje promena
+        working_data['inventory'] = inventory_list_data
         inventory.working_data = json.dumps(working_data, default=serialize_data)
         db.session.commit()
-        flash(f'Popisna lista {room_id} je sačuvana!', 'success')
+
+        flash(f'Popisna lista za prostoriju {room.name} je sačuvana!', 'success')
         return redirect(url_for('inventory.edit_inventory_list', inventory_id=inventory_id))
+
+    # GET zahtev
     if request.method == 'GET':
-        inventory = Inventory.query.get_or_404(inventory_id)
-        initial_inventory_list_data = json.loads(inventory.initial_data)['inventory']
-        working_inventory_list_data = json.loads(inventory.working_data)['inventory']
-        single_items = SingleItem.query.all()
-        serials_in_room = []
-        for room in working_inventory_list_data:
-            if room['room_id'] == room_id:
-                serials_in_room = [int(serial['serial']) for serial in room['items']]
-                break
-        print(f'{serials_in_room=}')
-        
-        
-        all_serials_items_list = list(set((int(single_item.item_id), int(single_item.serial), single_item.single_item_item.name, single_item.name) for single_item in single_items if int(single_item.serial) not in serials_in_room)) #! izbaciti serije koje se već nalaze u ovoj prostoriji
-        sorted_list = sorted(all_serials_items_list, key=lambda x: (x[0], x[1]))
-        print(f'sorted list: {sorted_list}')
-        all_serials_items_list = sorted_list
-        print(f'list: {all_serials_items_list=}')
-        print(f'{working_inventory_list_data=}')
         inventory_item_list_data = []
-        for room in working_inventory_list_data:
-            print(f'{room=}')
-            if room['room_id'] == room_id:
-                inventory_item_list_data = room['items']
-                for item_data in inventory_item_list_data:
-                    print(f'{item_data=}')
-                    print(f'{item_data["serial"]=}')
-                    single_item = SingleItem.query.filter_by(serial = item_data["serial"]).first()
-                    print(f'{single_item.id=} {single_item.name=}')
-                    item_data['item_id'] = single_item.item_id
-                    item_data['item_name'] = single_item.single_item_item.name
-                    item_data['name'] = single_item.name
-                    for room in working_inventory_list_data:
-                        if room['room_id'] == room_id:
-                            for item in room['items']:
-                                if item['serial'] == item_data["serial"]:
-                                    item_data['quantity_input'] = item['quantity_input']
-                                    item_data['comment'] = item['comment']
-                                    break  # Ovdje prekidamo petlju jer smo pronašli traženi element
-                            break  # Ovdje prekidamo petlju jer smo pronašli traženu sobu
-        if len(inventory_item_list_data) == 0:
-            inventory_item_list_data = []
-        else:
-            sorted_inventory = sorted(inventory_item_list_data, key=lambda x: (x['item_id'], x['serial']))
-            inventory_item_list_data = sorted_inventory
-        print(f'test: {inventory_item_list_data=}')
-        room = Room.query.get_or_404(room_id)
-        room_name = f'{Room.query.get_or_404(room.id).room_building.name} - ({Room.query.get_or_404(room.id).name}) {Room.query.get_or_404(room.id).dynamic_name}'
+        serials_in_room = set()
+        
+        # Dobavljanje stavki trenutne sobe iz working_data i initial_data
+        current_room_data = next((room for room in inventory_list_data 
+                                if room['room_id'] == room_id), None)
+        
+        # Dobavljanje originalnih podataka iz initial_data
+        initial_room_data = next((room for room in initial_data['inventory'] 
+                                if room['room_id'] == room_id), None)
+        
+        print("DEBUG - Initial Room Data:", json.dumps(initial_room_data, default=serialize_data))
+        
+        if current_room_data and current_room_data.get('items'):
+            # Prvo kreiramo mapu originalnih količina iz initial_data
+            original_quantities = {}
+            if initial_room_data and initial_room_data.get('items'):
+                for item in initial_room_data['items']:
+                    serial = str(item['serial'])  # Konvertujemo u string za konzistentnost
+                    if serial not in original_quantities:
+                        original_quantities[serial] = item['quantity']
+                    else:
+                        original_quantities[serial] += item['quantity']
+            
+            print("DEBUG - Original Quantities:", original_quantities)
+
+            # Grupišemo po serijama
+            grouped_items = {}
+            
+            for item in current_room_data['items']:
+                serial = item['serial']
+                single_item = SingleItem.query.filter_by(serial=serial).first()
+                
+                if not single_item:
+                    continue
+                    
+                serial_str = str(serial)  # Konvertujemo u string za konzistentnost
+                
+                if serial_str not in grouped_items:
+                    grouped_item = {
+                        'serial': serial,
+                        'name': single_item.name,
+                        'category_number': single_item.category.category_number,
+                        'category_name': single_item.category.name,
+                        'depreciation_rate': single_item.depreciation_rate.rate,
+                        'quantity': original_quantities.get(serial_str, 0),  # Koristimo string ključ
+                        'quantity_input': item.get('quantity_input', 0),
+                        'comment': item.get('comment', ''),
+                        'current_price': str(single_item.current_price)  # Konvertujemo Decimal u string
+                    }
+                    grouped_items[serial_str] = grouped_item
+                else:
+                    if item.get('quantity_input', 0) > 0:
+                        grouped_items[serial_str]['quantity_input'] = item.get('quantity_input', 0)
+                    if item.get('comment'):
+                        grouped_items[serial_str]['comment'] = item.get('comment')
+
+                serials_in_room.add(serial)
+
+            # Pretvaramo grupisane podatke u listu
+            inventory_item_list_data = list(grouped_items.values())
+
+        # Priprema liste svih dostupnih serija
+        all_items = SingleItem.query.all()
+        # Kreiranje privremenog rečnika za grupisanje po serijama
+        unique_items_dict = {}
+        for single_item in all_items:
+            if single_item.serial not in serials_in_room:
+                serial = str(single_item.serial)  # Konvertujemo u string za konzistentnost
+                if serial not in unique_items_dict:
+                    unique_items_dict[serial] = (
+                        single_item.serial,
+                        single_item.name,
+                        f"{single_item.category.category_number} - {single_item.category.name}",
+                        single_item.depreciation_rate.rate
+                    )
+
+        # Konvertovanje rečnika u listu
+        all_serials_items_list = list(unique_items_dict.values())
+
+        # Sortiranje lista
+        all_serials_items_list.sort(key=lambda x: (x[2], int(str(x[0]))))
+        inventory_item_list_data.sort(key=lambda x: (x['category_number'], int(str(x['serial']))))
+
+        # Generisanje imena sobe i dokumenta
+        room_name = f'{room.building.name} - ({room.name}) {room.dynamic_name}'
         popisna_lista_gen(inventory_item_list_data, room, inventory_id, school, inventory)
-    if inventory.status == 'finished':
-        title = f"Pregled popisne liste: {room_id}"
-    else:
-        title = f"Izmena popisne liste: {room_id}"
-    return render_template('edit_inventory_room_list.html',
+
+        # Debug ispis
+        print("Final Data:", json.dumps(inventory_item_list_data, default=serialize_data))
+
+        # Određivanje naslova stranice
+        title = f"Pregled popisne liste: {room.name}" if inventory.status == 'finished' else f"Izmena popisne liste: {room.name}"
+
+        return render_template('edit_inventory_room_list.html',
                             school=school,
                             title=title,
                             inventory_item_list_data=inventory_item_list_data,
@@ -427,116 +640,135 @@ def edit_inventory_room_list(inventory_id, room_id):
                             room_name=room_name,
                             all_serials_items_list=all_serials_items_list,
                             inventory_id=inventory_id,
-                            room_id=room_id,)
-
+                            room_id=room_id)
 
 @inventory.route('/compare_inventory_list/<int:inventory_id>', methods=['GET', 'POST'])
 def compare_inventory_list(inventory_id):
     if not current_user.is_authenticated:
         flash('Da biste pristupili ovoj stranici treba da budete ulogovani.', 'success')
         return redirect(url_for('users.login'))
+        
     inventory = Inventory.query.get_or_404(inventory_id)
+    
     if request.method == 'POST':
         single_items = SingleItem.query.all()
         single_items_from_inventory = json.loads(inventory.initial_data)['single_items']
         working_inventory_list_data = json.loads(inventory.working_data)['inventory']
-        #! prebaci sve predmete u magacin viškova (room_id=4)
+        
+        # Prebacivanje svih predmeta u magacin viškova (room_id=4)
         for single_item in single_items:
             single_item.room_id = 4
             db.session.commit()
-        #! izlista sve prostorije, definiše room_id
+            
+        # Prolazak kroz popisane prostorije i predmete
         for room in working_inventory_list_data:
             room_id = int(room['room_id'])
-            #! za svaki predmet u prostoriji
             for item in room['items']:
                 serial = int(item['serial'])
                 quantity_input = int(item['quantity_input'])
-                #! premesti onoliko predmeta koliki je quantity_input (iz magacina manjka u određenu prostoriju)
+                # Premeštanje predmeta prema popisanim količinama
                 for i in range(quantity_input):
-                    single_item = SingleItem.query.filter_by(room_id=4).filter_by(serial=serial).first()
+                    single_item = SingleItem.query.filter_by(room_id=4, serial=serial).first()
                     if single_item:
                         single_item.room_id = room_id
                         db.session.commit()
                     else: 
                         print(f'Nema predmeta sa serijom {serial} u magacinu manjkova.')
-        # print(f'{single_items_from_inventory=}')
-        # print(f'{single_items=}')
+        
         inventory.status = 'finished'
         db.session.commit()
+        
+        # Ažuriranje trenutnih cena
         for single_item in single_items:
-            single_item.current_price, _ = current_price_calculation(single_item.initial_price, single_item.single_item_item.item_depreciation_rate.rate, single_item.purchase_date, single_item.expediture_date, None, single_item.input_in_app_date, single_item.deprecation_value)
+            single_item.current_price, _ = current_price_calculation(
+                single_item.initial_price,
+                single_item.depreciation_rate.rate,  # Korišćenje depreciation_rate direktno iz SingleItem
+                single_item.purchase_date,
+                single_item.expediture_date,
+                None,
+                single_item.input_in_app_date,
+                single_item.deprecation_value
+            )
             db.session.commit()
+            
         flash(f'Popis "{inventory.description}" je završen.', 'success')
         return redirect(url_for('main.home'))
+
+    # GET request - priprema podataka za poređenje
+    def serialize_data(obj):
+        if isinstance(obj, Decimal):
+            return str(obj)
+        raise TypeError(f"Object of type {type(obj)} is not JSON serializable")
+
     initial_inventory_list_data = json.loads(inventory.initial_data)
     initial_inventory_list_data_rooms = initial_inventory_list_data['inventory']
-    print(f'{initial_inventory_list_data_rooms=}')
-    compare_items_list = [] #! ideja je da se prvo napravi lista initial, pa da se njoj dodaju quantity_input iz working_inventory_list_data
+    
+    # Kreiranje mape za grupisanje po serijama
+    compare_items_dict = {}
+    
+    # Obrada inicijalnih podataka
     for room in initial_inventory_list_data_rooms:
-        print(f'{room=}')
         for item in room['items']:
-            print(f'{item=}')
-            single_item = SingleItem.query.filter_by(serial=item['serial']).first()
-            initial_item = {
-                'item_id': single_item.item_id,
-                'serial': item['serial'],
-                'item_name': single_item.single_item_item.name,
-                'name': single_item.name,
-                'quantity': item['quantity'],
-                'value': single_item.current_price,
-                'quantity_input': 0,
-                'value_input': 0, #! vrednost je 0 jele je input 0
-            }
-            if not compare_items_list:
-                compare_items_list.append(initial_item)
-            else:
-                found = False
-                for existing_item in compare_items_list:
-                    if existing_item['serial'] == initial_item['serial']:
-                        existing_item['quantity'] += initial_item['quantity']
-                        existing_item['value'] += initial_item['value']
-                        found = True
-                        break
-                if not found:
-                    compare_items_list.append(initial_item)
+            serial = str(item['serial'])  # Konvertujemo u string za konzistentnost
+            single_item = SingleItem.query.filter_by(serial=serial).first()
+            
+            if not single_item:
+                continue
                 
-            print(f'{compare_items_list=}')
-    working_inventory_list_data = json.loads(inventory.working_data)
-    working_inventory_list_data_rooms = working_inventory_list_data['inventory'] 
-    #! ovde nastavi: ideja je da se prvo napravi lista initial, pa da se njoj dodaju quantity_input iz working_inventory_list_data
-    for room in working_inventory_list_data_rooms:
+            if serial not in compare_items_dict:
+                compare_items_dict[serial] = {
+                    'serial': serial,
+                    'name': single_item.name,
+                    'category_number': single_item.category.category_number,
+                    'category_name': single_item.category.name,
+                    'depreciation_rate': single_item.depreciation_rate.rate,
+                    'quantity': item['quantity'],
+                    'value': float(single_item.current_price) * item['quantity'],
+                    'quantity_input': 0,
+                    'value_input': 0,
+                }
+            else:
+                compare_items_dict[serial]['quantity'] += item['quantity']
+                compare_items_dict[serial]['value'] += float(single_item.current_price) * item['quantity']
+
+    # Obrada popisanih podataka
+    working_inventory_list_data = json.loads(inventory.working_data)['inventory']
+    
+    for room in working_inventory_list_data:
         for item in room['items']:
-            single_item = SingleItem.query.filter_by(serial=item['serial']).first()
-            input_item = {
-                'item_id': single_item.item_id,
-                'serial': item['serial'],
-                'item_name': single_item.single_item_item.name,
-                'name': single_item.name,
-                'quantity': 0,
-                'value': 0,
-                'quantity_input': item['quantity_input'],
-                'value_input': single_item.current_price, #!
-            }
-            print(f'{room["items"]=}')
-            serial = item['serial']
-            quantity_input = item['quantity_input']
-            print(f'{quantity_input=}; {item=}; {single_item.current_price=}')
-            value_input = float(item['current_price']) * quantity_input #! mora da se isravi dict room da ima kay value...
-            print(f'{quantity_input=}')
-            found = False
-            for existing_item in compare_items_list:
-                if existing_item['serial'] == serial:
-                    existing_item['quantity_input'] += quantity_input
-                    existing_item['value_input'] += value_input
-                    found = True
-                    break
-            if not found:
-                compare_items_list.append(input_item)
+            serial = str(item['serial'])
+            single_item = SingleItem.query.filter_by(serial=serial).first()
+            
+            if not single_item:
+                continue
+                
+            quantity_input = int(item['quantity_input'])
+            value_input = float(single_item.current_price) * quantity_input
+            
+            if serial in compare_items_dict:
+                compare_items_dict[serial]['quantity_input'] += quantity_input
+                compare_items_dict[serial]['value_input'] += value_input
+            else:
+                compare_items_dict[serial] = {
+                    'serial': serial,
+                    'name': single_item.name,
+                    'category_number': single_item.category.category_number,
+                    'category_name': single_item.category.name,
+                    'depreciation_rate': single_item.depreciation_rate.rate,
+                    'quantity': 0,
+                    'value': 0,
+                    'quantity_input': quantity_input,
+                    'value_input': value_input,
+                }
+
+    # Konvertovanje rečnika u listu i sortiranje
+    compare_items_list = list(compare_items_dict.values())
+    compare_items_list.sort(key=lambda x: (x['category_number'], int(x['serial'])))
+
     return render_template('compare_inventory_list.html', 
                             title="Poređenje popisnih rezultata sa stanjem u sistemu",
                             compare_items_list=compare_items_list,
                             inventory=inventory)
-
 
 @inventory.route('/read_inventory_list', methods=['GET', 'POST'])
 def read_inventory_list():

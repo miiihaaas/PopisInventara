@@ -1,68 +1,123 @@
 {% extends "layout.html" %}
 {% block content %}
-<div class="h1">Podaci škole</div> 
-<div class="tab-pane fade show" id="school" role="tabpanel" aria-labelledby="school-tab">
-    <a class="btn btn-secondary sec-nazad" href="javascript:history.back()">Nazad</a>
-    {% if current_user.authorization == 'admin' %}
-        {% if active_inventory_list %}
-            <button type="button" class="btn btn-primary mb-4" data-bs-toggle="modal" data-bs-target="#mySchool" disabled>Izmenite podatke škole</button>
-            {% else %}
-            <button type="button" class="btn btn-primary mb-4" data-bs-toggle="modal" data-bs-target="#mySchool">Izmenite podatke škole</button>
+
+<!-- Header Section -->
+<div class="page-header mb-4">
+    <div class="h1">Podaci škole</div>
+    <div class="action-buttons">
+        <a class="btn btn-secondary" href="javascript:history.back()">
+            <i class="fa fa-arrow-left me-2"></i>Nazad
+        </a>
+        {% if current_user.authorization == 'admin' %}
+            <button type="button" class="btn btn-primary" 
+                    data-bs-toggle="modal" 
+                    data-bs-target="#mySchool"
+                    {% if active_inventory_list %}disabled{% endif %}>
+                <i class="fa fa-edit me-2"></i>Izmenite podatke škole
+            </button>
         {% endif %}
-    {% endif %}
-    <form method="POST">
-        {{ form.csrf_token }}
-        <div class="row form-group">
-            <div class="col form-group">
-                {{ form.schoolname.label(class="form-control-label") }}
-                <input type="text" class="form-control" value="{{ school.schoolname }}" readonly>
-            </div>
-            <div class="col form-group">
-                {{ form.address.label(class="form-control-label") }}
-                <input type="text" class="form-control" value="{{ school.address }}" readonly>
-            </div>
-            <div class="col form-group">
-                {{ form.zip_code.label(class="form-control-label") }}
-                <input type="text" class="form-control" value="{{ school.zip_code }}" readonly>
-            </div>
-            <div class="col form-group">
-                {{ form.city.label(class="form-control-label") }}
-                <input type="text" class="form-control" value="{{ school.city }}" readonly>
-            </div>
-        </div>
-        <div class="row form-group">
-            <div class="col form-group">
-                {{ form.municipality.label(class="form-control-label") }}
-                <input type="text" class="form-control" value="{{ school.municipality }}" readonly>
-            </div>
-            <div class="col form-group">
-                {{ form.country.label(class="form-control-label") }}
-                <input type="text" class="form-control" value="{{ school.country }}" readonly>
-            </div>
-            <div class="col form-group">
-                {{ form.mb.label(class="form-control-label") }}
-                <input type="text" class="form-control" value="{{ school.mb }}" readonly>
-            </div>
-            <div class="col form-group">
-                {{ form.jbkjs.label(class="form-control-label") }}
-                <input type="text" class="form-control" value="{{ school.jbkjs }}" readonly>
-            </div>
-        </div>
-    </form>
-</div>
-<hr>
-<div class="form-group">
-    <form id="settingsForm" action="{{url_for('schools.edit_settings')}}" method="post">
-        <legend>Podešavanja aplikacije</legend>
-        <div class="form-check form-switch">
-            <input type="checkbox" class="form-check-input" id="show_quantity" name="show_quantity" {% if school.settings_show_quantity %}checked{% endif %}>
-            <label class="form-check-label" for="show_quantity">Predsednici popisne komisije mogu da vide količine u popisnim listama</label>
-        </div>
-    </form>
+    </div>
 </div>
 
+<!-- Main Content -->
+<div class="row g-4">
+    <!-- Basic School Info Card -->
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Osnovni podaci</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    {{ form.csrf_token }}
+                    <!-- School Name and Address -->
+                    <div class="row form-group mb-4">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                {{ form.schoolname.label(class="form-control-label") }}
+                                <input type="text" class="form-control" value="{{ school.schoolname }}" readonly>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                {{ form.address.label(class="form-control-label") }}
+                                <input type="text" class="form-control" value="{{ school.address }}" readonly>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Location Info -->
+                    <div class="row form-group mb-4">
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                {{ form.zip_code.label(class="form-control-label") }}
+                                <input type="text" class="form-control" value="{{ school.zip_code }}" readonly>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                {{ form.city.label(class="form-control-label") }}
+                                <input type="text" class="form-control" value="{{ school.city }}" readonly>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                {{ form.municipality.label(class="form-control-label") }}
+                                <input type="text" class="form-control" value="{{ school.municipality }}" readonly>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                {{ form.country.label(class="form-control-label") }}
+                                <input type="text" class="form-control" value="{{ school.country }}" readonly>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Registration Info -->
+                    <div class="row form-group">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                {{ form.mb.label(class="form-control-label") }}
+                                <input type="text" class="form-control" value="{{ school.mb }}" readonly>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                {{ form.jbkjs.label(class="form-control-label") }}
+                                <input type="text" class="form-control" value="{{ school.jbkjs }}" readonly>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Card -->
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Podešavanja aplikacije</h5>
+            </div>
+            <div class="card-body">
+                <form id="settingsForm" action="{{url_for('schools.edit_settings')}}" method="post">
+                    <div class="form-check form-switch">
+                        <input type="checkbox" class="form-check-input" id="show_quantity" 
+                               name="show_quantity" {% if school.settings_show_quantity %}checked{% endif %}>
+                        <label class="form-check-label" for="show_quantity">
+                            Predsednici popisne komisije mogu da vide količine u popisnim listama
+                        </label>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit School Modal -->
 <div class="modal fade" id="mySchool" tabindex="-1" role="dialog" aria-labelledby="mySchoolLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
+    <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="mySchoolLabel">Izmena podataka škole</h5>
@@ -72,123 +127,131 @@
             </div>
             <form method="POST">
                 {{ form.csrf_token }}
-                    <div class="modal-body">
-                    <div class="row form-group">
-                        <div class="col form-group">
+                <div class="modal-body">
+                    <!-- School Name and Address Section -->
+                    <div class="section-title mb-3">Osnovni podaci</div>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
                             {{ form.schoolname.label(class="form-control-label") }}
                             {% if form.schoolname.errors %}
-                                {{ form.schoolname(class="form-control form-control-lg is-invalid") }}
+                                {{ form.schoolname(class="form-control is-invalid") }}
                                 <div class="invalid-feedback">
                                     {% for error in form.schoolname.errors %}
                                         <span>{{ error }}</span>
                                     {% endfor %}
                                 </div>
                             {% else %}
-                                {{ form.schoolname(class="form-control form-control-lg") }}
+                                {{ form.schoolname(class="form-control") }}
                             {% endif %}
                         </div>
-                        <div class="col form-group">
+                        <div class="col-md-6">
                             {{ form.address.label(class="form-control-label") }}
                             {% if form.address.errors %}
-                                {{ form.address(class="form-control form-control-lg is-invalid") }}
+                                {{ form.address(class="form-control is-invalid") }}
                                 <div class="invalid-feedback">
                                     {% for error in form.address.errors %}
                                         <span>{{ error }}</span>
                                     {% endfor %}
                                 </div>
                             {% else %}
-                                {{ form.address(class="form-control form-control-lg") }}
+                                {{ form.address(class="form-control") }}
                             {% endif %}
                         </div>
                     </div>
-                    <div class="row form-group">
-                        <div class="col form-group">
+
+                    <!-- Location Section -->
+                    <div class="section-title mb-3">Lokacija</div>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
                             {{ form.zip_code.label(class="form-control-label") }}
                             {% if form.zip_code.errors %}
-                                {{ form.zip_code(class="form-control form-control-lg is-invalid") }}
+                                {{ form.zip_code(class="form-control is-invalid") }}
                                 <div class="invalid-feedback">
                                     {% for error in form.zip_code.errors %}
                                         <span>{{ error }}</span>
                                     {% endfor %}
                                 </div>
                             {% else %}
-                                {{ form.zip_code(class="form-control form-control-lg") }}
+                                {{ form.zip_code(class="form-control") }}
                             {% endif %}
                         </div>
-                        <div class="col form-group">
+                        <div class="col-md-6">
                             {{ form.city.label(class="form-control-label") }}
                             {% if form.city.errors %}
-                                {{ form.city(class="form-control form-control-lg is-invalid") }}
+                                {{ form.city(class="form-control is-invalid") }}
                                 <div class="invalid-feedback">
                                     {% for error in form.city.errors %}
                                         <span>{{ error }}</span>
                                     {% endfor %}
                                 </div>
                             {% else %}
-                                {{ form.city(class="form-control form-control-lg") }}
+                                {{ form.city(class="form-control") }}
                             {% endif %}
                         </div>
-                    </div>
-                    <div class="row form-group">
-                        <div class="col form-group">
+                        <div class="col-md-6">
                             {{ form.municipality.label(class="form-control-label") }}
                             {% if form.municipality.errors %}
-                                {{ form.municipality(class="form-control form-control-lg is-invalid") }}
+                                {{ form.municipality(class="form-control is-invalid") }}
                                 <div class="invalid-feedback">
                                     {% for error in form.municipality.errors %}
                                         <span>{{ error }}</span>
                                     {% endfor %}
                                 </div>
                             {% else %}
-                                {{ form.municipality(class="form-control form-control-lg") }}
+                                {{ form.municipality(class="form-control") }}
                             {% endif %}
                         </div>
-                        <div class="col form-group">
+                        <div class="col-md-6">
                             {{ form.country.label(class="form-control-label") }}
                             {% if form.country.errors %}
-                                {{ form.country(class="form-control form-control-lg is-invalid") }}
+                                {{ form.country(class="form-control is-invalid") }}
                                 <div class="invalid-feedback">
                                     {% for error in form.country.errors %}
                                         <span>{{ error }}</span>
                                     {% endfor %}
                                 </div>
                             {% else %}
-                                {{ form.country(class="form-control form-control-lg") }}
+                                {{ form.country(class="form-control") }}
                             {% endif %}
                         </div>
                     </div>
-                    <div class="row form-group">
-                        <div class="col form-group">
+
+                    <!-- Registration Section -->
+                    <div class="section-title mb-3">Registracioni podaci</div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
                             {{ form.mb.label(class="form-control-label") }}
                             {% if form.mb.errors %}
-                                {{ form.mb(class="form-control form-control-lg is-invalid") }}
+                                {{ form.mb(class="form-control is-invalid") }}
                                 <div class="invalid-feedback">
                                     {% for error in form.mb.errors %}
                                         <span>{{ error }}</span>
                                     {% endfor %}
                                 </div>
                             {% else %}
-                                {{ form.mb(class="form-control form-control-lg") }}
+                                {{ form.mb(class="form-control") }}
                             {% endif %}
                         </div>
-                        <div class="col form-group">
+                        <div class="col-md-6">
                             {{ form.jbkjs.label(class="form-control-label") }}
                             {% if form.jbkjs.errors %}
-                                {{ form.jbkjs(class="form-control form-control-lg is-invalid") }}
+                                {{ form.jbkjs(class="form-control is-invalid") }}
                                 <div class="invalid-feedback">
                                     {% for error in form.jbkjs.errors %}
                                         <span>{{ error }}</span>
                                     {% endfor %}
                                 </div>
                             {% else %}
-                                {{ form.jbkjs(class="form-control form-control-lg") }}
+                                {{ form.jbkjs(class="form-control") }}
                             {% endif %}
                         </div>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Otkažite</button>
-                        {{ form.submit(class="btn btn-primary") }}
-                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fa fa-times me-2"></i>Otkažite
+                    </button>
+                    {{ form.submit(class="btn btn-primary") }}
                 </div>
             </form>
         </div>
@@ -199,52 +262,8 @@
 
 {% block scripts %}
 <script>
-    function openBuildingModal(buildingId, buildingName, buildingAddress) {
-        document.getElementById("edit_building_id").value = buildingId;
-        document.getElementById("edit_building_name").value = buildingName;
-        document.getElementById("edit_building_address").value = buildingAddress;
-    }
-    function openRoomModal(roomId, roomName, roomDynamicName, buildingId) {
-        document.getElementById("edit_room_id").value = roomId;
-        document.getElementById("edit_room_name").value = roomName;
-        document.getElementById("edit_room_dynamic_name").value = roomDynamicName;
-        document.getElementById("edit_room_building_id").value = buildingId;
-        // inicijalizacija select2 polja
-        $('#edit_room_building_id').select2({
-            dropdownParent: $('#myRoom'),
-            placeholder: 'Izaberite opciju',
-            allowClear: true,
-            width: '100%',
-            tags: false,
-            closeOnSelect: true,
-        })
-    }
     $(document).ready(function () {
-        $("#data_1").DataTable({
-            order: [[1, "asc"]],
-            language: {
-                url: "//cdn.datatables.net/plug-ins/1.12.1/i18n/sr-SP.json",
-                stateSave: true
-            },
-        });
-        $("#data_2").DataTable({
-            order: [[1, "asc"]],
-            language: {
-                url: "//cdn.datatables.net/plug-ins/1.12.1/i18n/sr-SP.json",
-                stateSave: true
-            },
-        });
-        $('#building_id').select2({
-            dropdownParent: $('#newRoom'),
-            placeholder: 'Izaberite opciju',
-            allowClear: true,
-            width: '100%',
-            tags: false,
-            closeOnSelect: true,
-        });
-        // Postavite događaj na promenu prekidača
         $('#show_quantity').change(function () {
-            // Pošalji POST zahtev kada se promeni prekidač
             $('#settingsForm').submit();
         });
     });

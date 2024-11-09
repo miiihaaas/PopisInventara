@@ -92,17 +92,22 @@ def buildings_rooms():
     if current_user.authorization != 'admin':
         flash('Nemate dozvolu za pristum ovoj stranici.', 'danger')
         return redirect(url_for('main.home'))
+    route_name = request.endpoint
     active_inventory_list = Inventory.query.filter_by(status='active').first()
     school = School.query.get_or_404(1)
     buildings = Building.query.filter_by(school_id=1).all()
     rooms = Room.query.all()
-    print(f'{rooms=}')
+    for room in rooms:
+        print(f'{type(room)=}')
+        print(f'{room.building.name=}')
+    print(f'debug {rooms=} {type(rooms)=}')
     building_form = AddNewBuildingForm()
     room_form = AddNewRoomForm()
     room_form.building_id.choices = [(building.id, building.name) for building in buildings]
     return render_template('buildings_rooms.html',
                             title='Zgrade i prostorije',
                             legend='Zgrade i prostorije',
+                            route_name=route_name,
                             building_form=building_form,
                             room_form=room_form,
                             buildings=buildings,

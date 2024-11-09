@@ -22,6 +22,7 @@
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='mikicustom.css') }}">
   
+    {% block styles %}{% endblock %}
 
     {% if title %}
       <title>Popis inventara - {{ title }}</title>
@@ -29,55 +30,70 @@
       <title>Popis inventara</title>
     {% endif %}
   </head>
-  <body>
+  <body class="{{route_name}}">
     <header class="site-header">
-      <nav class="navbar navbar-expand-md navbar-dark bg-steel">
+      <nav class="navbar navbar-expand-md">
         <div class="container">
           {% if current_user.is_authenticated %}
-          <a class="navbar-brand mr-4" href="{{ url_for('main.home') }}">{{ current_user.user_school.schoolname }} | {{ current_user.name }}</a>
+          <a class="navbar-brand" href="{{ url_for('main.home') }}">
+            {{ current_user.school.schoolname }} | {{ current_user.name }}
+          </a>
           {% endif %}
+          <!-- Dodati hamburger dugme za mobilni prikaz -->
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarToggle" aria-controls="navbarToggle" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
           <div class="collapse navbar-collapse" id="navbarToggle">
               <!-- Navbar Right Side -->
-              <div class="navbar-nav">
+              <div class="navbar-nav ms-auto">
                 {% if current_user.is_authenticated %}
-                  <a class="nav-item nav-link" href="{{ url_for('main.home') }}">Početna</a>
+                  <a class="nav-item nav-link {{ 'active' if request.endpoint in ['main.home'] }}" href="{{ url_for('main.home') }}">Pocetna</a>
                   <li class="nav-item dropdown dropdown--align-right">
-                    <a class="nav-link dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" href="#">Inventarske aktivnosti</a>
+                    <a class="nav-link dropdown-toggle {{ 'active' if request.endpoint in ['single_items.single_item_list', 'single_items.move_select_serial', 'single_items.move_to', 'single_items.move_from'] }}" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" href="#">Inventarske aktivnosti</a>
                     <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdownMenuLink">
+                      <a class="dropdown-item {{ 'active' if request.endpoint in ['single_items.single_item_list'] }}" href="{{ url_for('single_items.single_item_list') }}">Predmeti</a>
                       {% if current_user.authorization == 'admin' %}
-                      <a class="dropdown-item" href="{{ url_for('items.items') }}">Tip predmeta</a>
-                      {% endif %}
-                      <a class="dropdown-item" href="{{ url_for('single_items.single_item_list') }}">Predmeti</a>
-                      {% if current_user.authorization == 'admin' %}
-                      <a class="dropdown-item" href="{{ url_for('single_items.move_select_item') }}">Premeštaj</a>
+                      <a class="dropdown-item {{ 'active' if request.endpoint in ['single_items.move_select_serial'] }}" href="{{ url_for('single_items.move_select_serial') }}">Premeštaj</a>
                       {% endif %}
                     </div>
                   </li>
                   {% if current_user.authorization == 'admin' %}
                   <li class="nav-item dropdown dropdown--align-right">
-                    <a class="nav-link dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" href="#">Popisne aktivnosti</a>
+                    <a class="nav-link dropdown-toggle {{ 'active' if request.endpoint in ['inventory.create_inventory_list', 'inventory.read_inventory_list', 'inventory.compare_inventory_list', 'inventory.edit_inventory_room_list', 'inventory.edit_inventory_list'] }}" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" href="#">Popisne aktivnosti</a>
                     <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdownMenuLink">
-                      <a class="dropdown-item" href="{{ url_for('inventory.create_inventory_list') }}">Kreiranje popisne liste</a>
-                      <a class="dropdown-item" href="{{ url_for('inventory.read_inventory_list') }}">Pregled popisnih listi</a>
+                      <a class="dropdown-item {{ 'active' if request.endpoint in ['inventory.create_inventory_list'] }}" href="{{ url_for('inventory.create_inventory_list') }}">Kreiranje popisne liste</a>
+                      <a class="dropdown-item {{ 'active' if request.endpoint in ['inventory.read_inventory_list'] }}" href="{{ url_for('inventory.read_inventory_list') }}">Pregled popisnih listi</a>
                     </div>
                   </li>
                   <li class="nav-item dropdown dropdown--align-right">
-                    <a class="nav-link dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" href="#">Magacini</a>
+                    <a class="nav-link dropdown-toggle {{ 'active' if request.endpoint in ['single_items.room_single_items'] }}" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" href="#">Magacini</a>
                     <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdownMenuLink">
-                      <a class="dropdown-item" href="{{url_for('single_items.room_single_items', room_id=1)}}">Virtuelni magacin</a>
-                      <a class="dropdown-item" href="{{url_for('single_items.room_single_items', room_id=2)}}">Magacin rashodovanih predmeta</a>
-                      <a class="dropdown-item" href="{{url_for('single_items.room_single_items', room_id=3)}}">Magacin reversa</a>
+                      <!-- <a class="dropdown-item {{ 'active' if request.endpoint in ['single_items.room_single_items'] }}" href="{{url_for('single_items.room_single_items', room_id=1)}}">Virtuelni magacin</a>
+                      <a class="dropdown-item {{ 'active' if request.endpoint in ['single_items.room_single_items'] }}" href="{{url_for('single_items.room_single_items', room_id=2)}}">Magacin rashodovanih predmeta</a>
+                      <a class="dropdown-item {{ 'active' if request.endpoint in ['single_items.room_single_items'] }}" href="{{url_for('single_items.room_single_items', room_id=3)}}">Magacin reversa</a> -->
+                      {% set rooms = [
+                          {'id': 1, 'name': 'Virtuelni magacin'},
+                          {'id': 2, 'name': 'Magacin rashodovanih predmeta'},
+                          {'id': 3, 'name': 'Magacin reversa'}
+                      ] %}
+                      
+                      {% for room in rooms %}
+                          <a class="dropdown-item {{ 'active' if request.endpoint == 'single_items.room_single_items' and request.view_args.get('room_id') == room.id }}" 
+                            href="{{ url_for('single_items.room_single_items', room_id=room.id) }}">
+                            {{ room.name }}
+                          </a>
+                      {% endfor %}
                     </div>
                   </li>
                   <li class="nav-item dropdown dropdown--align-right">
-                    <a class="nav-link dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" href="#">Podešavanja</a>
+                    <a class="nav-link dropdown-toggle {{ 'active' if request.endpoint in ['users.user_list', 'schools.school', 'schools.buildings_rooms', 'items.category', 'items.depreciation_rates'] }}" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" href="#">Podešavanja</a>
                     <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdownMenuLink">
-                      <a class="dropdown-item" href="{{ url_for('users.user_list') }}">Korisnički nalozi</a>
-                      <a class="dropdown-item" href="{{ url_for('schools.school', school_id=1) }}">Škola</a>
-                      <a class="dropdown-item" href="{{ url_for('schools.buildings_rooms') }}">Zgrade | Prostorije</a>
+                      <a class="dropdown-item {{ 'active' if request.endpoint in ['users.user_list'] }}" href="{{ url_for('users.user_list') }}">Korisnički nalozi</a>
+                      <a class="dropdown-item {{ 'active' if request.endpoint in ['schools.school'] }}" href="{{ url_for('schools.school', school_id=1) }}">Škola</a>
+                      <a class="dropdown-item {{ 'active' if request.endpoint in ['schools.buildings_rooms'] }}" href="{{ url_for('schools.buildings_rooms') }}">Zgrade | Prostorije</a>
                       <hr>
-                      <a class="dropdown-item" href="{{ url_for('items.category') }}">Konta</a>
-                      <a class="dropdown-item" href="{{ url_for('items.depreciation_rates') }}">Stope amortizacije</a>
+                      <a class="dropdown-item {{ 'active' if request.endpoint in ['items.category'] }}" href="{{ url_for('items.category') }}">Konta</a>
+                      <a class="dropdown-item {{ 'active' if request.endpoint in ['items.depreciation_rates'] }}" href="{{ url_for('items.depreciation_rates') }}">Stope amortizacije</a>
                     </div>
                   </li>
                   {% endif %}

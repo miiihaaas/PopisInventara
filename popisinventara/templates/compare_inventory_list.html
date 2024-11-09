@@ -1,58 +1,152 @@
 {% extends "layout.html" %}
 {% block content %}
 <div class="h1">{{ title }}</div>
-<div class="form-group mb-4">
-    <a class="btn btn-secondary" href="javascript:history.back()">Nazad</a>
-</div>
-<table id="data_1" border="1" class="table table-striped userlist">
-    <thead>
-        <tr>
-            <th>ID tipa predmeta</th>
-            <th>Serija</th>
-            <th>Tip predmeta</th>
-            <th>Naziv predmeta</th>
-            <th>Količina</th>
-            <th>Popisana količina</th>
-            <th>Razlika (kom)</th>
-            <!-- <th>Razlika (din)</th> -->
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for item in compare_items_list %}
-        <tr>
-            <td>{{ item.item_id }}</td>
-            <!-- <td name="serial_{{ item.serial }}">{{ item.serial }}</td> -->
-            <td name="serial_{{ item.serial }}">{{ '{0:05d}'.format(item.serial) }}</td>
-            <td>{{ item.item_name }}</td>
-            <td>{{ item.name }}</td>
-            <td>{{ item.quantity }}</td>
-            <td>{{ item.quantity_input }}</td>
-            <td>{{ item.quantity_input - item.quantity }}</td>
-            <td><a href="{{url_for('single_items.single_item_rooms', item_id=item.item_id)}}" title="Pregled predmeta po prostorijama"><i class="fa fa-door-closed awesomeedit" aria-hidden="true"></i></a></td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-{% if not inventory.status == 'finished' %}
-<form action="" method="post">
-    <button class="btn btn-danger" type="submit">Zavrišite popis</button>
-</form>
-{% endif %}
 
-{% endblock content%}
+<div class="page-content">
+    <!-- Action Buttons -->
+    <div class="action-buttons">
+        <a class="btn btn-secondary" href="javascript:history.back()">
+            <i class="fa fa-arrow-left me-2"></i>Nazad
+        </a>
+    </div>
+
+    <!-- Inventory Comparison Table -->
+    <div class="table-responsive mt-4">
+        <table id="data_1" class="table table-striped report-table">
+            <thead>
+                <tr>
+                    <th>Serija</th>
+                    <th>Konto</th>
+                    <th>Naziv predmeta</th>
+                    <th class="text-end">Stopa amortizacije</th>
+                    <th class="text-end">Količina</th>
+                    <th class="text-end">Popisana količina</th>
+                    <th class="text-end">Razlika</th>
+                    <th class="text-center">Status</th>
+                    <th class="text-end">Akcije</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in compare_items_list %}
+                <tr class="{% if item.quantity_input - item.quantity > 0 %}table-success-soft{% elif item.quantity_input - item.quantity < 0 %}table-danger-soft{% endif %}">
+                    <td>{{ '{0:05d}'.format(item.serial|int) }}</td>
+                    <td>{{ item.category_number }}</td>
+                    <td>{{ item.name }}</td>
+                    <td class="text-end">{{ item.depreciation_rate }}%</td>
+                    <td class="text-end">{{ item.quantity }}</td>
+                    <td class="text-end">{{ item.quantity_input }}</td>
+                    <td class="text-end fw-bold">
+                        {% set difference = item.quantity_input - item.quantity %}
+                        {% if difference > 0 %}
+                            <span class="text-success">+{{ difference }}</span>
+                        {% elif difference < 0 %}
+                            <span class="text-danger">{{ difference }}</span>
+                        {% else %}
+                            {{ difference }}
+                        {% endif %}
+                    </td>
+                    <td class="text-center">
+                        {% if difference > 0 %}
+                            <span class="badge bg-success-soft text-success">Višak</span>
+                        {% elif difference < 0 %}
+                            <span class="badge bg-danger-soft text-danger">Manjak</span>
+                        {% else %}
+                            <span class="badge bg-secondary-soft">U redu</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end">
+                        <a href="{{url_for('single_items.single_item_rooms', serial=item.serial)}}" 
+                           class="btn-x" title="Pregled predmeta po prostorijama">
+                            <i class="fa fa-door-closed awesomeedit"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr class="table-dark fw-bold">
+                    <td colspan="4" class="text-end">Ukupno:</td>
+                    <td class="text-end">{{ compare_items_list|sum(attribute='quantity') }}</td>
+                    <td class="text-end">{{ compare_items_list|sum(attribute='quantity_input') }}</td>
+                    <td class="text-end">{{ compare_items_list|sum(attribute='quantity_input') - compare_items_list|sum(attribute='quantity') }}</td>
+                    <td></td>
+                    <td></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+
+    {% if not inventory.status == 'finished' %}
+    <div class="mt-4">
+        <form action="" method="post" class="d-inline">
+            <button class="btn btn-danger" type="submit" onclick="return confirm('Da li ste sigurni da želite da završite popis?');">
+                <i class="fa fa-check-circle me-2"></i>Završi popis
+            </button>
+        </form>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock content %}
 
 {% block scripts %}
 <script>
-    $(document).ready(function () {
-        $("#data_1").DataTable({
-            language: {
-                url: "//cdn.datatables.net/plug-ins/1.12.1/i18n/sr-SP.json",
-                stateSave: true
-            },
-            // lengthMenu: [100, 200, 400], // Postavljanje podrazumevanih vrednosti za prikazivanje
-            paging: false, // Isključivanje paginacije
-        });
+$(document).ready(function () {
+    $("#data_1").DataTable({
+        language: {
+            url: "//cdn.datatables.net/plug-ins/1.12.1/i18n/sr-SP.json"
+        },
+        paging: false,
+        stateSave: true,
+        order: [[1, "asc"], [0, "asc"]], 
+        responsive: true,
+        columnDefs: [
+            { className: "text-end", targets: [3,4,5,6,8] },
+            { className: "text-center", targets: [7] },
+            { orderable: false, targets: [8] }
+        ]
     });
+});
 </script>
+
+<style>
+/* Soft Background Colors */
+.table-success-soft {
+    background-color: rgba(25, 135, 84, 0.1) !important;
+}
+
+.table-danger-soft {
+    background-color: rgba(220, 53, 69, 0.1) !important;
+}
+
+/* Badge Styles */
+.badge {
+    font-weight: 500;
+    padding: 0.5em 0.75em;
+    border-radius: 4px;
+}
+
+.bg-success-soft {
+    background-color: rgba(25, 135, 84, 0.1);
+}
+
+.bg-danger-soft {
+    background-color: rgba(220, 53, 69, 0.1);
+}
+
+.bg-secondary-soft {
+    background-color: rgba(108, 117, 125, 0.1);
+}
+
+/* Action Button */
+.btn-x {
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.btn-x:hover {
+    background-color: rgba(0,0,0,0.05);
+}
+</style>
 {% endblock %}

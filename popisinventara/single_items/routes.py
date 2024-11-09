@@ -6,7 +6,7 @@ from flask_login import current_user
 from popisinventara import db
 from popisinventara.reports.functions import write_off_until_current_year
 from popisinventara.single_items.functions import create_reverse_document, current_price_calculation
-from popisinventara.models import School, SingleItem, Item, Room, Inventory
+from popisinventara.models import Category, DepreciationRate, School, SingleItem, Item, Room, Inventory
 from sqlalchemy import and_, or_, extract
 
 
@@ -36,28 +36,27 @@ def single_item_list_without_expeditured_items():
 
 @single_items.route('/single_item_list')
 def single_item_list():
+    #! prekucano !#
+    route_name = request.endpoint
     inventory_years = [inventory.date for inventory in Inventory.query.all()]
-    print(f'{inventory_years=}')
     
     correction = 0
     if date((date.today().year -1), 12, 31) not in inventory_years:
-        print(f'NIJE urađen je popis na kraju prošle godine')
         correction = 1
+        
     active_inventory_list = Inventory.query.filter_by(status='active').first()
     single_item_list = single_item_list_without_expeditured_items().all()
-    item_list = Item.query.all()
     all_room_list = Room.query.all()
-    room_list = [room for room in all_room_list if room.id not in [2]] #! sve sobe osim magacina za rashod (id=2), magacina za revers (id=3) i magacina za manjkove (id=4)
-    
+    room_list = [room for room in all_room_list if room.id not in [2]]  # Exclude specific rooms
+
+    # Cumulative calculations per series
     cumulatively_per_series = []
     for item in single_item_list:
-        print(f'debug: {type(item.initial_price)=}')
         series = item.inventory_number.split('-')[1]
         
         new_dict = {
-            'item_id': item.item_id,
             'series': series,
-            'name': item.single_item_item.name,
+            'name': item.name,  # Direct access since name is now on SingleItem
             'quantity': 1,
             'initial_price': item.initial_price,
             'current_price': item.current_price,
@@ -76,66 +75,49 @@ def single_item_list():
         if not series_found:
             cumulatively_per_series.append(new_dict)
 
-    cumulatively_per_item = []
-    for item in single_item_list:
-        new_dict = {
-            'item_id': item.item_id,
-            'name': item.single_item_item.name,
-            'quantity': 1,
-            'initial_price': item.initial_price,
-            'current_price': item.current_price,
-            'purchase_date': item.purchase_date,
-        }
-        
-        item_found = False
-        for existing_dict in cumulatively_per_item:
-            if existing_dict['item_id'] == item.item_id:
-                existing_dict['quantity'] += 1
-                existing_dict['initial_price'] += item.initial_price
-                existing_dict['current_price'] += item.current_price
-                item_found = True
-                break
-            
-        if not item_found:
-            cumulatively_per_item.append(new_dict)
+    # Cumulative calculations per room
     cumulatively_per_room = []
     for item in single_item_list:
         new_dict = {
             'room_id': item.room_id,
-            'room_name': item.single_item_room.name,
-            'item_id': item.item_id,
-            'item_name': item.single_item_item.name,
+            'room_name': item.room.name,  # Using new relationship syntax
             'serial': item.serial,
             'quantity': 1,
             'initial_price': item.initial_price,
             'current_price': item.current_price,
             'purchase_date': item.purchase_date,
         }
-        item_found = False
+        
+        room_found = False
         for existing_dict in cumulatively_per_room:
             if existing_dict['room_id'] == item.room_id:
                 existing_dict['quantity'] += 1
                 existing_dict['initial_price'] += item.initial_price
                 existing_dict['current_price'] += item.current_price
-                item_found = True
+                room_found = True
                 break
-        if not item_found:
+                
+        if not room_found:
             cumulatively_per_room.append(new_dict)
+    category_list = Category.query.all()
+    depreciation_rate_list = DepreciationRate.query.all()
     
-    
-    return render_template('single_items.html', title="Pregled predmeta",
+    return render_template('single_items.html', 
+                            title="Pregled predmeta",
+                            route_name=route_name,
+                            category_list=category_list,
+                            depreciation_rate_list=depreciation_rate_list,
                             correction=correction,
                             active_inventory_list=active_inventory_list,
                             single_item_list=single_item_list,
-                            item_list=item_list,
                             room_list=room_list,
                             cumulatively_per_series=cumulatively_per_series,
-                            cumulatively_per_item=cumulatively_per_item,
                             cumulatively_per_room=cumulatively_per_room)
 
 
 @single_items.route('/api/item')
 def api_item(): #! kupulativno po tipu predmeta
+    #! ovo se neće koristiti - valjda !#
     single_item_list = single_item_list_without_expeditured_items().all()
     # search filter
     search = request.args.get('search[value]')
@@ -306,15 +288,18 @@ def api_item(): #! kupulativno po tipu predmeta
 
 
 @single_items.route('/api/serial')
-def api_serial(): #! kumulativno po seriji
+def api_serial():
+    #! prekucano !#
     single_item_list = single_item_list_without_expeditured_items().all()
-    # room_select = request.args.get('room_select')
     cumulatively_per_series = []
+    
     for item in single_item_list:
         write_off, _, __ = write_off_until_current_year(item)
-        series = item.inventory_number.split('-')[1]
+        series = item.inventory_number.split('-')[0]  # Izmenjeno jer je novi format
+        
         new_dict = {
-            'item_id': item.item_id,
+            'category_id': item.category_id,
+            'depreciation_rate_id': item.depreciation_rate_id,
             'series': series,
             'name': item.name,
             'quantity': 1,
@@ -326,6 +311,7 @@ def api_serial(): #! kumulativno po seriji
             'invoice_number': item.invoice_number,
             'room_id': item.room_id,
         }
+        
         series_found = False
         for existing_dict in cumulatively_per_series:
             if existing_dict['series'] == series:
@@ -338,112 +324,58 @@ def api_serial(): #! kumulativno po seriji
         
         if not series_found:
             cumulatively_per_series.append(new_dict)
-    print(f'{cumulatively_per_series=}')
-    # search filter
+
+    # Filteri
     search = request.args.get('search[value]')
     room_select = request.args.get('room_select')
     current_year_procurement = request.args.get('current_year_procurement')
-    print(f'iz api_serial: {current_year_procurement=} {search=} {room_select=}')
-    
+
     if room_select:
-        # cumulatively_per_series = [record for record in cumulatively_per_series if
-        #                         str(room_select).lower() in str(record['room_id']).lower()]
-        room_select = request.args.get('room_select')
+        cumulatively_per_series = [record for record in cumulatively_per_series if record['room_id'] == int(room_select)]
 
-        cumulatively_per_series = []
-
-        for item in single_item_list:
-            write_off, _, __ = write_off_until_current_year(item)
-            if item.room_id == int(room_select):
-                series = item.inventory_number.split('-')[1]
-                new_dict = {
-                    'item_id': item.item_id,
-                    'series': series,
-                    'name': item.name,
-                    'quantity': 1,
-                    'initial_price': item.initial_price,
-                    'write_off': write_off,
-                    'current_price': item.current_price,
-                    'purchase_date': item.purchase_date,
-                    'supplier': item.supplier,
-                    'invoice_number': item.invoice_number,
-                    'room_id': item.room_id,
-                }
-                series_found = False
-                for existing_dict in cumulatively_per_series:
-                    if existing_dict['series'] == series:
-                        existing_dict['quantity'] += 1
-                        existing_dict['initial_price'] += item.initial_price
-                        existing_dict['current_price'] += item.current_price
-                        existing_dict['write_off'] += write_off
-                        series_found = True
-                        break
-                
-                if not series_found:
-                    cumulatively_per_series.append(new_dict)
-
-
-    # Proverite da li je vrednost "on" prisutna za current_year_procurement
     if current_year_procurement == 'true':
-        current_year_procurement = True
-        # Prvo, dohvatite trenutnu godinu
         current_year = datetime.now().year
-
-        # Zatim postavite početni i krajnji datum za trenutnu godinu
         start_date = date(current_year, 1, 1)
         end_date = date(current_year, 12, 31)
-        cumulatively_per_series = [record for record in cumulatively_per_series if record['purchase_date'] >= start_date and record['purchase_date'] <= end_date]
-    else:
-        current_year_procurement = False
+        cumulatively_per_series = [record for record in cumulatively_per_series 
+                                    if start_date <= record['purchase_date'] <= end_date]
+
     if search:
         cumulatively_per_series = [record for record in cumulatively_per_series if
-                                str(search).lower() in str(record['name']).lower() or
-                                str(search).lower() in str(record['item_id']).lower() or
-                                str(search).lower() in str(record['series']).lower() or 
-                                str(search).lower() in str(record['supplier']).lower() or 
-                                str(search).lower() in str(record['invoice_number']).lower()]
+                                    any(str(search).lower() in str(val).lower() 
+                                        for val in [record['name'], record['series'],
+                                                record['supplier'], record['invoice_number']])]
+
     total_filtered = len(cumulatively_per_series)
     
-    # sorting
+    # Sortiranje
     order = []
     i = 0
     while True:
         col_index = request.args.get(f'order[{i}][column]')
         if col_index is None:
             break
+            
         col_name = request.args.get(f'columns[{col_index}][data]')
-        if col_name not in ['item_id', 'series', 'name', 'quantity', 'initial_price', 'current_price', 'purchase_date']:
-            col_name = 'name'
         descending = request.args.get(f'order[{i}][dir]') == 'desc'
-
-        # Korišćenje lambda funkcija za pristupanje odgovarajućim vrednostima u zapisima
-        if col_name == 'item_id':
-            col = lambda x: x['item_id']
-        elif col_name == 'series':
-            col = lambda x: x['series']
-        elif col_name == 'name':
-            col = lambda x: x['name']
-        elif col_name == 'quantity':
-            col = lambda x: x['quantity']
-        elif col_name == 'initial_price':
-            col = lambda x: x['initial_price']
-        elif col_name == 'current_price':
-            col = lambda x: x['current_price']
-        elif col_name == 'purchase_date':
-            col = lambda x: x['purchase_date']
-
-        order.append(col)
+        
+        def get_sort_key(col_name):
+            def key(x):
+                val = x.get(col_name)
+                return (val if val is not None else '') if isinstance(val, (int, str, float, date)) else str(val)
+            return key
+        
+        order.append((get_sort_key(col_name), descending))
         i += 1
 
     if order:
-        # Ovde primenjujete sortiranje na listu cumulatively_per_series
-        cumulatively_per_series.sort(key=lambda x: [col(x) for col in order], reverse=descending)
-    # pagination
+        for key_func, desc in reversed(order):
+            cumulatively_per_series.sort(key=key_func, reverse=desc)
+
+    # Paginacija
     start = request.args.get('start', type=int)
     length = request.args.get('length', type=int)
     cumulatively_per_series = cumulatively_per_series[start:start + length]
-    
-    # update_price()
     
     return {
         'data': cumulatively_per_series,
@@ -455,16 +387,15 @@ def api_serial(): #! kumulativno po seriji
 
 @single_items.route('/api/singleitems')
 def api_single_items():
+    #! prekucano !#
     single_items_query = single_item_list_without_expeditured_items()
     
     # search filter
     search = request.args.get('search[value]')
     room_select = request.args.get('room_select')
     current_year_procurement = request.args.get('current_year_procurement')
-    print(f'{current_year_procurement=}')
+    
     if search and not room_select:
-        print('imamo pretragu')
-        print(f'{search=}')
         single_items_query = single_items_query.filter(db.or_(
             SingleItem.name.like(f'%{search}%'),
             SingleItem.inventory_number.like(f'%{search}%'),
@@ -473,9 +404,6 @@ def api_single_items():
             SingleItem.invoice_number.like(f'%{search}%'),
         ))
     elif search and room_select:
-        print('selektovana je prostorija i imamo pretragu')
-        print(f'{search=}')
-        print(f'{room_select=}')
         single_items_query = single_items_query.filter(db.or_(
             SingleItem.name.like(f'%{search}%'),
             SingleItem.inventory_number.like(f'%{search}%'),
@@ -485,23 +413,16 @@ def api_single_items():
             SingleItem.invoice_number.like(f'%{search}%'),
         ))
     elif room_select:
-        print('samo je selektovana prostorija')
-        print(f'{room_select=}')
         single_items_query = single_items_query.filter(db.or_(
             SingleItem.room_id.like(f'{int(room_select)}'),
         ))
-    # Proverite da li je vrednost "on" prisutna za current_year_procurement
+
     if current_year_procurement == 'true':
-        current_year_procurement = True
-        # Prvo, dohvatite trenutnu godinu
         current_year = datetime.now().year
-            
-        # Zatim postavite početni i krajnji datum za trenutnu godinu
         start_date = date(current_year, 1, 1)
         end_date = date(current_year, 12, 31)
         single_items_query = single_items_query.filter(and_(SingleItem.purchase_date >= start_date, SingleItem.purchase_date <= end_date))
-    else:
-        current_year_procurement = False
+
     total_filtered = single_items_query.count()
     
     # sorting
@@ -545,9 +466,10 @@ def api_single_items():
             'invoice_number': single_item.invoice_number,
             'reverse_date': single_item.reverse_date,
             'reverse_person': single_item.reverse_person,
-            'button_name': single_item.single_item_room.room_building.name + " > " +  single_item.single_item_room.dynamic_name,
+            'button_name': f"{single_item.room.building.name} > {single_item.room.dynamic_name}",
         }
         single_items_list.append(new_dict)
+        
     return {
         'data': single_items_list,
         'recordsFiltered': total_filtered,
@@ -558,6 +480,7 @@ def api_single_items():
 
 @single_items.route('/move_single_item_to_room', methods=['GET', 'POST'])
 def move_single_item_to_room():
+    #! prekucano !#
     single_item_id = request.form.get('single_item_id')
     room_id = request.form.get('edit_single_item_room')
     active_inventory_list = Inventory.query.filter_by(status='active').first()
@@ -571,12 +494,13 @@ def move_single_item_to_room():
     single_item = SingleItem.query.filter_by(id=single_item_id).first()
     single_item.room_id = room_id
     db.session.commit()
-    flash(f'Uspešno ste premestili predmet {single_item.name} u prostoriju {single_item.single_item_room.name}.', 'success')
+    flash(f'Uspešno ste premestili predmet {single_item.name} u prostoriju {single_item.room.name}.', 'success')
     return redirect(url_for('single_items.single_item_list'))
 
 
 @single_items.route('/open_file', methods=['GET', 'POST'])
 def open_file():
+    #! prekucano !#
     # Ovde dodajte kod koji će otvoriti fajl u novom tabu
     print('ušao sam u funkciju open_file')
     file_path = './static/reverses/revers.pdf'  # Promenite putanju prema vašem fajlu
@@ -591,6 +515,7 @@ def open_file():
 
 @single_items.route('/reverse_single_item', methods=['GET', 'POST'])
 def reverse_single_item():
+    #! prekucano !#
     active_inventory_list = Inventory.query.filter_by(status='active').first()
     if active_inventory_list:
         flash(f'Nije moguće izdavati predmet na revers dok je aktivan popis.', 'danger')
@@ -623,6 +548,7 @@ def reverse_single_item():
 
 @single_items.route('/return_reverse_single_item', methods=['GET', 'POST'])
 def return_reverse_single_item():
+    #! prekucano !#
     active_inventory_list = Inventory.query.filter_by(status='active').first()
     print(f'{request.form=}')
     action = request.form.get('action')
@@ -650,13 +576,18 @@ def return_reverse_single_item():
 
 @single_items.route('/expediture_single_item', methods=['GET', 'POST'])
 def expediture_single_item():
+    #! prekucano !#
     active_inventory_list = Inventory.query.filter_by(status='active').first()
     if active_inventory_list:
         flash(f'Nije moguće rashodovati predmete dok je aktivan popis.', 'danger')
         return redirect(url_for('single_items.single_item_list'))
+
+    # Dobavljanje podataka iz forme
     single_item_id = request.form.get('single_item_id_expediture')
     expediture_date = request.form.get('single_item_expediture_date_expediture')
     single_item = SingleItem.query.filter_by(id=single_item_id).first()
+
+    # Validacija datuma rashoda
     if not expediture_date or not expediture_date.strip():
         flash('Da bi ste rashodovali predmet, morate uneti validan datum rashoda.', 'danger')
         return redirect(url_for('single_items.single_item_list'))
@@ -669,18 +600,34 @@ def expediture_single_item():
     elif False:
         print('dodati uslov da je datum rashoda obavezan da bude u tekućoj godini // ispravi False u potrebni uslov')
     else:
-        expediture_date = datetime.strptime(request.form.get('single_item_expediture_date_expediture'), '%Y-%m-%d').date()
+        expediture_date = datetime.strptime(expediture_date, '%Y-%m-%d').date()
+
     print(f'{single_item_id=} {expediture_date=}')
     print(f'rashodovao bih ovaj predmet: {single_item=}')
+
+    # Pribavljanje potrebnih vrednosti za kalkulaciju
     initial_price = single_item.initial_price
-    rate = single_item.single_item_item.item_depreciation_rate.rate
+    
+    # Dobavljanje stope amortizacije na osnovu postavki škole
+    if single_item.room.building.school.use_legacy_system:
+        rate = single_item.item.depreciation_rate.rate
+    else:
+        rate = single_item.depreciation_rate.rate
+        
     purchase_date = single_item.purchase_date
     input_in_app_date = single_item.input_in_app_date 
     deprecation_value = single_item.deprecation_value
     
-    single_item.current_price, single_item.expediture_price = current_price_calculation(initial_price, rate, purchase_date, expediture_date, None, input_in_app_date, deprecation_value)
+    # Računanje trenutne cene i cene rashodovanja
+    single_item.current_price, single_item.expediture_price = current_price_calculation(
+        initial_price, rate, purchase_date, expediture_date, 
+        None, input_in_app_date, deprecation_value
+    )
+    
+    # Ažuriranje podataka o rashodovanju
     single_item.expediture_date = expediture_date
-    single_item.room_id = 2 #! room_id = 2 je magacin rashoda
+    single_item.room_id = 2  #! room_id = 2 je magacin rashoda
+    
     db.session.commit()
     flash(f'Uspešno ste rashodovali predmet: {single_item.name}.', 'success')
     return redirect(url_for('single_items.single_item_list'))
@@ -688,6 +635,7 @@ def expediture_single_item():
 
 @single_items.route('/undo_expediture_single_item', methods=['GET', 'POST'])
 def undo_expediture_single_item():
+    #! prekucano !#
     active_inventory_list = Inventory.query.filter_by(status='active').first()
     if active_inventory_list:
         flash(f'Nije moguće stornirati rashodovani predmet dok je aktivan popis.', 'danger')
@@ -704,8 +652,9 @@ def undo_expediture_single_item():
     return redirect(url_for('single_items.single_item_list'))
 
 
-@single_items.route('/undo_expediture_serial', methods=['GET', 'POST']) #!
+@single_items.route('/undo_expediture_serial', methods=['GET', 'POST'])
 def undo_expediture_serial():
+    #! prekucano !#
     active_inventory_list = Inventory.query.filter_by(status='active').first()
     if active_inventory_list:
         flash(f'Nije moguće stornirati rashodovani predmet dok je aktivan popis.', 'danger')
@@ -727,6 +676,7 @@ def undo_expediture_serial():
 
 @single_items.route('/expediture_serial', methods=['GET', 'POST']) #!
 def expediture_serial():
+    #! prekucano !#
     print('test rashod po seriji')
     active_inventory_list = Inventory.query.filter_by(status='active').first()
     if active_inventory_list:
@@ -752,7 +702,7 @@ def expediture_serial():
     single_items_with_same_serial = SingleItem.query.filter_by(serial=int(serial)).all()
     for single_item in single_items_with_same_serial:
         initial_price = single_item.initial_price
-        rate = single_item.single_item_item.item_depreciation_rate.rate
+        rate = single_item.depreciation_rate.rate
         purchase_date = single_item.purchase_date
         input_in_app_date = single_item.input_in_app_date
         deprecation_value = single_item.deprecation_value
@@ -770,90 +720,84 @@ def expediture_serial():
 
 @single_items.route('/add_single_items_to_app', methods=['GET', 'POST'])
 def add_single_items_to_app():
+    #? da li ovo treba uopšte - možda je za import iz excela ?#
     single_items_list = SingleItem.query.all()
     if len(single_items_list) == 0:
         max_serial_number = 1
     else:
         max_serial_number = max([int(single_item.inventory_number.split('-')[1]) for single_item in single_items_list])+1
     
-    item_id = request.form.get('add_single_item_item_id')
-    rate = Item.query.filter_by(id=item_id).first().item_depreciation_rate.rate
+    # Pribavljanje podataka iz forme
+    category_id = request.form.get('add_single_item_category_id')
+    depreciation_rate_id = request.form.get('add_single_item_depreciation_rate_id')
+    rate = DepreciationRate.query.filter_by(id=depreciation_rate_id).first().rate
+    
     item_name = request.form.get('add_single_item_name')
-    # if not item_name or not item_name.strip():
-    #     flash('Da bi ste dodali novi predmet, morate uneti naziv predmeta.', 'danger')
-    #     return redirect(url_for('single_items.single_item_list'))
-    item_room = request.form.get('add_single_item_room')
-    if not item_room or not item_room.strip():
-        item_room = 1 #! ako nije selektovana nijedna soba onda je room_id = 1 je virtuelni magacin
-    quantity = request.form.get('add_single_item_quantity')
-    # if not quantity or not quantity.strip():
-    #     flash('Da bi ste dodali novi predmet, morate uneti količinu predmeta.', 'danger')
-    #     return redirect(url_for('single_items.single_item_list'))
-    # Pokušaj konvertovati quantity u cijeli broj
+    item_room = request.form.get('add_single_item_room', '1')  # Podrazumevani magacin ako nije izabrana prostorija
+    
+    # Validacija quantity
     try:
-        quantity = int(quantity)
+        quantity = int(request.form.get('add_single_item_quantity'))
+        if quantity < 1:
+            flash('Količina predmeta mora biti veća od 0.', 'danger')
+            return redirect(url_for('single_items.single_item_list'))
     except ValueError:
-        # Ako nije moguće konvertovati u cijeli broj
-        print(f'{type(quantity)=}')
         flash('Količina predmeta mora biti ceo broj.', 'danger')
         return redirect(url_for('single_items.single_item_list'))
 
-    # Provjeri da li je quantity sada cijeli broj
-    if not isinstance(quantity, int):
-        flash('Količina predmeta mora biti ceo broj.', 'danger')
-        return redirect(url_for('single_items.single_item_list'))
-    if int(quantity) < 1:
-        flash('Količina predmeta mora biti veća od 0.', 'danger')
-        return redirect(url_for('single_items.single_item_list'))
-    #! nastaviti (initial_price, quantity, purchase_date)
+    # Obrada cene
     initial_price = float(request.form.get('add_single_item_initial_price')) / float(quantity)
     if initial_price < 0:
         flash('Cena predmeta mora biti veća od 0.', 'danger')
         return redirect(url_for('single_items.single_item_list'))
-    purchase_date_str = request.form.get('add_single_item_date')
-    
-    input_in_app_date = request.form.get('input_in_app_date')
-    deprecatin_value = float(request.form.get('deprecation_value')) / float(quantity)
 
-    # Provjeri da li je purchase_date_str prazan ili sastoji se samo od praznina
+    # Validacija datuma
+    purchase_date_str = request.form.get('add_single_item_date')
     if not purchase_date_str or not purchase_date_str.strip():
         flash('Da bi ste dodali novi predmet, morate uneti datum kupovine predmeta.', 'danger')
         return redirect(url_for('single_items.single_item_list'))
 
-    # Pokušaj parsirati purchase_date_str u datetime.date
     try:
         purchase_date = datetime.strptime(purchase_date_str, '%Y-%m-%d').date()
+        if purchase_date > datetime.now().date():
+            flash('Datum kupovine ne može biti u budućnosti.', 'danger')
+            return redirect(url_for('single_items.single_item_list'))
     except ValueError:
         flash('Neispravan format datuma. Molimo unesite datum u formatu YYYY-MM-DD.', 'danger')
         return redirect(url_for('single_items.single_item_list'))
 
-    # Provjeri da li je purchase_date u prošlosti
-    if purchase_date > datetime.now().date():
-        flash('Datum kupovine ne može biti u budućnosti.', 'danger')
-        return redirect(url_for('single_items.single_item_list'))
+    input_in_app_date = request.form.get('input_in_app_date')
+    deprecation_value = float(request.form.get('deprecation_value', 0)) / float(quantity)
     supplier = request.form.get('add_single_item_supplier')
     invoice_number = request.form.get('add_single_item_invoice_number')
+    
     current_price, _ = current_price_calculation(initial_price, rate, purchase_date)
-    print(f'{item_id=} {item_name=} {item_room=} {initial_price=} {purchase_date=} {quantity=} {input_in_app_date=} {deprecatin_value=}')
+    
     new_single_items = []
-    for i in range(1, int(quantity) + 1):
-        print(f'{type(item_id)=}, {type(max_serial_number)=}, {type(i)=}')
-        inventory_number = f'{int(item_id):04d}-{max_serial_number:05d}-{i:04d}'
-        new_single_item = SingleItem(item_id=item_id,
-                                        serial=max_serial_number,
-                                        name=item_name,
-                                        room_id=item_room,
-                                        initial_price=initial_price,
-                                        current_price=current_price,
-                                        purchase_date=purchase_date,
-                                        inventory_number=inventory_number,
-                                        supplier=supplier,
-                                        invoice_number=invoice_number,
-                                        input_in_app_date=input_in_app_date,
-                                        deprecation_value=deprecatin_value)
+    for i in range(1, quantity + 1):
+        # Novi format inventarskog broja: SERIJA-BROJ_ARTIKLA
+        inventory_number = f'{max_serial_number:05d}-{i:04d}'
+        
+        new_single_item = SingleItem(
+            serial=max_serial_number,
+            name=item_name,
+            room_id=item_room,
+            category_id=category_id,
+            depreciation_rate_id=depreciation_rate_id,
+            initial_price=initial_price,
+            current_price=current_price,
+            purchase_date=purchase_date,
+            inventory_number=inventory_number,
+            supplier=supplier,
+            invoice_number=invoice_number,
+            input_in_app_date=input_in_app_date,
+            deprecation_value=deprecation_value
+        )
         new_single_items.append(new_single_item)
+        
     db.session.add_all(new_single_items)
     db.session.commit()
+    
     return redirect(url_for('single_items.single_item_list'))
 
 @single_items.route('/add_single_item', methods=['GET', 'POST'])
@@ -864,231 +808,252 @@ def add_single_item():
     if current_user.authorization != 'admin':
         flash('Nemate dozvolu za pristum ovoj stranici.', 'danger')
         return redirect(url_for('main.home'))
+        
     active_inventory_list = Inventory.query.filter_by(status='active').first()
     if active_inventory_list:
         flash(f'Da bi ste dodali novi predmet, morate prvo završiti aktivnu popisnu listu koja je započeta: {active_inventory_list.date}.', 'danger')
         return redirect(url_for('main.home'))
+
+    # Dobavljanje maksimalnog serijskog broja
     single_items_list = SingleItem.query.all()
-    if len(single_items_list) == 0:
-        max_serial_number = 1
-    else:
-        max_serial_number = max([int(single_item.inventory_number.split('-')[1]) for single_item in single_items_list])+1
-    item_id = request.form.get('add_single_item_item_id')
-    rate = Item.query.filter_by(id=item_id).first().item_depreciation_rate.rate
-    print(f'{rate=}')
+    max_serial_number = 1 if len(single_items_list) == 0 else max([int(single_item.inventory_number.split('-')[0]) for single_item in single_items_list])+1
+    
+    # Pribavljanje podataka iz forme
+    category_id = request.form.get('add_single_item_category_id')
+    depreciation_rate_id = request.form.get('add_single_item_depreciation_rate_id')
+    rate = DepreciationRate.query.filter_by(id=depreciation_rate_id).first().rate
+    
     item_name = request.form.get('add_single_item_name')
     if not item_name or not item_name.strip():
         flash('Da bi ste dodali novi predmet, morate uneti naziv predmeta.', 'danger')
         return redirect(url_for('single_items.single_item_list'))
+        
     item_room = request.form.get('add_single_item_room')
     if not item_room or not item_room.strip():
-        item_room = 1 #! ako nije selektovana nijedna soba onda je room_id = 1 je virtuelni magacin
+        item_room = 1  # Podrazumevani virtuelni magacin
+        
+    # Validacija količine
     quantity = request.form.get('add_single_item_quantity')
     if not quantity or not quantity.strip():
         flash('Da bi ste dodali novi predmet, morate uneti količinu predmeta.', 'danger')
         return redirect(url_for('single_items.single_item_list'))
-    # Pokušaj konvertovati quantity u cijeli broj
+        
     try:
         quantity = int(quantity)
+        if quantity < 1:
+            flash('Količina predmeta mora biti veća od 0.', 'danger')
+            return redirect(url_for('single_items.single_item_list'))
     except ValueError:
-        # Ako nije moguće konvertovati u cijeli broj
-        print(f'{type(quantity)=}')
         flash('Količina predmeta mora biti ceo broj.', 'danger')
         return redirect(url_for('single_items.single_item_list'))
 
-    # Provjeri da li je quantity sada cijeli broj
-    if not isinstance(quantity, int):
-        flash('Količina predmeta mora biti ceo broj.', 'danger')
-        return redirect(url_for('single_items.single_item_list'))
-    if int(quantity) < 1:
-        flash('Količina predmeta mora biti veća od 0.', 'danger')
-        return redirect(url_for('single_items.single_item_list'))
-    #! nastaviti (initial_price, quantity, purchase_date)
+    # Validacija cene
     initial_price = float(request.form.get('add_single_item_initial_price')) / float(quantity)
     if initial_price < 0:
         flash('Cena predmeta mora biti veća od 0.', 'danger')
         return redirect(url_for('single_items.single_item_list'))
-    purchase_date_str = request.form.get('add_single_item_date')
 
-    # Provjeri da li je purchase_date_str prazan ili sastoji se samo od praznina
+    # Validacija datuma
+    purchase_date_str = request.form.get('add_single_item_date')
     if not purchase_date_str or not purchase_date_str.strip():
         flash('Da bi ste dodali novi predmet, morate uneti datum kupovine predmeta.', 'danger')
         return redirect(url_for('single_items.single_item_list'))
 
-    # Pokušaj parsirati purchase_date_str u datetime.date
     try:
         purchase_date = datetime.strptime(purchase_date_str, '%Y-%m-%d').date()
+        if purchase_date > datetime.now().date():
+            flash('Datum kupovine ne može biti u budućnosti.', 'danger')
+            return redirect(url_for('single_items.single_item_list'))
     except ValueError:
         flash('Neispravan format datuma. Molimo unesite datum u formatu YYYY-MM-DD.', 'danger')
         return redirect(url_for('single_items.single_item_list'))
 
-    # Provjeri da li je purchase_date u prošlosti
-    if purchase_date > datetime.now().date():
-        flash('Datum kupovine ne može biti u budućnosti.', 'danger')
-        return redirect(url_for('single_items.single_item_list'))
     supplier = request.form.get('add_single_item_supplier')
     invoice_number = request.form.get('add_single_item_invoice_number')
     current_price, _ = current_price_calculation(initial_price, rate, purchase_date)
-    print(f'{item_id=} {item_name=} {item_room=} {initial_price=} {purchase_date=} {quantity=}')
+
+    # Kreiranje novih predmeta
     new_single_items = []
     for i in range(1, int(quantity) + 1):
-        print(f'{type(item_id)=}, {type(max_serial_number)=}, {type(i)=}')
-        inventory_number = f'{int(item_id):04d}-{max_serial_number:05d}-{i:04d}'
-        new_single_item = SingleItem(item_id=item_id,
-                                        serial=max_serial_number,
-                                        name=item_name,
-                                        room_id=item_room,
-                                        initial_price=initial_price,
-                                        current_price=current_price,
-                                        purchase_date=purchase_date,
-                                        inventory_number=inventory_number,
-                                        supplier=supplier,
-                                        invoice_number=invoice_number)
+        # Novi format inventarskog broja: SERIJA-BROJ_ARTIKLA
+        inventory_number = f'{max_serial_number:05d}-{i:04d}'
+        
+        new_single_item = SingleItem(
+            serial=max_serial_number,
+            name=item_name,
+            room_id=item_room,
+            category_id=category_id,
+            depreciation_rate_id=depreciation_rate_id,
+            initial_price=initial_price,
+            current_price=current_price,
+            purchase_date=purchase_date,
+            inventory_number=inventory_number,
+            supplier=supplier,
+            invoice_number=invoice_number
+        )
         new_single_items.append(new_single_item)
+        
     db.session.add_all(new_single_items)
     db.session.commit()
-    if quantity == 1:
-        flash(f'Novi predmet je uspešno dodat.', 'success')
-    else:
-        flash(f'Uspešno je dodato {quantity} novih predmeta.', 'success')
+
+    flash(f'{"Novi predmet je" if quantity == 1 else f"{quantity} novih predmeta su"} uspešno dodat{"" if quantity == 1 else "i"}.', 'success')
     return redirect(url_for('single_items.single_item_list'))
 
 
 @single_items.route('/edit_single_item', methods=['GET', 'POST'])
 def edit_single_item():
+    #! prekucano !#
     if not current_user.is_authenticated:
         flash('Da biste pristupili ovoj stranici treba da budete ulogovani.', 'danger')
         return redirect(url_for('users.login'))
     if current_user.authorization != 'admin':
         flash('Nemate dozvolu za pristum ovoj stranici.', 'danger')
         return redirect(url_for('main.home'))
+        
     active_inventory_list = Inventory.query.filter_by(status='active').first()
     if active_inventory_list:
         flash(f'Nije moguće vršiti izmene podataka predmeta dok je aktivan popis.', 'danger')
         return redirect(url_for('main.home'))
+        
     inventory_years = [inventory.date for inventory in Inventory.query.all()]
-    print(f'{inventory_years=}')
-    
     correction = 0
     if date((date.today().year -1), 12, 31) not in inventory_years:
-        print(f'NIJE urađen je popis na kraju prošle godine')
         correction = 1
 
     purchase_date = datetime.strptime(request.form.get('edit_single_item_date'), '%Y-%m-%d').date()
     if purchase_date.year + correction < date.today().year:
         flash('Ne može se menjati serija predmeta iz predhodnih godina.', 'danger')
         return redirect(url_for('single_items.single_item_list'))
+        
+    # Osnovni podaci
     serial = int(request.form.get('edit_single_item_serial'))
-    item_id = request.form.get('edit_single_item_item_id')
+    category_id = request.form.get('edit_single_item_category_id')
+    depreciation_rate_id = request.form.get('edit_single_item_depreciation_rate_id')
+    rate = DepreciationRate.query.filter_by(id=depreciation_rate_id).first().rate
+    
+    # Validacija naziva
     name = request.form.get('edit_single_item_name')
     if not name or not name.strip():
         flash('Da bi ste izmenili predmet, morate uneti naziv predmeta.', 'danger')
         return redirect(url_for('single_items.single_item_list'))
+
+    # Validacija količine
     quantity = request.form.get('edit_single_item_quantity')
-    if not quantity or not quantity.strip():
-        flash('Da bi ste dodali novi predmet, morate uneti količinu predmeta.', 'danger')
-        return redirect(url_for('single_items.single_item_list'))
-    # Pokušaj konvertovati quantity u cijeli broj
     try:
         quantity = int(quantity)
-    except ValueError:
-        # Ako nije moguće konvertovati u cijeli broj
-        print(f'{type(quantity)=}')
+        if quantity < 1:
+            flash('Količina predmeta mora biti veća od 0.', 'danger')
+            return redirect(url_for('single_items.single_item_list'))
+    except (ValueError, TypeError):
         flash('Količina predmeta mora biti ceo broj.', 'danger')
         return redirect(url_for('single_items.single_item_list'))
 
-    # Provjeri da li je quantity sada cijeli broj
-    if not isinstance(quantity, int):
-        flash('Količina predmeta mora biti ceo broj.', 'danger')
-        return redirect(url_for('single_items.single_item_list'))
-    if int(quantity) < 1:
-        flash('Količina predmeta mora biti veća od 0.', 'danger')
-        return redirect(url_for('single_items.single_item_list'))
+    # Validacija cene
     initial_price = float(request.form.get('edit_single_item_initial_price')) / float(quantity)
     if initial_price < 0:
         flash('Cena predmeta mora biti veća od 0.', 'danger')
         return redirect(url_for('single_items.single_item_list'))
-    purchase_date_str = request.form.get('edit_single_item_date')
 
-    # Provjeri da li je purchase_date_str prazan ili sastoji se samo od praznina
-    if not purchase_date_str or not purchase_date_str.strip():
+    # Validacija datuma
+    if not purchase_date:
         flash('Da bi ste izmenili predmet, morate uneti datum kupovine predmeta.', 'danger')
         return redirect(url_for('single_items.single_item_list'))
 
-    # Pokušaj parsirati purchase_date_str u datetime.date
     try:
-        purchase_date = datetime.strptime(purchase_date_str, '%Y-%m-%d').date()
+        # purchase_date = datetime.strptime(purchase_date_str, '%Y-%m-%d').date()
+        if purchase_date > datetime.now().date():
+            flash('Datum kupovine ne može biti u budućnosti.', 'danger')
+            return redirect(url_for('single_items.single_item_list'))
     except ValueError:
         flash('Neispravan format datuma. Molimo unesite datum u formatu YYYY-MM-DD.', 'danger')
         return redirect(url_for('single_items.single_item_list'))
 
-    # Provjeri da li je purchase_date u prošlosti
-    if purchase_date > datetime.now().date():
-        flash('Datum kupovine ne može biti u budućnosti.', 'danger')
-        return redirect(url_for('single_items.single_item_list'))
-    current_price, _ = current_price_calculation(initial_price, Item.query.filter_by(id=item_id).first().item_depreciation_rate.rate, datetime.now().date())
+    current_price, _ = current_price_calculation(initial_price, rate, datetime.now().date())
     supplier = request.form.get('edit_single_item_supplier')
     invoice_number = request.form.get('edit_single_item_invoice_number')
-    print(f'{serial=}, {initial_price=}')
+
+    # Ažuriranje postojećih predmeta
     single_items = SingleItem.query.filter_by(serial=serial).all()
-    print(f'{single_items=}')
     for single_item in single_items:
         inventory_number = single_item.inventory_number
-        i = int(inventory_number.split('-')[2])
-        single_item.item_id = item_id
+        i = int(inventory_number.split('-')[1])  # Novi format bez item_id
+        single_item.category_id = category_id
+        single_item.depreciation_rate_id = depreciation_rate_id
         single_item.name = name
         single_item.initial_price = initial_price
         single_item.current_price = current_price
         single_item.purchase_date = purchase_date
-        single_item.inventory_number = f'{int(item_id):04d}-{int(serial):05d}-{i:04d}'
+        single_item.inventory_number = f'{serial:05d}-{i:04d}'  # Novi format
         single_item.supplier = supplier
         single_item.invoice_number = invoice_number
-    db.session.commit()
+
+    # Brisanje viška predmeta ako je nova količina manja
     for i in range(1, (len(single_items) - quantity + 1)):
-        print(f'{quantity=}, {len(single_items)=}')
         db.session.delete(single_items[-i])
+
+    # Dodavanje novih predmeta ako je nova količina veća
     if quantity > len(single_items):
         for i in range(len(single_items), quantity):
-            i += 1 #! da bi bio veći za jedan od maximalnog broja len(single_items)
-            inventory_number = f'{int(item_id):04d}-{serial}-{i:04d}'
-            new_single_item = SingleItem(item_id=item_id,
-                                            serial=serial,
-                                            name=name,
-                                            initial_price=initial_price,
-                                            current_price=current_price,
-                                            purchase_date=purchase_date,
-                                            inventory_number=inventory_number,
-                                            room_id=1, #! virtuelni magacin
-                                            supplier=supplier,
-                                            invoice_number=invoice_number)
+            i += 1
+            inventory_number = f'{serial:05d}-{i:04d}'  # Novi format
+            new_single_item = SingleItem(
+                serial=serial,
+                category_id=category_id,
+                depreciation_rate_id=depreciation_rate_id,
+                name=name,
+                initial_price=initial_price,
+                current_price=current_price,
+                purchase_date=purchase_date,
+                inventory_number=inventory_number,
+                room_id=1,  # Virtuelni magacin
+                supplier=supplier,
+                invoice_number=invoice_number
+            )
             db.session.add(new_single_item)
+
     db.session.commit()
     update_price()
+    
     flash(f'Uspešno ste izmenili predmete sa serijom: {str(serial).zfill(5)}.', 'success')
     return redirect(url_for('single_items.single_item_list'))
 
 
-@single_items.route('/single_item_rooms/<int:item_id>', methods=['GET', 'POST'])
-def single_item_rooms(item_id):
-    item = Item.query.filter_by(id=item_id).first()
+@single_items.route('/single_item_rooms/<int:serial>', methods=['GET', 'POST'])
+def single_item_rooms(serial):
+    # Uzimamo jedan predmet iz serije kao referencu
+    reference_item = SingleItem.query.filter_by(serial=serial).first()
     inventory = Inventory.query.filter_by(status='active').first()
-    single_item_list = SingleItem.query.filter_by(item_id=item_id).all()
+    
+    # Dobavljamo sve predmete iz serije
+    single_item_list = SingleItem.query.filter_by(serial=serial).all()
+    
     data_list = []
     for single_item in single_item_list:
         new_dict = {
-            'building': single_item.single_item_room.room_building.name,
-            'room_id': single_item.single_item_room.id,
-            'room': f'({single_item.single_item_room.name}) {single_item.single_item_room.dynamic_name}',
-            'serial': single_item.inventory_number.split('-')[1],
+            'building': single_item.room.building.name,
+            'room_id': single_item.room.id,
+            'room': f'({single_item.room.name}) {single_item.room.dynamic_name}',
+            'serial': single_item.serial,
+            'name': single_item.name,
             'quantity': 1,
             'initial_price': single_item.initial_price,
             'current_price': single_item.current_price,
             'purchase_date': single_item.purchase_date,
+            # Dodajemo informacije o kontu i amortizaciji
+            'category_info': f"{single_item.category.category_number} - {single_item.category.name}" if single_item.category else "",
+            'depreciation_info': (f"{single_item.depreciation_rate.name}: {single_item.depreciation_rate.rate}%" 
+                                if single_item.depreciation_rate else "")
         }
+        
+        # Grupisanje po prostoriji
         found = False
         for existing_item in data_list:
-            if existing_item['building'] == new_dict['building'] and existing_item['room'] == new_dict['room'] and existing_item['serial'] == new_dict['serial']:
+            if (existing_item['building'] == new_dict['building'] and 
+                existing_item['room'] == new_dict['room'] and 
+                existing_item['serial'] == new_dict['serial']):
                 existing_item['quantity'] += 1
+                existing_item['initial_price'] += single_item.initial_price
+                existing_item['current_price'] += single_item.current_price
                 found = True
                 break
         
@@ -1097,9 +1062,10 @@ def single_item_rooms(item_id):
         
     print(f'{data_list=}')
     
-    return render_template('single_item_rooms.html', title="Pregled predmeta po prostorijama",
+    return render_template('single_item_rooms.html', 
+                            title="Pregled predmeta po prostorijama",
                             single_item_list=single_item_list,
-                            item=item,
+                            reference_item=reference_item,  # Umesto item šaljemo reference_item
                             inventory=inventory,
                             data_list=data_list)
 
@@ -1108,39 +1074,49 @@ def single_item_rooms(item_id):
 def room_single_items(room_id):
     room = Room.query.filter_by(id=room_id).first()
     single_item_list = SingleItem.query.filter_by(room_id=room_id).all()
-    active_inventory_list=Inventory.query.filter_by(status='active').first()
+    active_inventory_list = Inventory.query.filter_by(status='active').first()
     print(f'{single_item_list=}')
+    
     data_list = []
     for single_item in single_item_list:
         new_dict = {
-            'id': single_item.single_item_item.id,
-            'item_name': f'{single_item.single_item_item.name}',
-            'single_item_name': single_item.name,
-            'serial': single_item.inventory_number.split('-')[1],
+            'id': single_item.id,
+            'name': single_item.name,
+            'serial': f'{int(single_item.serial):05d}',  # Formatiranje serijskog broja
             'quantity': 1,
             'initial_price': single_item.initial_price,
             'current_price': single_item.current_price,
             'purchase_date': single_item.purchase_date,
+            # Dodajemo informacije o kontu i amortizaciji ako su potrebne
+            'category_name': f"{single_item.category.category_number} - {single_item.category.name}" if single_item.category else "",
+            'depreciation_rate': f"{single_item.depreciation_rate.rate}%" if single_item.depreciation_rate else "",
         }
-        print(f'{new_dict=}')
+        
+        # Grupisanje po serijskom broju
         found = False
         for existing_item in data_list:
             if existing_item['serial'] == new_dict['serial']:
                 existing_item['quantity'] += 1
+                existing_item['initial_price'] += single_item.initial_price
+                existing_item['current_price'] += single_item.current_price
                 found = True
                 break
+                
         if not found:
             data_list.append(new_dict)
+    
     print(f'{data_list=}')
-    return render_template('room_single_items.html', title="Pregled predmeta u prostoriji",
-                                room=room,
-                                single_item_list=single_item_list,
-                                data_list=data_list,
-                                active_inventory_list=active_inventory_list)
+    
+    return render_template('room_single_items.html', 
+                            title="Pregled predmeta u prostoriji",
+                            room=room,
+                            single_item_list=single_item_list,
+                            data_list=data_list,
+                            active_inventory_list=active_inventory_list)
 
 
 @single_items.route('/move_select', methods=['GET', 'POST'])
-def move_select_item():
+def move_select_serial():
     active_inventory_list = Inventory.query.filter_by(status='active').first()
     if active_inventory_list:
         flash(f'Nije moguće premeštati predmete dok je aktivan popis.', 'danger')
@@ -1151,23 +1127,24 @@ def move_select_item():
     if current_user.authorization != 'admin':
         flash('Nemate dozvolu za pristum ovoj stranici.', 'danger')
         return redirect(url_for('main.home'))
+    route_name = request.endpoint
     if request.method == 'POST':
         if 'submit_to' in request.form:
-            item_id = request.form.get('item_id_to_move_to')
+            serial = request.form.get('serial_to_move_to')
             room_id = request.form.get('room_id_to_move_to')
-            return redirect(url_for('single_items.move_to', item_id=item_id, room_id=room_id))
+            print(f'debug: {serial=}, {room_id=}')
+            return redirect(url_for('single_items.move_to', serial=serial, room_id=room_id))
         elif 'submit_from' in request.form:
-            item_id = request.form.get('item_id_to_move_from')
+            serial = request.form.get('serial_to_move_from')
             room_id = request.form.get('room_id_to_move_from')
-            return redirect(url_for('single_items.move_from', serial=item_id, room_id=room_id))
-    item_list = Item.query.all()
-    from sqlalchemy import distinct
+            print(f'debug: {serial=}, {room_id=}')
+            return redirect(url_for('single_items.move_from', serial=serial, room_id=room_id))
 
     single_item_list = SingleItem.query.all()
     unique_series = set()  # Set za praćenje jedinstvenih serija
     single_item_list_from = []
 
-    for single_item in sorted(single_item_list, key=lambda x: x.item_id):
+    for single_item in sorted(single_item_list, key=lambda x: x.serial):
         if single_item.serial not in unique_series:
             unique_series.add(single_item.serial)
             single_item_list_from.append(single_item)
@@ -1175,10 +1152,12 @@ def move_select_item():
     print(f'{single_item_list_from=}')
     all_room_list = Room.query.all()
     room_list_to = [room for room in all_room_list if room.id not in [2, 3, 4]] #! 2 - magacin rashoda, 3 - magacin reversa, 4 magacin manjkova -> ne može se na ovaj način premestiti u taj magacin
-    room_list_from = [room for room in all_room_list if room.id not in [2, 3, 4]] #! 2 - magacin rashoda, 3 - magacin reversa, 4 magacin manjkova -> ne može se na ovaj način premestiti u taj magacinv !!!! ne treba listati prostorije koje nemaju ovaj predmet za tip kretnje iz prostorije u druge prostorije
-    print(f'{item_list=}')
-    return render_template('move_select.html', title='Izbor predmeta za premeštanje',
-                            item_list=item_list,
+    room_list_from = [room for room in all_room_list if room.id not in [2, 3, 4]] #! 2 - magacin rashoda, 3 - magacin reversa, 4 magacin manjkova -> ne može se na ovaj način premestiti u taj magacin
+    #! ne treba listati prostorije koje nemaju ovaj predmet za tip kretnje iz prostorije u druge prostorije
+    
+    return render_template('move_select.html', 
+                            title='Izbor predmeta za premeštanje',
+                            route_name=route_name,
                             single_item_list_from=single_item_list_from,
                             room_list_to=room_list_to,
                             room_list_from=room_list_from)
@@ -1198,7 +1177,10 @@ def move_from(serial, room_id):
     if current_user.authorization != 'admin':
         flash('Nemate dozvolu za pristum ovoj stranici.', 'danger')
         return redirect(url_for('main.home'))
-    single_item_ = SingleItem.query.filter_by(serial=serial).first() #!
+
+    route_name = request.endpoint
+
+    single_item_ = SingleItem.query.filter_by(serial=serial).first()
     room_from = Room.query.filter_by(id=room_id).first()
     room_list = Room.query.all()
     single_item_in_room_list = SingleItem.query.filter_by(serial=serial, room_id=room_id).all()
@@ -1211,9 +1193,8 @@ def move_from(serial, room_id):
 
             if not single_item_list:
                 new_dict = {
-                    'building': room.room_building.name,
+                    'building': room.building.name,
                     'room_id': room.id,
-                    'item_id': single_item_.item_id,
                     'room': f'({room.name}) {room.dynamic_name}',
                     'serial': '',
                     'quantity': 0,
@@ -1226,11 +1207,10 @@ def move_from(serial, room_id):
             else:
                 for single_item in single_item_list:
                     new_dict = {
-                        'building': single_item.single_item_room.room_building.name,
+                        'building': single_item.room.building.name,
                         'room_id': room.id,
-                        'item_id': single_item.item_id,
                         'room': f'({room.name}) {room.dynamic_name}',
-                        'serial': single_item.inventory_number.split('-')[1],
+                        'serial': single_item.inventory_number.split('-')[0],  # Izmenjen indeks jer je novi format
                         'quantity': 1,
                         'single_item_name': f'{single_item.name}',
                         'initial_price': single_item.initial_price,
@@ -1247,8 +1227,6 @@ def move_from(serial, room_id):
                         data_list.append(new_dict)
     print(f'{data_list=}')
 
-
-    
     quantity_of_single_items_in_room = 0
     for data in data_list:
         if data['room_id'] == room_id and data['serial'] == str(serial).zfill(5):
@@ -1278,11 +1256,14 @@ def move_from(serial, room_id):
                 single_item_to_move_from.room_id = room_id_to_move
                 single_item_in_room_list.remove(single_item_to_move_from)
         db.session.commit()
-        # room_to_move = Room.query.get_or_404(room_id_to_move)
-        flash(f'Premešteni su predmeti iz izabrane prostorije:  ({room_from.name}) {room_from.dynamic_name}.', 'success')
-        return redirect(url_for('single_items.single_item_rooms', item_id=single_item_.item_id))
+        
+        flash(f'Premešteni su predmeti iz izabrane prostorije: ({room_from.name}) {room_from.dynamic_name}.', 'success')
+        # Preusmeravanje na listu svih predmeta umesto na specifičan tip
+        return redirect(url_for('single_items.single_item_list'))
     
-    return render_template('move_from.html', title='Premeštanje predmeta iz izabrane prostorije u više različitih prostorija',
+    return render_template('move_from.html', 
+                            title='Premeštanje predmeta iz izabrane prostorije u više različitih prostorija',
+                            route_name=route_name,
                             item=single_item_,
                             room_from=room_from,
                             single_item_list=single_item_list,
@@ -1290,8 +1271,10 @@ def move_from(serial, room_id):
                             quantity_of_single_items_in_room=quantity_of_single_items_in_room)
 
 
-@single_items.route("/move_to/<int:item_id>/<int:room_id>", methods=['GET', 'POST'])
-def move_to(item_id, room_id):
+# @single_items.route("/move_to/<int:item_id>/<int:room_id>", methods=['GET', 'POST'])
+@single_items.route("/move_to/<int:serial>/<int:room_id>", methods=['GET', 'POST'])
+# def move_to(item_id, room_id):
+def move_to(serial, room_id):
     active_inventory_list = Inventory.query.filter_by(status='active').first()
     if active_inventory_list:
         flash(f'Nije moguće premeštati predmete dok je aktivan popis.', 'danger')
@@ -1302,16 +1285,21 @@ def move_to(item_id, room_id):
     if current_user.authorization != 'admin':
         flash('Nemate dozvolu za pristum ovoj stranici.', 'danger')
         return redirect(url_for('main.home'))
-    item = Item.query.filter_by(id=item_id).first()
+
+    route_name = request.endpoint
+
+    # Uzimamo jedan predmet iz serije za prikaz osnovnih informacija
+    reference_item = SingleItem.query.filter_by(serial=serial).first()
     room = Room.query.filter_by(id=room_id).first()
-    single_item_list = SingleItem.query.filter_by(item_id=item_id).all()
+    single_item_list = SingleItem.query.filter_by(serial=serial).all()
+    
     data_list = []
     for single_item in single_item_list:
         new_dict = {
-            'building': single_item.single_item_room.room_building.name,
-            'room_id': single_item.single_item_room.id,
-            'room': f'({single_item.single_item_room.name}) {single_item.single_item_room.dynamic_name}',
-            'serial': single_item.inventory_number.split('-')[1],
+            'building': single_item.room.building.name,
+            'room_id': single_item.room.id,
+            'room': f'({single_item.room.name}) {single_item.room.dynamic_name}',
+            'serial': single_item.serial,  # Direktno koristimo serial
             'quantity': 1,
             'single_item_name': f'{single_item.name}',
             'initial_price': single_item.initial_price,
@@ -1320,7 +1308,9 @@ def move_to(item_id, room_id):
         }
         found = False
         for existing_item in data_list:
-            if existing_item['building'] == new_dict['building'] and existing_item['room'] == new_dict['room'] and existing_item['serial'] == new_dict['serial']:
+            if (existing_item['building'] == new_dict['building'] and 
+                existing_item['room'] == new_dict['room'] and 
+                existing_item['serial'] == new_dict['serial']):
                 existing_item['quantity'] += 1
                 found = True
                 break
@@ -1335,22 +1325,36 @@ def move_to(item_id, room_id):
         print(f'{move_list=}')
         if len(move_list) == 0:
             flash('Niste izabrali nijedan predmet za premeštanje.', 'danger')
-            return redirect(url_for('single_items.move_to', item_id=item_id, room_id=room_id))
+            return redirect(url_for('single_items.move_to', serial=serial, room_id=room_id))
+            
         try:
             if not db.session.is_active:
                 db.session.begin()
             for data in move_list:
-                for i in range(int(data['quantity_to_move_to'])):
-                    single_item = SingleItem.query.filter_by(room_id=data['room_id']).filter_by(serial=int(data['serial'])).first()
-                    single_item.room_id = room_id #!iz atributa funkcije
+                quantity_to_move = int(data['quantity_to_move_to'])
+                # Uzimamo predmete iz izabrane prostorije za zadatu seriju
+                items_to_move = SingleItem.query.filter_by(
+                    room_id=data['room_id'],
+                    serial=data['serial']
+                ).limit(quantity_to_move).all()
+                
+                # Premeštamo svaki predmet pojedinačno
+                for single_item in items_to_move:
+                    single_item.room_id = room_id
             db.session.commit()
+            
+            flash(f'Predmeti su premešteni u prostoriju: ({room.name}) {room.dynamic_name}.', 'success')
         except Exception as e:
             print(f'Greška pri čuvanju promena u bazi: {e}')
-            db.session.rollback() # U slučaju greške, poništite transakciju
-        flash(f'Predmeti su premešteni u prostoriju: ({room.name}) {room.dynamic_name}.', 'success')
-        return redirect(url_for('single_items.single_item_rooms', item_id=item_id))
-    return render_template('move_to.html', title='Premeštanje predmeta u izabranu prostoriju',
-                            item=item,
+            db.session.rollback()
+            flash('Došlo je do greške prilikom premeštanja predmeta.', 'danger')
+            
+        return redirect(url_for('single_items.single_item_list'))
+        
+    return render_template('move_to.html', 
+                            title='Premeštanje predmeta u izabranu prostoriju',
+                            route_name=route_name,
+                            item=reference_item,
                             room=room,
                             single_item_list=single_item_list,
                             data_list=data_list)
@@ -1370,7 +1374,7 @@ def update_price():
     single_items = SingleItem.query.all()
     for single_item in single_items:
         if single_item.expediture_date is None:
-            single_item.current_price, _ = current_price_calculation(single_item.initial_price, single_item.single_item_item.item_depreciation_rate.rate, single_item.purchase_date, None, None, single_item.input_in_app_date, single_item.deprecation_value)
+            single_item.current_price, _ = current_price_calculation(single_item.initial_price, single_item.depreciation_rate.rate, single_item.purchase_date, None, None, single_item.input_in_app_date, single_item.deprecation_value)
             print(f'{single_item.inventory_number=}; {single_item.input_in_app_date=}: {single_item.current_price=}')
     flash('Cena na kraju tekuće godine kod svih nerashodovanih predmeta je izmenjena.', 'success')
     db.session.commit()

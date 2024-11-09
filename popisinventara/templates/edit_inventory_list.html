@@ -1,49 +1,284 @@
 {% extends "layout.html" %}
 {% block content %}
 <div class="h1">{{ title }}</div>
-<div class="form-group mb-4">
-    <a class="btn btn-secondary" href="javascript:history.back()">Nazad</a>
-    <!-- <a class="btn btn-primary" href="">Štampa svih listi (bez količina)</a>
-    <a class="btn btn-primary" href="">Štampa svih listi (sa količinama)</a> -->
-    <a class="btn btn-danger" href="{{url_for('inventory.compare_inventory_list', inventory_id=inventory_id)}}">Poređenje popisnih rezultata sa stanjem u sistemu</a>
-</div>
-<hr>
-<div class="form-group mb-4">
-    {% for building_name in unique_building_names %}
-    <div class="form-group">
-        <legend>{{ building_name }}</legend>
-        <div class="button-container" id="button-container-{{ loop.index }}">
-            {% for button in room_buttons %}
-            {% if button.building_name == building_name %}
-            <a class="btn btn-primary mb-4" href="{{ inventory_id }}/{{ button.room_id }}" style="width: 350px;">({{ button.name }}) {{ button.dynamic_name }}</a>
-            {% endif %}
-            {% endfor %}
+
+<div class="page-content">
+    <!-- Status Card -->
+    <div class="status-card mb-4">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-lg-8">
+                        <div class="status-section">
+                            <h5 class="card-title d-flex align-items-center">
+                                <i class="fa fa-chart-pie me-2"></i>Status popisa
+                            </h5>
+                            
+                            <div class="progress mb-4" style="height: 25px;">
+                                <div class="progress-bar bg-primary" 
+                                     role="progressbar"
+                                     style="width: {{ inventory_stats.completion_percentage | round(1) }}%;"
+                                     aria-valuenow="{{ inventory_stats.completion_percentage }}"
+                                     aria-valuemin="0"
+                                     aria-valuemax="100">
+                                    {{ inventory_stats.completion_percentage | round(1) }}%
+                                </div>
+                            </div>
+
+                            <div class="stats-grid">
+                                <div class="stat-item">
+                                    <span class="stat-badge bg-secondary">
+                                        <i class="fa fa-home me-1"></i>{{ inventory_stats.total_rooms }}
+                                    </span>
+                                    <span class="stat-label">Ukupno prostorija</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-badge bg-success">
+                                        <i class="fa fa-check me-1"></i>{{ inventory_stats.completed_rooms }}
+                                    </span>
+                                    <span class="stat-label">Završeno</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-badge bg-warning">
+                                        <i class="fa fa-clock me-1"></i>{{ inventory_stats.in_progress_rooms }}
+                                    </span>
+                                    <span class="stat-label">U toku</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-badge bg-danger">
+                                        <i class="fa fa-times me-1"></i>{{ inventory_stats.not_started_rooms }}
+                                    </span>
+                                    <span class="stat-label">Nije započeto</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-badge bg-light text-dark">
+                                        <i class="fa fa-minus me-1"></i>{{ inventory_stats.empty_rooms }}
+                                    </span>
+                                    <span class="stat-label">Prazne prostorije</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="action-buttons d-flex flex-column gap-2">
+                            <a class="btn btn-secondary" href="javascript:history.back()">
+                                <i class="fa fa-arrow-left me-2"></i>Nazad
+                            </a>
+                            {% if current_user.authorization == 'admin' %}
+                            <a class="btn btn-danger" href="{{url_for('inventory.compare_inventory_list', inventory_id=inventory_id)}}">
+                                <i class="fa fa-balance-scale me-2"></i>Poređenje rezultata
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-    <hr>
-    {% endfor %}
-</div>
 
-{% endblock content%}
+    <!-- Legend Card -->
+    <div class="status-legend mb-4">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h6 class="card-title d-flex align-items-center mb-3">
+                    <i class="fa fa-info-circle me-2"></i>Legenda
+                </h6>
+                <div class="d-flex gap-3 flex-wrap">
+                    <span class="status-badge bg-success"><i class="fa fa-check me-2"></i>Završeno</span>
+                    <span class="status-badge bg-warning"><i class="fa fa-clock me-2"></i>U toku</span>
+                    <span class="status-badge bg-danger"><i class="fa fa-times me-2"></i>Nije započeto</span>
+                    <span class="status-badge bg-secondary"><i class="fa fa-minus me-2"></i>Prazna prostorija</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Buildings Accordion -->
+    <div class="accordion" id="buildingAccordion">
+        {% for building_name in unique_building_names %}
+        <div class="accordion-item mb-3 shadow-sm">
+            <h2 class="accordion-header" id="heading{{ loop.index }}">
+                <button class="accordion-button" type="button" data-bs-toggle="collapse" 
+                        data-bs-target="#collapse{{ loop.index }}">
+                    <i class="fa fa-building me-2"></i>{{ building_name }}
+                </button>
+            </h2>
+            <div id="collapse{{ loop.index }}" class="accordion-collapse collapse show" 
+                 data-bs-parent="#buildingAccordion">
+                <div class="accordion-body p-3">
+                    <div class="row g-3">
+                        {% for button in room_buttons %}
+                        {% if button.building_name == building_name %}
+                        <div class="col-md-6 col-lg-4">
+                            <a href="{{ url_for('inventory.edit_inventory_room_list', 
+                                              inventory_id=inventory_id, 
+                                              room_id=button.room_id) }}" 
+                               class="room-card">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <h6 class="card-title d-flex align-items-center">
+                                            <i class="fa fa-door-open me-2"></i>{{ button.name }}
+                                        </h6>
+                                        <p class="card-text text-muted">{{ button.dynamic_name }}</p>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="status-badge bg-{{ button.status.color }}">
+                                                <i class="fa fa-{{ 
+                                                    'check' if button.status.status == 'completed' 
+                                                    else 'clock' if button.status.status == 'in_progress' 
+                                                    else 'times' 
+                                                }} me-1"></i>
+                                                {{ button.status.label }}
+                                            </span>
+                                            {% if button.status.status == 'in_progress' %}
+                                            <small class="text-muted">
+                                                Popisano: {{ button.status.label.split('(')[1].split(')')[0] }}
+                                            </small>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+.page-content {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* Status Card Styles */
+.status-card .progress {
+    border-radius: 8px;
+    background-color: #e9ecef;
+}
+
+.status-card .progress-bar {
+    transition: width 1s ease;
+    border-radius: 8px;
+}
+
+/* Stats Grid */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.stat-badge, .status-badge {
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-weight: 500;
+    font-size: 0.9rem;
+    display: inline-flex;
+    align-items: center;
+}
+
+.stat-badge {
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    color: var(--color-text-light);
+    font-size: 0.9rem;
+}
+
+/* Room Cards */
+.room-card {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+.room-card .card {
+    transition: all 0.2s ease;
+    border: 1px solid rgba(0,0,0,0.1);
+}
+
+.room-card:hover .card {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+/* Accordion Styles */
+.accordion-button {
+    background: white;
+    font-weight: 500;
+}
+
+.accordion-button:not(.collapsed) {
+    background-color: var(--color-primary);
+    color: white;
+}
+
+.accordion-button:not(.collapsed)::after {
+    filter: brightness(0) invert(1);
+}
+
+@media (max-width: 768px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+</style>
+{% endblock %}
 
 {% block scripts %}
-<!-- <script>
-    // JavaScript za dinamički raspored dugmadi
-    document.addEventListener("DOMContentLoaded", function() {
-        const buttonContainers = document.querySelectorAll(".button-container");
-        buttonContainers.forEach(container => {
-            const buttons = container.querySelectorAll("a");
-            for (let i = 0; i < buttons.length; i += 3) {
-                const div = document.createElement("div");
-                div.classList.add("button-column");
-                container.insertBefore(div, buttons[i]);
-                for (let j = 0; j < 3 && i + j < buttons.length; j++) {
-                    div.appendChild(buttons[i + j]);
-                }
-            }
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Postojeći JavaScript kod ostaje isti
+    const accordionItems = document.querySelectorAll('.accordion-collapse');
+    accordionItems.forEach(item => {
+        item.addEventListener('shown.bs.collapse', function() {
+            localStorage.setItem(item.id, 'open');
         });
+        item.addEventListener('hidden.bs.collapse', function() {
+            localStorage.setItem(item.id, 'closed');
+        });
+        
+        const savedState = localStorage.getItem(item.id);
+        if (savedState === 'closed') {
+            item.classList.remove('show');
+        }
     });
-</script> -->
-
-
+    
+    const searchInput = document.getElementById('roomSearch');
+    if (searchInput) {
+        searchInput.addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const roomCards = document.querySelectorAll('.room-card');
+            
+            roomCards.forEach(card => {
+                const roomName = card.querySelector('.card-title').textContent.toLowerCase();
+                const roomDesc = card.querySelector('.card-text').textContent.toLowerCase();
+                
+                if (roomName.includes(searchTerm) || roomDesc.includes(searchTerm)) {
+                    card.style.display = '';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+    }
+});
+</script>
 {% endblock %}

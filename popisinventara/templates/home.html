@@ -1,44 +1,125 @@
 {% extends "layout.html" %}
 {% block content %}
-<div class="h1">{{ title }}</div>
-{% if current_user.authorization == 'admin' %}
-<div class="form-group mb-4">
-    <legend>Inventarske aktivnosti</legend>
-    {% if not active_inventory_list %}
-    <a class="btn btn-primary mb-4" href="{{url_for('items.items')}}">Tip Predmeta</a>
-    <a class="btn btn-primary mb-4" href="{{url_for('single_items.single_item_list')}}">Predmeti</a>
-    <a class="btn btn-primary mb-4" href="{{url_for('single_items.move_select_item')}}">Premeštaj</a>
-    {% else %}
-    <a class="btn btn-primary mb-4" href="{{url_for('single_items.single_item_list')}}">Predmeti</a>
-    {% endif %}
-</div>
-<div class="form-group mb-4">
-    {% if not active_inventory_list %}
-    <legend>Popisne aktivnosti</legend>
-        {% if virtual_warehouse %}
-        <a class="btn btn-primary mb-4" href="{{url_for('single_items.room_single_items', room_id=1)}}">
-            Broj predmeta u virtuelnom magacinu: <span class="badge bg-danger">{{virtual_warehouse}}</span>
-        </a>
-        <a class="btn btn-primary disabled mb-4" href="{{url_for('inventory.create_inventory_list')}}">Kreiranje popisne liste</a>
-        {% else %}
-        <a class="btn btn-primary mb-4" href="{{url_for('inventory.create_inventory_list')}}">Kreiranje popisne liste</a>
-        {% endif %}
-    {% else %}
-    <legend>Popis u toku: {{active_inventory_list.date}}</legend>
-    <a class="btn btn-primary mb-4" href="{{url_for('inventory.edit_inventory_list', inventory_id=active_inventory_list.id)}}">Unos/izmena popisnih rezultata</a>
-    <a class="btn btn-primary mb-4" href="{{url_for('inventory.compare_inventory_list', inventory_id=active_inventory_list.id)}}">Poređenje popisnih rezultata sa stanjem u sistemu</a>
-    {% endif %}
-    <a class="btn btn-primary mb-4" href="{{url_for('inventory.read_inventory_list')}}">Pregled popisnih listi</a>
-</div>
-{% else %}
-    <div class="form-group mb-4">
-        <legend>Inventarske aktivnosti</legend>
-        <a class="btn btn-primary mb-4" href="{{url_for('single_items.single_item_list')}}">Predmeti</a>
+
+<div class="page-container">
+    <!-- Page Title -->
+    <div class="page-header">
+        <h1 class="h1">{{ title }}</h1>
     </div>
-    {% if active_inventory_list %}
-        <legend>Popis u toku: {{active_inventory_list.date}}</legend>
-        <a class="btn btn-primary mb-4" href="{{url_for('inventory.edit_inventory_list', inventory_id=active_inventory_list.id)}}">Unos/izmena popisnih rezultata</a>
-        <a class="btn btn-primary mb-4" href="{{url_for('inventory.compare_inventory_list', inventory_id=active_inventory_list.id)}}">Poređenje popisnih rezultata sa stanjem u sistemu</a>
+
+    {% if current_user.authorization == 'admin' %}
+    <!-- Inventory Activities Section -->
+    <section class="content-section">
+        <div class="section-header">
+        <h2 class="section-title">Inventarske aktivnosti</h2>
+        </div>
+        
+        <div class="action-buttons">
+        {% if not active_inventory_list %}
+            <a href="{{url_for('single_items.single_item_list')}}" class="btn btn-primary">
+            <i class="fas fa-boxes"></i>
+            Predmeti
+            </a>
+            <a href="{{url_for('single_items.move_select_serial')}}" class="btn btn-primary">
+            <i class="fas fa-exchange-alt"></i>
+            Premeštaj
+            </a>
+        {% else %}
+            <a href="{{url_for('single_items.single_item_list')}}" class="btn btn-primary">
+            <i class="fas fa-boxes"></i>
+            Predmeti
+            </a>
+        {% endif %}
+        </div>
+    </section>
+
+    <!-- Inventory List Section -->
+    <section class="content-section">
+        <div class="section-header">
+            <h2 class="section-title">Popisne aktivnosti</h2>
+        </div>
+
+        {% if not active_inventory_list %}
+        <div class="action-buttons">
+            {% if virtual_warehouse %}
+            <a href="{{url_for('single_items.room_single_items', room_id=1)}}" class="btn btn-primary">
+                <i class="fas fa-warehouse"></i>
+                Broj predmeta u virtuelnom magacinu: <span class="badge bg-light text-dark">{{virtual_warehouse}}</span>
+            </a>
+            <button class="btn btn-primary disabled">
+                <i class="fas fa-list-alt"></i>
+                Kreiranje popisne liste
+            </button>
+            {% else %}
+            <a href="{{url_for('inventory.create_inventory_list')}}" class="btn btn-primary">
+                <i class="fas fa-list-alt"></i>
+                Kreiranje popisne liste
+            </a>
+            {% endif %}
+        </div>
+        {% else %}
+        <div class="active-inventory">
+            <div class="inventory-status">
+                <span class="status-label">Popis u toku:</span>
+                <span class="status-date">{{active_inventory_list.date}}</span>
+            </div>
+            <div class="action-buttons">
+                <a href="{{url_for('inventory.edit_inventory_list', inventory_id=active_inventory_list.id)}}" class="btn btn-primary">
+                    <i class="fas fa-edit"></i>
+                    Unos/izmena popisnih rezultata
+                </a>
+                <a href="{{url_for('inventory.compare_inventory_list', inventory_id=active_inventory_list.id)}}" class="btn btn-primary">
+                    <i class="fas fa-tasks"></i>
+                    Poređenje popisnih rezultata
+                </a>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Inventory Overview Button -->
+        <div class="action-buttons mt-4">
+            <a href="{{url_for('inventory.read_inventory_list')}}" class="btn btn-primary">
+                <i class="fas fa-list"></i>
+                Pregled popisnih listi
+            </a>
+        </div>
+    </section>
+
+    {% else %}
+    <!-- Regular User View -->
+    <section class="content-section">
+        <div class="section-header">
+            <h2 class="section-title">Inventarske aktivnosti</h2>
+        </div>
+        <div class="action-buttons">
+            <a href="{{url_for('single_items.single_item_list')}}" class="btn btn-primary">
+                <i class="fas fa-boxes"></i>
+                Predmeti
+            </a>
+        </div>
+    </section>
+
+        {% if active_inventory_list %}
+        <section class="content-section">
+            <div class="active-inventory">
+            <div class="inventory-status">
+                <span class="status-label">Popis u toku:</span>
+                <span class="status-date">{{active_inventory_list.date}}</span>
+            </div>
+            <div class="action-buttons">
+                <a href="{{url_for('inventory.edit_inventory_list', inventory_id=active_inventory_list.id)}}" class="btn btn-primary">
+                <i class="fas fa-edit"></i>
+                Unos/izmena popisnih rezultata
+                </a>
+                <a href="{{url_for('inventory.compare_inventory_list', inventory_id=active_inventory_list.id)}}" class="btn btn-primary">
+                <i class="fas fa-tasks"></i>
+                Poređenje popisnih rezultata
+                </a>
+            </div>
+            </div>
+        </section>
+        {% endif %}
     {% endif %}
-{% endif %}
+</div>
+
 {% endblock content%}

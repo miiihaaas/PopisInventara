@@ -1,115 +1,194 @@
 {% extends "layout.html" %}
 {% block content %}
 <div class="h1">{{ title }}</div>
-<div class="row">
-    <div class="form-group mb-4 col">
-        <a class="btn btn-secondary" href="javascript:history.back()">Nazad</a>
-    </div>
-    <div class="form-group mb-4 col">
-        <legend class="form-control-label" for="item_id_to_move">ID tipa predmeta</legend>
-        <input class="form-control" name="item_id_to_move" id="item_id_to_move" value="{{item.single_item_item.id}}" readonly>
-    </div>
-    <div class="form-group mb-4 col">
-        <legend class="form-control-label" for="item_id_to_move">Tip predmeta</legend>
-        <input class="form-control" name="item_id_to_move" id="item_id_to_move" value="{{item.single_item_item.name}}" readonly>
-    </div>
-    <div class="form-group mb-4 col">
-        <legend class="form-control-label" for="item_id_to_move">Serija</legend>
-        <input class="form-control" name="item_id_to_move" id="item_id_to_move" value="{{item.serial}}" readonly>
-    </div>
-    <div class="form-group mb-4 col">
-        <legend class="form-control-label" for="item_id_to_move">Naziv predmeta iz serije</legend>
-        <input class="form-control" name="item_id_to_move" id="item_id_to_move" value="{{item.name}}" readonly>
-    </div>
-    <div class="form-group mb-4 col">
-        <legend class="form-control-label" for="item_id_to_move">Količina</legend>
-        <input class="form-control" name="item_id_to_move" id="item_id_to_move" value="{{quantity_of_single_items_in_room}}" readonly>
-    </div>
-    <div class="form-group mb-4 col">
-        <legend class="form-control-label" for="room_id_to_move">Prostorija iz koje se premešta</legend>
-        <input class="form-control" name="room_id_to_move" id="room_id_to_move" value="({{room_from.name}}) {{room_from.dynamic_name}}" readonly>
-    </div>
-</div>
-<form action="" method="post" id="moveForm">
-    <input type="hidden" name="data_to_move_from" id="data_to_move_from">
-    {% if quantity_of_single_items_in_room > 0 %}
-    <table id="data" border="1" class="table table-striped userlist">
-        <thead>
-            <tr>
-                <td>ID prostorije</td>
-                <th>Zgrada</th>
-                <th>Prostorija u koju se premešta</th>
-                <th>Serija</th>
-                <th>Količina</th>
-                <th>Naziv predmeta iz serije</th>
-                <th>Količina za prenos</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for data in data_list %}
-            {% if room_from.id != data['room_id'] %}
-            <tr>
-                <td>{{ data.room_id }}</td>
-                <td>{{ data.building }}</td>
-                <td>{{ data.room }}</td>
-                <td>{{ data.serial }}</td>
-                <td>{{ data.quantity }}</td>
-                <td>{{ data.single_item_name }}</td>
-                <td><input class="form-control" type="number" min="0" max="{{ quantity_of_single_items_in_room }}" name="quantity_to_move[{{data.serial}}]"></td>
-            </tr>
-            {% endif %}
-            {% endfor %}
-        </tbody>
-    </table>
-    <button type="submit" class="btn btn-primary" onclick="submitForm()">Premestite</button>
-    {% else %}
-    <p>U prostoriji <strong>{{room_from.dynamic_name}}</strong> nema predmeta <strong>{{item.name}}</strong>.</p>
-    {% endif %}
-</form>
 
-{% endblock content%}
+<div class="page-content">
+    <!-- Info Card -->
+    <div class="info-card card shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-auto">
+                    <a class="btn btn-secondary" href="javascript:history.back()">
+                        <i class="fa fa-arrow-left me-2"></i>Nazad
+                    </a>
+                </div>
+                
+                <div class="col-md">
+                    <label class="form-label" for="series">Serija</label>
+                    <input class="form-control-plaintext" 
+                            id="series" value="{{item.serial}}" readonly>
+                </div>
+                
+                <div class="col-md">
+                    <label class="form-label" for="item_name">Naziv predmeta</label>
+                    <input class="form-control-plaintext" 
+                            id="item_name" value="{{item.name}}" readonly>
+                </div>
+                
+                <div class="col-md">
+                    <label class="form-label" for="item_quantity">Količina</label>
+                    <input class="form-control-plaintext" 
+                            id="item_quantity" value="{{quantity_of_single_items_in_room}}" readonly>
+                </div>
+                
+                <div class="col-md">
+                    <label class="form-label" for="room_from">Prostorija iz koje se premešta</label>
+                    <input class="form-control-plaintext" 
+                            id="room_from" value="({{room_from.name}}) {{room_from.dynamic_name}}" readonly>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if quantity_of_single_items_in_room > 0 %}
+    <!-- Move Form -->
+    <form action="" method="post" id="moveForm">
+        <input type="hidden" name="data_to_move_from" id="data_to_move_from">
+        
+        <div class="table-responsive">
+            <table id="data" class="table table-striped report-table">
+                <thead>
+                    <tr>
+                        <th>ID prostorije</th>
+                        <th>Zgrada</th>
+                        <th>Prostorija (cilj)</th>
+                        <th>Serija</th>
+                        <th class="text-end">Količina</th>
+                        <th>Naziv predmeta</th>
+                        <th class="text-end">Količina za prenos</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for data in data_list %}
+                    {% if room_from.id != data['room_id'] %}
+                    <tr>
+                        <td>{{ data.room_id }}</td>
+                        <td>{{ data.building }}</td>
+                        <td>{{ data.room }}</td>
+                        <td>{{ data.serial }}</td>
+                        <td class="text-end">{{ data.quantity }}</td>
+                        <td>{{ data.single_item_name }}</td>
+                        <td>
+                            <input class="form-control form-control-sm text-end quantity-input" 
+                                    type="number" min="0" max="{{ quantity_of_single_items_in_room }}"
+                                    name="quantity_to_move[{{data.serial}}]"
+                                    placeholder="0">
+                        </td>
+                    </tr>
+                    {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="form-actions mt-4">
+            <button type="submit" class="btn btn-primary" onclick="submitForm()">
+                <i class="fa fa-exchange-alt me-2"></i>Premesti
+            </button>
+        </div>
+    </form>
+    {% else %}
+    <div class="alert alert-info">
+        <i class="fa fa-info-circle me-2"></i>
+        U prostoriji <strong>{{room_from.dynamic_name}}</strong> nema predmeta <strong>{{item.name}}</strong>.
+    </div>
+    {% endif %}
+</div>
+
+{% endblock content %}
 
 {% block scripts %}
 <script>
+$(document).ready(function() {
     $("#data").DataTable({
         order: [[1, "asc"]],
         language: {
-            url: "//cdn.datatables.net/plug-ins/1.12.1/i18n/sr-SP.json",
-            stateSave: true
+            url: "//cdn.datatables.net/plug-ins/1.12.1/i18n/sr-SP.json"
         },
-        // lengthMenu: [100, 200, 400], // Postavljanje podrazumevanih vrednosti za prikazivanje
-        paging: false, // Isključivanje paginacije
+        pageLength: 25,
+        paging: false,
+        stateSave: true,
+        responsive: true,
+        columnDefs: [
+            { className: "text-end", targets: [4,6] }
+        ]
     });
-    document.addEventListener('DOMContentLoaded', function () {
-        var form = document.getElementById('moveForm');
-        form.addEventListener('submit', function (event) {
-            event.preventDefault(); // Prevent the default form submission
+    
+    // Validacija unosa količine
+    $('.quantity-input').on('input', function() {
+        const value = parseInt($(this).val());
+        const max = parseInt($(this).attr('max'));
+        
+        if (value > max) {
+            $(this).val(max);
+        } else if (value < 0) {
+            $(this).val(0);
+        }
+    });
+});
+
+// Form submission handler
+document.addEventListener('DOMContentLoaded', function() {
+    var form = document.getElementById('moveForm');
+    form.addEventListener('submit', function(event) {
+        event.preventDefault();
+        
+        var formData = [];
+        var table = document.getElementById('data');
+        var rows = table.getElementsByTagName('tr');
+        
+        for (var i = 1; i < rows.length; i++) {
+            var row = rows[i];
+            var inputs = row.getElementsByTagName('input');
             
-            var formData = [];
-            var table = document.getElementById('data');
-            var rows = table.getElementsByTagName('tr');
-            
-            for (var i = 1; i < rows.length; i++) { // Skipping the header row
-                var row = rows[i];
-                var inputs = row.getElementsByTagName('input');
-                
-                var room_id = row.cells[0].innerText; // Assuming the room_id is in the 1st cell
-                var serial = row.cells[3].innerText; // Assuming the serial is in the third cell
-                var quantity_to_move_from = inputs[0].value;
-                
+            if (inputs[0].value && inputs[0].value > 0) {
                 formData.push({
-                    'room_id': room_id,
-                    'serial': serial,
-                    'quantity_to_move_from': quantity_to_move_from
+                    'room_id': row.cells[0].innerText,
+                    'serial': row.cells[3].innerText,
+                    'quantity_to_move_from': inputs[0].value
                 });
             }
-            
-            // Set the JSON data in the hidden input field
-            document.getElementById('data_to_move_from').value = JSON.stringify(formData);
-            
-            // Submit the form
-            form.submit();
-        });
+        }
+        
+        if (formData.length === 0) {
+            alert('Molimo unesite količinu za prenos.');
+            return;
+        }
+        
+        document.getElementById('data_to_move_from').value = JSON.stringify(formData);
+        form.submit();
     });
+});
 </script>
+
+<style>
+.form-control-plaintext {
+   padding: 0.375rem 0;
+   font-weight: 500;
+   color: var(--color-text);
+}
+
+.form-label {
+   font-size: 0.875rem;
+   color: var(--color-text-light);
+   margin-bottom: 0.25rem;
+}
+
+.quantity-input {
+   min-width: 80px;
+   text-align: right;
+}
+
+.quantity-input::-webkit-inner-spin-button,
+.quantity-input::-webkit-outer-spin-button {
+   opacity: 1;
+}
+
+.alert {
+   border-radius: 8px;
+   border: none;
+   background-color: rgba(13, 202, 240, 0.1);
+   color: var(--color-text);
+}
+</style>
 {% endblock %}
