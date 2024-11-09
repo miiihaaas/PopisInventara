@@ -49,7 +49,7 @@ def create_inventory_list():
     # all_room_list = Room.query.all()
     # rooms = [room for room in all_room_list if room.id not in [1, 2, 4]]
     # Kompletnija query sa filtriranjem u samom upitu
-    rooms_data = db.session.query(Room).options(
+    rooms = db.session.query(Room).options(
         joinedload(Room.building)
     ).filter(
         Room.id.notin_([1, 2, 4])
@@ -59,11 +59,11 @@ def create_inventory_list():
     ).all()
     # Debug ispis
     print("\n=== DEBUG BEFORE TEMPLATE ===")
-    print(f"Number of rooms: {len(rooms_data)}")
-    print("Room IDs:", [r.id for r in rooms_data])
-    print("Room Names:", [r.name for r in rooms_data])
-    print("Building IDs:", [r.building_id for r in rooms_data])
-    print("Building Names:", [r.building.name if r.building else 'None' for r in rooms_data])
+    print(f"Number of rooms: {len(rooms)}")
+    print("Room IDs:", [r.id for r in rooms])
+    print("Room Names:", [r.name for r in rooms])
+    print("Building IDs:", [r.building_id for r in rooms])
+    print("Building Names:", [r.building.name if r.building else 'None' for r in rooms])
     print("========================\n")
     
     users = User.query.filter_by(authorization='user').all()
@@ -109,7 +109,7 @@ def create_inventory_list():
         
         # Kreiranje inventory_initial_data sa novom strukturom
         inventory_initial_data = []
-        for room in rooms_data:
+        for room in rooms:
             room_id = room.id
             user_id = [int(u_id) for (r_id, u_id) in room_user_ids if r_id == str(room_id)][0]
             single_items_in_room = SingleItem.query.filter_by(room_id=room_id).all()
@@ -205,7 +205,7 @@ def create_inventory_list():
         
         flash('Popis inventara je uspešno kreiran.', 'success')
         return redirect(url_for('main.home'))
-    print(f'last debug on GET: {[type(room) for room in rooms_data]=}')
+    print(f'last debug on GET: {[type(room) for room in rooms]=}')
     # return render_template('create_inventory_list.html',
     #                         title="Kreiranje popisne liste",
     #                         route_name=route_name,
@@ -215,12 +215,12 @@ def create_inventory_list():
     #                         inventory_at_the_end_of_last_year=inventory_at_the_end_of_last_year,
     #                         inventory_at_the_end_of_current_year=inventory_at_the_end_of_current_year)
     # Dodajte provjeru da li rooms lista ostaje ista
-    original_rooms = rooms_data.copy()
+    original_rooms = rooms.copy()
     
     result = render_template('create_inventory_list.html',
                          title="Kreiranje popisne liste",
                          route_name=route_name,
-                         rooms_data=rooms_data,
+                         rooms=rooms,
                          users=users,
                          years=years,
                          inventory_at_the_end_of_last_year=inventory_at_the_end_of_last_year,
@@ -229,7 +229,7 @@ def create_inventory_list():
     # Provjera nakon renderovanja
     print("\n=== DEBUG AFTER TEMPLATE ===")
     print(f"Original rooms count: {len(original_rooms)}")
-    print(f"Current rooms count: {len(rooms_data)}")
+    print(f"Current rooms count: {len(rooms)}")
     print("========================\n")
     
     return result

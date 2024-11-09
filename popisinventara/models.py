@@ -2,7 +2,11 @@ from popisinventara import app, db, login_manager
 from flask_login import UserMixin
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.dialects.mysql import LONGTEXT
+# Provera da li je MySQL ili SQLite
+is_sqlite = 'sqlite' in app.config['SQLALCHEMY_DATABASE_URI']
+
+if not is_sqlite:
+    from sqlalchemy.dialects.mysql import LONGTEXT
 
 
 @login_manager.user_loader
@@ -217,8 +221,15 @@ class Inventory(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     description = db.Column(db.String(500), nullable=False)
     date = db.Column(db.Date, nullable=False)
-    initial_data = db.Column(LONGTEXT, nullable=False)
-    working_data = db.Column(LONGTEXT, nullable=False)
+    
+    # Uslovni tip kolone zavisno od baze
+    if is_sqlite:
+        initial_data = db.Column(db.Text, nullable=False)
+        working_data = db.Column(db.Text, nullable=False)
+    else:
+        initial_data = db.Column(LONGTEXT, nullable=False)
+        working_data = db.Column(LONGTEXT, nullable=False)
+        
     status = db.Column(db.String(20), nullable=False)
 
     def __repr__(self):

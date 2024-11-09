@@ -71,13 +71,13 @@
                       <!-- <a class="dropdown-item {{ 'active' if request.endpoint in ['single_items.room_single_items'] }}" href="{{url_for('single_items.room_single_items', room_id=1)}}">Virtuelni magacin</a>
                       <a class="dropdown-item {{ 'active' if request.endpoint in ['single_items.room_single_items'] }}" href="{{url_for('single_items.room_single_items', room_id=2)}}">Magacin rashodovanih predmeta</a>
                       <a class="dropdown-item {{ 'active' if request.endpoint in ['single_items.room_single_items'] }}" href="{{url_for('single_items.room_single_items', room_id=3)}}">Magacin reversa</a> -->
-                      {% set rooms = [
+                      {% set rooms_menu = [
                           {'id': 1, 'name': 'Virtuelni magacin'},
                           {'id': 2, 'name': 'Magacin rashodovanih predmeta'},
                           {'id': 3, 'name': 'Magacin reversa'}
                       ] %}
                       
-                      {% for room in rooms %}
+                      {% for room in rooms_menu %}
                           <a class="dropdown-item {{ 'active' if request.endpoint == 'single_items.room_single_items' and request.view_args.get('room_id') == room.id }}" 
                             href="{{ url_for('single_items.room_single_items', room_id=room.id) }}">
                             {{ room.name }}
