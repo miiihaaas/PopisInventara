@@ -130,17 +130,6 @@
                                         {% endfor %}
                                     </select>
                                 </td>
-                                <td>
-                                    <!-- Debug info -->
-                                    <small style="color: red;">
-                                        Room Type: {{ room.__class__.__name__ if not room is mapping else 'dict' }}<br>
-                                        Has Building: {{ 'Yes' if room.building else 'No' }}<br>
-                                        Building Type: {{ room.building.__class__.__name__ if room.building else 'None' }}
-                                    </small>
-                                    
-                                    <input type="text" class="form-control-plaintext" 
-                                           value="{{ room.building.name if room.building else 'No Building' }}" disabled>
-                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
