@@ -10,6 +10,7 @@ from popisinventara.models import Inventory, Room, School, SingleItem, Item, Use
 from popisinventara.inventory.functions import popisna_lista_gen, popisne_liste_gen
 from popisinventara.reports.functions import write_off_until_current_year
 from popisinventara.single_items.functions import current_price_calculation
+from sqlalchemy.orm import joinedload
 
 
 inventory = Blueprint('inventory', __name__)
@@ -45,8 +46,26 @@ def create_inventory_list():
     
     route_name = request.endpoint
     
-    all_room_list = Room.query.all()
-    rooms = [room for room in all_room_list if room.id not in [1, 2, 4]]
+    # all_room_list = Room.query.all()
+    # rooms = [room for room in all_room_list if room.id not in [1, 2, 4]]
+    # Kompletnija query sa filtriranjem u samom upitu
+    rooms_data = db.session.query(Room).options(
+        joinedload(Room.building)
+    ).filter(
+        Room.id.notin_([1, 2, 4])
+    ).order_by(
+        Room.building_id,
+        Room.name
+    ).all()
+    # Debug ispis
+    print("\n=== DEBUG BEFORE TEMPLATE ===")
+    print(f"Number of rooms: {len(rooms_data)}")
+    print("Room IDs:", [r.id for r in rooms_data])
+    print("Room Names:", [r.name for r in rooms_data])
+    print("Building IDs:", [r.building_id for r in rooms_data])
+    print("Building Names:", [r.building.name if r.building else 'None' for r in rooms_data])
+    print("========================\n")
+    
     users = User.query.filter_by(authorization='user').all()
     
     this_year = date.today().year
@@ -90,7 +109,7 @@ def create_inventory_list():
         
         # Kreiranje inventory_initial_data sa novom strukturom
         inventory_initial_data = []
-        for room in rooms:
+        for room in rooms_data:
             room_id = room.id
             user_id = [int(u_id) for (r_id, u_id) in room_user_ids if r_id == str(room_id)][0]
             single_items_in_room = SingleItem.query.filter_by(room_id=room_id).all()
@@ -186,15 +205,34 @@ def create_inventory_list():
         
         flash('Popis inventara je uspešno kreiran.', 'success')
         return redirect(url_for('main.home'))
-        
-    return render_template('create_inventory_list.html',
-                            title="Kreiranje popisne liste",
-                            route_name=route_name,
-                            rooms=rooms,
-                            users=users,
-                            years=years,
-                            inventory_at_the_end_of_last_year=inventory_at_the_end_of_last_year,
-                            inventory_at_the_end_of_current_year=inventory_at_the_end_of_current_year)
+    print(f'last debug on GET: {[type(room) for room in rooms_data]=}')
+    # return render_template('create_inventory_list.html',
+    #                         title="Kreiranje popisne liste",
+    #                         route_name=route_name,
+    #                         rooms=rooms,
+    #                         users=users,
+    #                         years=years,
+    #                         inventory_at_the_end_of_last_year=inventory_at_the_end_of_last_year,
+    #                         inventory_at_the_end_of_current_year=inventory_at_the_end_of_current_year)
+    # Dodajte provjeru da li rooms lista ostaje ista
+    original_rooms = rooms_data.copy()
+    
+    result = render_template('create_inventory_list.html',
+                         title="Kreiranje popisne liste",
+                         route_name=route_name,
+                         rooms_data=rooms_data,
+                         users=users,
+                         years=years,
+                         inventory_at_the_end_of_last_year=inventory_at_the_end_of_last_year,
+                         inventory_at_the_end_of_current_year=inventory_at_the_end_of_current_year)
+                         
+    # Provjera nakon renderovanja
+    print("\n=== DEBUG AFTER TEMPLATE ===")
+    print(f"Original rooms count: {len(original_rooms)}")
+    print(f"Current rooms count: {len(rooms_data)}")
+    print("========================\n")
+    
+    return result
 
 @inventory.route('/edit_inventory_list/<int:inventory_id>', methods=['GET', 'POST'])
 def edit_inventory_list(inventory_id):
@@ -393,67 +431,67 @@ def edit_inventory_list(inventory_id):
         inventory=inventory
     )
 
-def _get_room_inventory_status(room_id, inventory_data):
-    """
-    Određuje status popisa za datu prostoriju.
-    """
-    for room_data in inventory_data['inventory']:
-        if room_data['room_id'] == room_id:
-            total_items = len(room_data['items'])
-            items_counted = sum(1 for item in room_data['items'] if item['quantity_input'] > 0)
+# def _get_room_inventory_status(room_id, inventory_data):
+#     """
+#     Određuje status popisa za datu prostoriju.
+#     """
+#     for room_data in inventory_data['inventory']:
+#         if room_data['room_id'] == room_id:
+#             total_items = len(room_data['items'])
+#             items_counted = sum(1 for item in room_data['items'] if item['quantity_input'] > 0)
             
-            if total_items == 0:
-                return {
-                    'status': 'empty',
-                    'label': 'Prazna prostorija',
-                    'color': 'secondary'
-                }
-            elif items_counted == 0:
-                return {
-                    'status': 'not_started',
-                    'label': 'Nije započeto',
-                    'color': 'danger'
-                }
-            elif items_counted < total_items:
-                return {
-                    'status': 'in_progress',
-                    'label': f'U toku ({items_counted}/{total_items})',
-                    'color': 'warning'
-                }
-            else:
-                return {
-                    'status': 'completed',
-                    'label': 'Završeno',
-                    'color': 'success'
-                }
-    return {
-        'status': 'error',
-        'label': 'Greška',
-        'color': 'danger'
-    }
+#             if total_items == 0:
+#                 return {
+#                     'status': 'empty',
+#                     'label': 'Prazna prostorija',
+#                     'color': 'secondary'
+#                 }
+#             elif items_counted == 0:
+#                 return {
+#                     'status': 'not_started',
+#                     'label': 'Nije započeto',
+#                     'color': 'danger'
+#                 }
+#             elif items_counted < total_items:
+#                 return {
+#                     'status': 'in_progress',
+#                     'label': f'U toku ({items_counted}/{total_items})',
+#                     'color': 'warning'
+#                 }
+#             else:
+#                 return {
+#                     'status': 'completed',
+#                     'label': 'Završeno',
+#                     'color': 'success'
+#                 }
+#     return {
+#         'status': 'error',
+#         'label': 'Greška',
+#         'color': 'danger'
+#     }
 
-def _calculate_inventory_stats(inventory_data, room_buttons):
-    """
-    Izračunava statistiku popisa.
-    """
-    total_rooms = len(room_buttons)
-    completed_rooms = sum(1 for room in room_buttons 
-                         if room['status']['status'] == 'completed')
-    in_progress_rooms = sum(1 for room in room_buttons 
-                           if room['status']['status'] == 'in_progress')
-    not_started_rooms = sum(1 for room in room_buttons 
-                           if room['status']['status'] == 'not_started')
-    empty_rooms = sum(1 for room in room_buttons 
-                     if room['status']['status'] == 'empty')
+# def _calculate_inventory_stats(inventory_data, room_buttons):
+#     """
+#     Izračunava statistiku popisa.
+#     """
+#     total_rooms = len(room_buttons)
+#     completed_rooms = sum(1 for room in room_buttons 
+#                          if room['status']['status'] == 'completed')
+#     in_progress_rooms = sum(1 for room in room_buttons 
+#                            if room['status']['status'] == 'in_progress')
+#     not_started_rooms = sum(1 for room in room_buttons 
+#                            if room['status']['status'] == 'not_started')
+#     empty_rooms = sum(1 for room in room_buttons 
+#                      if room['status']['status'] == 'empty')
 
-    return {
-        'total_rooms': total_rooms,
-        'completed_rooms': completed_rooms,
-        'in_progress_rooms': in_progress_rooms,
-        'not_started_rooms': not_started_rooms,
-        'empty_rooms': empty_rooms,
-        'completion_percentage': (completed_rooms / total_rooms * 100) if total_rooms > 0 else 0
-    }
+#     return {
+#         'total_rooms': total_rooms,
+#         'completed_rooms': completed_rooms,
+#         'in_progress_rooms': in_progress_rooms,
+#         'not_started_rooms': not_started_rooms,
+#         'empty_rooms': empty_rooms,
+#         'completion_percentage': (completed_rooms / total_rooms * 100) if total_rooms > 0 else 0
+#     }
 
 
 @inventory.route('/edit_inventory_list/<int:inventory_id>/<int:room_id>', methods=['GET', 'POST'])

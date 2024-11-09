@@ -1,29 +1,6 @@
 {% extends "layout.html" %}
 {% block content %}
 
-<!-- Debug info -->
-<div >
-    <h4>Debug Info:</h4>
-    {% with %}
-        {% set first_room = rooms[0] %}
-        <p>Type: {{ first_room.__class__.__name__ if first_room.__class__ is defined else 'No class' }}</p>
-        <p>Has building: {{ first_room.building is defined }}</p>
-        <p>Is dict: {{ first_room is mapping }}</p>
-        <p>Dict contents: {{ first_room | tojson }}</p>
-        <p>{{first_room}}</p>
-    {% endwith %}
-</div>
-<div >
-    <h4>Debug Info:</h4>
-    {% with %}
-        {% set first_building = buildings[0] %}
-        <p>Type: {{ first_building.__class__.__name__ if first_building.__class__ is defined else 'No class' }}</p>
-        <p>Has building: {{ first_building.building is defined }}</p>
-        <p>Is dict: {{ first_building is mapping }}</p>
-        <p>{{first_building}}</p>
-    {% endwith %}
-</div>
-
 <div class="h1">{{ legend }}</div>
 <ul class="nav nav-tabs justify-content-center mb-4" id="myTab" role="tablist">
     <li class="nav-item" role="presentation">
@@ -126,7 +103,7 @@
                 </tr>
             </thead>
             <tbody>
-                {% for room in rooms %}
+                {% for room in rooms_data %}
                 <tr>
                     <td>{{ room.building.name if room.building else 'Nema zgrade' }}</td>
                     <td>{{ room.building.city if room.building else 'Nema zgrade' }}</td>

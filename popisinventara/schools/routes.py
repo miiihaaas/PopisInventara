@@ -96,11 +96,11 @@ def buildings_rooms():
     active_inventory_list = Inventory.query.filter_by(status='active').first()
     school = School.query.get_or_404(1)
     buildings = Building.query.filter_by(school_id=1).all()
-    rooms = Room.query.all()
-    for room in rooms:
+    rooms_data = Room.query.all()
+    for room in rooms_data:
         print(f'{type(room)=}')
         print(f'{room.building.name=}')
-    print(f'debug {rooms=} {type(rooms)=}')
+    print(f'debug {rooms_data=} {type(rooms_data)=}')
     building_form = AddNewBuildingForm()
     room_form = AddNewRoomForm()
     room_form.building_id.choices = [(building.id, building.name) for building in buildings]
@@ -111,7 +111,7 @@ def buildings_rooms():
                             building_form=building_form,
                             room_form=room_form,
                             buildings=buildings,
-                            rooms=rooms,
+                            rooms_data=rooms_data,
                             school=school,
                             active_inventory_list=active_inventory_list)
 

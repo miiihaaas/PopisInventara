@@ -103,23 +103,23 @@
                             </tr>
                         </thead>
                         <tbody>
-                            {% for room in rooms %}
+                            {% for room in rooms_data %}
                             <tr>
                                 <td>
                                     <input type="checkbox" class="form-check-input room-select" 
-                                           data-room-id="{{room.id}}">
+                                           data-room-id="{{ room.id }}">
                                 </td>
                                 <td>
                                     <input type="text" class="form-control-plaintext" 
-                                           value="{{room.id}}" name="room_id[]" readonly>
+                                           value="{{ room.id }}" name="room_id[]" readonly>
                                 </td>
                                 <td>
                                     <input type="text" class="form-control-plaintext" 
-                                           value="{{room.building.name}}" disabled>
+                                           value="{{ room.building.name if room.building else '' }}" disabled>
                                 </td>
                                 <td>
                                     <input type="text" class="form-control-plaintext" 
-                                           value="{{room.dynamic_name}}" disabled>
+                                           value="{{ room.dynamic_name }}" disabled>
                                 </td>
                                 <td>
                                     <select class="form-select user-select" name="user_id[]" 
@@ -129,6 +129,17 @@
                                         <option value="{{user.id}}">{{ user.name }} {{ user.surname }}</option>
                                         {% endfor %}
                                     </select>
+                                </td>
+                                <td>
+                                    <!-- Debug info -->
+                                    <small style="color: red;">
+                                        Room Type: {{ room.__class__.__name__ if not room is mapping else 'dict' }}<br>
+                                        Has Building: {{ 'Yes' if room.building else 'No' }}<br>
+                                        Building Type: {{ room.building.__class__.__name__ if room.building else 'None' }}
+                                    </small>
+                                    
+                                    <input type="text" class="form-control-plaintext" 
+                                           value="{{ room.building.name if room.building else 'No Building' }}" disabled>
                                 </td>
                             </tr>
                             {% endfor %}
