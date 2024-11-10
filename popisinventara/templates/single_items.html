@@ -150,11 +150,11 @@
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label class="form-control-label" for="add_single_item_initial_price">
+                                <label class="form-control-label" for="add_single_item_total_initial_price">
                                     <i class="fa fa-money-bill me-2"></i>Nabavna cena (svih predmeta)
                                 </label>
-                                <input class="form-control" type="number" id="add_single_item_initial_price" 
-                                       name="add_single_item_initial_price" step="0.01" inputmode="decimal" 
+                                <input class="form-control" type="number" id="add_single_item_total_initial_price" 
+                                       name="add_single_item_total_initial_price" step="0.01" inputmode="decimal" 
                                        placeholder="0.00" required>
                             </div>
                         </div>
@@ -299,12 +299,12 @@
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label class="form-control-label" for="edit_single_item_initial_price">
+                                <label class="form-control-label" for="edit_single_item_total_initial_price">
                                     <i class="fa fa-money-bill me-2"></i>Nabavna cena (svih predmeta)
                                 </label>
                                 <input class="form-control" type="number" 
-                                       id="edit_single_item_initial_price" 
-                                       name="edit_single_item_initial_price" 
+                                       id="edit_single_item_total_initial_price" 
+                                       name="edit_single_item_total_initial_price" 
                                        step="0.01" inputmode="decimal" 
                                        placeholder="0.00" required>
                             </div>
@@ -1016,10 +1016,10 @@
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                         <i class="fa fa-times me-2"></i>Otkažite
                     </button>
-                    <button type="submit" class="btn btn-success" name="action" value="print_reverse">
+                    <button type="submit" class="btn btn-primary" name="action" value="print_reverse">
                         <i class="fa fa-print me-2"></i>Štampa reversa
                     </button>
-                    <button type="submit" class="btn btn-primary" name="action" value="return_reverse">
+                    <button type="submit" class="btn btn-danger" name="action" value="return_reverse">
                         <i class="fa fa-file-circle-check me-2"></i>Povraćaj reversa
                     </button>
                 </div>
@@ -1203,7 +1203,7 @@
         $("#edit_single_item_depreciation_rate_id").val(singleItemDepreciationRateId).trigger("change");
         document.getElementById("edit_single_item_name").value = singleItemName;
         document.getElementById("edit_single_item_quantity").value = singleItemQuantity;
-        document.getElementById("edit_single_item_initial_price").value = singleItemInitialPrice;
+        document.getElementById("edit_single_item_total_initial_price").value = singleItemInitialPrice;
         document.getElementById("edit_single_item_date").value = formattedDate;
         document.getElementById("edit_single_item_supplier").value = singleItemSupplier;
         document.getElementById("edit_single_item_invoice_number").value = singleItemInvoiceNumber;
@@ -1216,7 +1216,7 @@
             document.getElementById("edit_single_item_depreciation_rate_id").disabled = true;
             document.getElementById("edit_single_item_name").disabled = true;
             document.getElementById("edit_single_item_quantity").disabled = true;
-            document.getElementById("edit_single_item_initial_price").disabled = true;
+            document.getElementById("edit_single_item_total_initial_price").disabled = true;
             document.getElementById("edit_single_item_date").disabled = true;
             document.getElementById("edit_single_item_supplier").disabled = true;
             document.getElementById("edit_single_item_invoice_number").disabled = true;
@@ -1227,7 +1227,7 @@
             document.getElementById("edit_single_item_depreciation_rate_id").disabled = false;
             document.getElementById("edit_single_item_name").disabled = false;
             document.getElementById("edit_single_item_quantity").disabled = false;
-            document.getElementById("edit_single_item_initial_price").disabled = false;
+            document.getElementById("edit_single_item_total_initial_price").disabled = false;
             document.getElementById("edit_single_item_date").disabled = false;
             document.getElementById("edit_single_item_supplier").disabled = false;
             document.getElementById("edit_single_item_invoice_number").disabled = false;
