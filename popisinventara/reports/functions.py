@@ -207,7 +207,7 @@ font_path_B = os.path.join(project_folder, 'static', 'fonts', 'DejaVuSansCondens
 #             self.cell(190/2, 7, f'JBKJS: {school.jbkjs}', new_x='LMARGIN', new_y='NEXT', align='R', border=0)
 #             self.cell(190/2, 7, f'{school.zip_code} {school.city}, {school.municipality}', new_x='LMARGIN', new_y='NEXT', align='L', border=0)
 #             self.set_font('DejaVuSansCondensed', 'B', 14)
-#             self.cell(0, 10, f'Rekapitulacija novih nabavki po kontu - datum popisa: {inventory.date.strftime("%d.%m.%Y.")}', new_x='LMARGIN', new_y='NEXT', align='C', border=0)
+#             self.cell(0, 10, f'Izveštaj o novim nabavkama po kontu po kontu - datum popisa: {inventory.date.strftime("%d.%m.%Y.")}', new_x='LMARGIN', new_y='NEXT', align='C', border=0)
 #             self.set_font('DejaVuSansCondensed', '', 8)
 #             self.set_fill_color(211, 211, 211)
 #             self.cell(12, 6, f'Konto', new_y='LAST', align='C', border=1, fill=True)
@@ -249,9 +249,9 @@ font_path_B = os.path.join(project_folder, 'static', 'fonts', 'DejaVuSansCondens
 #             self.cell(270/2, 7, f'{school.zip_code} {school.city}, {school.municipality}', new_x='LMARGIN', new_y='NEXT', align='L', border=0)
 #             self.set_font('DejaVuSansCondensed', 'B', 14)
 #             if report_type == 'new_purchases_item': 
-#                 self.cell(0, 10, f'Rekapitulacija nabavljenih predmeta po kontu - datum popisa: {inventory.date.strftime("%d.%m.%Y.")}', new_x='LMARGIN', new_y='NEXT', align='C', border=0)
+#                 self.cell(0, 10, f'Izveštaj o novim nabavkama po kontu i predmetu po kontu - datum popisa: {inventory.date.strftime("%d.%m.%Y.")}', new_x='LMARGIN', new_y='NEXT', align='C', border=0)
 #             else:
-#                 self.cell(0, 10, f'Rekapitulacija rashodovanih predmeta po kontu - datum popisa: {inventory.date.strftime("%d.%m.%Y.")}', new_x='LMARGIN', new_y='NEXT', align='C', border=0)
+#                 self.cell(0, 10, f'Izveštaj o isknjiženim stavkama po kontu i predmetu po kontu - datum popisa: {inventory.date.strftime("%d.%m.%Y.")}', new_x='LMARGIN', new_y='NEXT', align='C', border=0)
 #             self.set_font('DejaVuSansCondensed', '', 8)
 #             self.set_fill_color(211, 211, 211)
 #             self.cell(12, 6, f'Konto', new_y='LAST', align='C', border=1, fill=True)
@@ -469,8 +469,8 @@ class CategoryReportPDF(BaseReportPDF):
         """Određuje naslov izveštaja na osnovu tipa."""
         titles = {
             'basic': 'Izveštaj po kontima',
-            'expediture': 'Rekapitulacija rashoda po kontima',
-            'new_purchases': 'Rekapitulacija novih nabavki po kontima'
+            'expediture': 'Izveštaj o isknjiženim stavkama po kontu',
+            'new_purchases': 'Izveštaj o novim nabavkama po kontu'
         }
         return titles.get(report_type, 'Izveštaj po kontima')
 
@@ -781,8 +781,8 @@ class ItemReportPDF(BaseReportPDF):
     def _get_title(self, report_type):
         """Određuje naslov izveštaja na osnovu tipa."""
         titles = {
-            'expediture_item': 'Rekapitulacija rashodovanih predmeta po kontima',
-            'new_purchases_item': 'Rekapitulacija nabavljenih predmeta po kontima'
+            'expediture_item': 'izveštaj o isknjiženim stavkama po kontu i predmetu',
+            'new_purchases_item': 'Izveštaj o novim nabavkama po kontu i predmetu po kontima'
         }
         return titles.get(report_type, 'Rekapitulacija predmeta po kontima')
 

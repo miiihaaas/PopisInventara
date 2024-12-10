@@ -14,37 +14,43 @@
         </a>
         
         {% if inventory_id %}
-        <div class="btn-group report-dropdown">
+        <div class="dropdown">
             <button type="button" class="btn btn-danger dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
                 <i class="fa fa-list me-2"></i>Ostali izveštaji
             </button>
-            <ul class="dropdown-menu">
-                <li><a class="dropdown-item" href="{{ url_for('reports.category_reports_expediture', inventory_id=inventory_id) }}">
-                    <i class="fa fa-chart-bar me-2"></i>Rekapitulacija rashoda po kontima
-                </a></li>
-                <li><a class="dropdown-item" href="{{ url_for('reports.category_reports_expediture_item', inventory_id=inventory_id) }}">
-                    <i class="fa fa-file-invoice me-2"></i>Rekapitulacija rashodovanih predmeta
-                </a></li>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li class="dropdown-header">Isknjiženja</li>
+                <li>
+                    <a class="dropdown-item" href="{{ url_for('reports.category_reports_expediture', inventory_id=inventory_id) }}">
+                        <i class="fa fa-chart-bar me-2"></i>Izveštaj po kontu
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item" href="{{ url_for('reports.category_reports_expediture_item', inventory_id=inventory_id) }}">
+                        <i class="fa fa-file-invoice me-2"></i>Izveštaj po kontu i predmetu
+                    </a>
+                </li>
                 <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item" href="{{ url_for('reports.category_reports_new_purchases_past', inventory_id=inventory_id) }}">
-                    <i class="fa fa-shopping-cart me-2"></i>Rekapitulacija novih nabavki
-                </a></li>
-                <li><a class="dropdown-item" href="{{ url_for('reports.category_reports_new_purchases_item', inventory_id=inventory_id) }}">
-                    <i class="fa fa-list-ul me-2"></i>Rekapitulacija nabavljenih predmeta
-                </a></li>
+                <li class="dropdown-header">Nove nabavke</li>
+                <li>
+                    <a class="dropdown-item" href="{{ url_for('reports.category_reports_new_purchases_past', inventory_id=inventory_id) }}">
+                        <i class="fa fa-shopping-cart me-2"></i>Izveštaj po kontu
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item" href="{{ url_for('reports.category_reports_new_purchases_item', inventory_id=inventory_id) }}">
+                        <i class="fa fa-list-ul me-2"></i>Izveštaj po kontu i predmetu
+                    </a>
+                </li>
                 <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item" href="#">
-                    <i class="fa fa-calculator me-2"></i>Obračun amortizacije
-                </a></li>
-                <li><a class="dropdown-item" href="#">
-                    <i class="fa fa-table me-2"></i>Rekapitulacija amortizacije
-                </a></li>
                 <li><a class="dropdown-item" href="{{ url_for('reports.single_item_working', inventory_id=inventory_id) }}">
-                    <i class="fa fa-boxes me-2"></i>Stanje inventara
-                </a></li>
+                        <i class="fa fa-boxes me-2"></i>Stanje inventara
+                    </a>
+                </li>
                 <li><a class="dropdown-item" href="{{ url_for('reports.category_reports_past', inventory_id=inventory_id) }}">
-                    <i class="fa fa-folder me-2"></i>Izveštaj po kontima
-                </a></li>
+                        <i class="fa fa-folder me-2"></i>Izveštaj po kontima
+                    </a>
+                </li>
             </ul>
         </div>
         {% endif %}
@@ -58,10 +64,10 @@
             <tr>
                 <th>Konto</th>
                 <th class="numeric">Nabavna vrednost</th>
-                <th class="numeric">Otpis do tekuće godine</th>
-                <th class="numeric">Otpis u tekućoj godini</th>
+                <th class="numeric">Otpis do {{inventory_year}} godine</th>
+                <th class="numeric">Otpis u {{inventory_year}} godini</th>
                 <th class="numeric">Ukupan otpis</th>
-                <th class="numeric">Vrednost na kraju godine</th>
+                <th class="numeric">Vrednost na kraju {{inventory_year}} godine</th>
                 <th class="numeric">Količina</th>
             </tr>
         </thead>

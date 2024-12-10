@@ -1,7 +1,7 @@
 from datetime import datetime
 from decimal import Decimal
 import json
-from flask import Blueprint
+from flask import Blueprint, request
 from popisinventara.models import Inventory, Room, SingleItem
 from popisinventara.reports.functions import write_off_until_current_year, category_reports_past_pdf, category_reports_expediture_pdf, category_reports_item_pdf, category_reports_new_purchases_pdf, serial_reports_pdf
 from flask import render_template
@@ -68,6 +68,7 @@ def category_reports():
     
     return render_template('category_reports.html', 
                             data=data,
+                            inventory_year=datetime.now().year,
                             title='Izveštaj po kontima',
                             legend='Izveštaj po kontima')
 
@@ -147,19 +148,23 @@ def category_reports_past(inventory_id):
                             data=data,
                             totals=totals,
                             inventory_id=inventory_id,
+                            inventory_year=inventory.date.year,
                             title='Izveštaj po kontima',
                             legend=f'Izveštaj po kontima - popis {inventory.date}')
+
 
 @reports.route('/category_reports_expediture/<int:inventory_id>')
 def category_reports_expediture(inventory_id):
     """
     Generiše izveštaj o rashodovanim predmetima grupisano po kategorijama (kontima).
-    Prikazuje samo predmete koji su rashodovani u godini popisa.
+    Prikazuje predmete koji su rashodovani u godini popisa, kao i predmete kod kojih
+    je utvrđen manjak (razlika između stvarnog stanja i popisanog stanja).
     """
     inventory = Inventory.query.get_or_404(inventory_id)
     inventory_year = inventory.date.year
     inventory_data = json.loads(inventory.working_data)
     single_items = inventory_data.get('single_items', [])
+    inventory_rooms = inventory_data.get('inventory', [])
     
     data = []
     category_list = []
@@ -167,56 +172,98 @@ def category_reports_expediture(inventory_id):
     # Debug ispis
     print(f"Processing {len(single_items)} items for inventory year {inventory_year}")
     
+    # Kreiramo mapu stvarnog stanja po serijskom broju
+    actual_quantities = {}
     for single_item in single_items:
-        # Provera da li predmet ima datum rashoda
-        expediture_date_str = single_item.get('expediture_date')
-        if not expediture_date_str:
-            continue
-            
-        try:
-            expediture_date = datetime.strptime(expediture_date_str, '%Y-%m-%d')
-            expediture_year = expediture_date.year
-            
-            # Proveravamo da li je rashod izvršen u godini popisa
-            if expediture_year != inventory_year:
-                continue
-                
-            category_number = single_item.get('category_number')
-            if not category_number:
-                print(f"Missing category for item {single_item.get('name')}")
-                continue
-                
-            print(f"Processing expediture item with category {category_number}")
-            
-            if category_number not in category_list:
-                category_list.append(category_number)
-                new_record = {
-                    'category': category_number,
-                    'initial_price': Decimal(str(single_item['initial_price'])),
-                    'write_off_until_current_year': Decimal(str(single_item['write_off_until_current_year'])),
-                    'depreciation_per_year': Decimal(str(single_item['depreciation_per_year'])),
-                    'price_at_end_of_year': Decimal(str(single_item['price_at_end_of_year'])),
-                    'current_price': Decimal(str(single_item['current_price'])),
-                    'quantity': 1
-                }
-                data.append(new_record)
+        serial = str(single_item.get('serial'))
+        if serial not in actual_quantities:
+            actual_quantities[serial] = {
+                'quantity': 1,
+                'item_data': single_item
+            }
+        else:
+            actual_quantities[serial]['quantity'] += 1
+
+    # Kreiramo mapu popisanih količina po serijskom broju
+    counted_quantities = {}
+    for room in inventory_rooms:
+        for item in room['items']:
+            serial = str(item.get('serial'))
+            quantity_input = int(item.get('quantity_input', 0))
+            if serial not in counted_quantities:
+                counted_quantities[serial] = quantity_input
             else:
-                for record in data:
-                    if record['category'] == category_number:
-                        record['initial_price'] += Decimal(str(single_item['initial_price']))
-                        record['current_price'] += Decimal(str(single_item['current_price']))
-                        record['write_off_until_current_year'] += Decimal(str(single_item['write_off_until_current_year']))
-                        record['depreciation_per_year'] += Decimal(str(single_item['depreciation_per_year']))
-                        record['price_at_end_of_year'] += Decimal(str(single_item['price_at_end_of_year']))
-                        record['quantity'] += 1
-                        break
-                        
-        except (ValueError, TypeError) as e:
-            print(f"Error processing date {expediture_date_str}: {e}")
-            continue
-    
+                counted_quantities[serial] += quantity_input
+
+    def process_item_for_report(single_item, category_list, data):
+        """Pomoćna funkcija za obradu predmeta i dodavanje u izveštaj"""
+        category_number = single_item.get('category_number')
+        if not category_number:
+            print(f"Missing category for item {single_item.get('name')}")
+            return
+            
+        print(f"Processing item with category {category_number}")
+        
+        if category_number not in category_list:
+            category_list.append(category_number)
+            new_record = {
+                'category': category_number,
+                'initial_price': Decimal(str(single_item['initial_price'])),
+                'write_off_until_current_year': Decimal(str(single_item['write_off_until_current_year'])),
+                'depreciation_per_year': Decimal(str(single_item['depreciation_per_year'])),
+                'price_at_end_of_year': Decimal(str(single_item['price_at_end_of_year'])),
+                'current_price': Decimal(str(single_item['current_price'])),
+                'quantity': 1
+            }
+            data.append(new_record)
+        else:
+            for record in data:
+                if record['category'] == category_number:
+                    record['initial_price'] += Decimal(str(single_item['initial_price']))
+                    record['current_price'] += Decimal(str(single_item['current_price']))
+                    record['write_off_until_current_year'] += Decimal(str(single_item['write_off_until_current_year']))
+                    record['depreciation_per_year'] += Decimal(str(single_item['depreciation_per_year']))
+                    record['price_at_end_of_year'] += Decimal(str(single_item['price_at_end_of_year']))
+                    record['quantity'] += 1
+                    break
+
+    # Prvo obrađujemo već rashodovane predmete
+    for single_item in single_items:
+        expediture_date_str = single_item.get('expediture_date')
+        if expediture_date_str:
+            try:
+                expediture_date = datetime.strptime(expediture_date_str, '%Y-%m-%d')
+                expediture_year = expediture_date.year
+                
+                if expediture_year != inventory_year:
+                    continue
+                    
+                process_item_for_report(single_item, category_list, data)
+                    
+            except (ValueError, TypeError) as e:
+                print(f"Error processing date {expediture_date_str}: {e}")
+                continue
+
+    # Zatim obrađujemo predmete koji imaju manjak
+    for serial, actual_data in actual_quantities.items():
+        actual_qty = actual_data['quantity']
+        counted_qty = counted_quantities.get(serial, 0)
+        
+        if counted_qty < actual_qty:
+            # Postoji manjak - razlika između stvarnog stanja i popisanog
+            missing_qty = actual_qty - counted_qty
+            item_data = actual_data['item_data']
+            
+            # Preskačemo ako je predmet već rashodovan
+            if item_data.get('expediture_date'):
+                continue
+                
+            # Dodajemo predmet u izveštaj onoliko puta koliki je manjak
+            for _ in range(missing_qty):
+                process_item_for_report(item_data, category_list, data)
+
     # Debug ispis
-    print(f"Found {len(category_list)} categories with expediture items")
+    print(f"Found {len(category_list)} categories with expediture and missing items")
     print("Category list:", category_list)
     print("Data:", data)
     
@@ -240,86 +287,132 @@ def category_reports_expediture(inventory_id):
                             data=data,
                             totals=totals,
                             inventory_id=inventory_id,
-                            title=f'Rekapitulacija rashoda po kontima - datum popisa: {inventory.date}',
-                            legend=f'Rekapitulacija rashoda po kontima')
+                            inventory_year=inventory_year,
+                            title=f'Izveštaj o isknjiženim stavkama po kontu - datum popisa: {inventory.date}',
+                            legend=f'Izveštaj o isknjiženim stavkama po kontu')
 
 
 @reports.route('/category_reports_expediture_item/<int:inventory_id>')
 def category_reports_expediture_item(inventory_id):
     """
     Generiše izveštaj o rashodovanim predmetima grupisano po kategorijama i nazivima predmeta.
-    Prikazuje samo predmete koji su rashodovani u godini popisa.
+    Prikazuje predmete koji su rashodovani u godini popisa, kao i predmete kod kojih
+    je utvrđen manjak (razlika između stvarnog stanja i popisanog stanja).
     """
+    endpoint = request.endpoint
     inventory = Inventory.query.get_or_404(inventory_id)
     inventory_year = inventory.date.year
     inventory_data = json.loads(inventory.working_data)
     single_items = inventory_data.get('single_items', [])
+    inventory_rooms = inventory_data.get('inventory', [])
     
     data = []
-    category_serial_list = []  # Koristimo seriju umesto item_id
+    category_serial_list = []  # Lista jedinstvenih kombinacija kategorija i serija
     
     # Debug ispis
     print(f"Processing {len(single_items)} items for inventory year {inventory_year}")
     
-    for single_item in single_items:
-        # Provera da li predmet ima datum rashoda
-        expediture_date_str = single_item.get('expediture_date')
-        if not expediture_date_str:
-            continue
+    def process_item_for_report(single_item, category_serial_list, data):
+        """Pomoćna funkcija za obradu predmeta i dodavanje u izveštaj"""
+        category_number = single_item.get('category_number')
+        serial = single_item.get('serial')
+        
+        if not category_number or not serial:
+            print(f"Missing category or serial for item {single_item.get('name')}")
+            return
             
-        try:
-            expediture_date = datetime.strptime(expediture_date_str, '%Y-%m-%d')
-            expediture_year = expediture_date.year
-            
-            # Proveravamo da li je rashod izvršen u godini popisa
-            if expediture_year != inventory_year:
-                continue
-                
-            category_number = single_item.get('category_number')
-            serial = single_item.get('serial')
-            
-            if not category_number or not serial:
-                print(f"Missing category or serial for item {single_item.get('name')}")
-                continue
-                
-            print(f"Processing expediture item with category {category_number} and serial {serial}")
-            
-            found = False
-            for cat, ser in category_serial_list:
-                if cat == category_number and ser == serial:
-                    found = True
-                    # Ažuriramo postojeći zapis
-                    for record in data:
-                        if record['category'] == category_number and record['serial'] == serial:
-                            record['quantity'] += 1
-                            record['initial_price'] += Decimal(str(single_item['initial_price']))
-                            record['write_off_until_current_year'] += Decimal(str(single_item['write_off_until_current_year']))
-                            record['depreciation_per_year'] += Decimal(str(single_item['depreciation_per_year']))
-                            record['price_at_end_of_year'] += Decimal(str(single_item['price_at_end_of_year']))
-                            break
-                    break
+        print(f"Processing item with category {category_number} and serial {serial}")
+        
+        found = False
+        for cat, ser in category_serial_list:
+            if cat == category_number and ser == serial:
+                found = True
+                # Ažuriramo postojeći zapis
+                for record in data:
+                    if record['category'] == category_number and record['serial'] == serial:
+                        record['quantity'] += 1
+                        record['initial_price'] += Decimal(str(single_item['initial_price']))
+                        record['write_off_until_current_year'] += Decimal(str(single_item['write_off_until_current_year']))
+                        record['depreciation_per_year'] += Decimal(str(single_item['depreciation_per_year']))
+                        record['price_at_end_of_year'] += Decimal(str(single_item['price_at_end_of_year']))
+                        break
+                break
 
-            if not found:
-                # Dodajemo novi zapis
-                category_serial_list.append((category_number, serial))
-                new_record = {
-                    'category': category_number,
-                    'serial': serial,
-                    'item': single_item['name'],
-                    'quantity': 1,
-                    'initial_price': Decimal(str(single_item['initial_price'])),
-                    'write_off_until_current_year': Decimal(str(single_item['write_off_until_current_year'])),
-                    'depreciation_per_year': Decimal(str(single_item['depreciation_per_year'])),
-                    'price_at_end_of_year': Decimal(str(single_item['price_at_end_of_year'])),
-                }
-                data.append(new_record)
+        if not found:
+            # Dodajemo novi zapis
+            category_serial_list.append((category_number, serial))
+            new_record = {
+                'category': category_number,
+                'serial': serial,
+                'item': single_item['name'],
+                'quantity': 1,
+                'initial_price': Decimal(str(single_item['initial_price'])),
+                'write_off_until_current_year': Decimal(str(single_item['write_off_until_current_year'])),
+                'depreciation_per_year': Decimal(str(single_item['depreciation_per_year'])),
+                'price_at_end_of_year': Decimal(str(single_item['price_at_end_of_year'])),
+            }
+            data.append(new_record)
+    
+    # Kreiramo mapu stvarnog stanja po serijskom broju
+    actual_quantities = {}
+    for single_item in single_items:
+        serial = str(single_item.get('serial'))
+        if serial not in actual_quantities:
+            actual_quantities[serial] = {
+                'quantity': 1,
+                'item_data': single_item
+            }
+        else:
+            actual_quantities[serial]['quantity'] += 1
+
+    # Kreiramo mapu popisanih količina po serijskom broju
+    counted_quantities = {}
+    for room in inventory_rooms:
+        for item in room['items']:
+            serial = str(item.get('serial'))
+            quantity_input = int(item.get('quantity_input', 0))
+            if serial not in counted_quantities:
+                counted_quantities[serial] = quantity_input
+            else:
+                counted_quantities[serial] += quantity_input
+
+    # Prvo obrađujemo već rashodovane predmete
+    for single_item in single_items:
+        expediture_date_str = single_item.get('expediture_date')
+        if expediture_date_str:
+            try:
+                expediture_date = datetime.strptime(expediture_date_str, '%Y-%m-%d')
+                expediture_year = expediture_date.year
                 
-        except (ValueError, TypeError) as e:
-            print(f"Error processing item: {e}")
-            continue
+                if expediture_year != inventory_year:
+                    continue
+                    
+                process_item_for_report(single_item, category_serial_list, data)
+                    
+            except (ValueError, TypeError) as e:
+                print(f"Error processing date {expediture_date_str}: {e}")
+                continue
+
+    # Zatim obrađujemo predmete koji imaju manjak
+    for serial, actual_data in actual_quantities.items():
+        actual_qty = actual_data['quantity']
+        counted_qty = counted_quantities.get(serial, 0)
+        
+        if counted_qty < actual_qty:
+            # Postoji manjak - razlika između stvarnog stanja i popisanog
+            missing_qty = actual_qty - counted_qty
+            item_data = actual_data['item_data']
+            
+            # Preskačemo ako je predmet već rashodovan
+            if item_data.get('expediture_date'):
+                continue
+                
+            # Dodajemo predmet u izveštaj onoliko puta koliki je manjak
+            for _ in range(missing_qty):
+                process_item_for_report(item_data, category_serial_list, data)
     
     # Debug ispis
-    print(f"Found {len(category_serial_list)} unique category-serial combinations")
+    print(f"Found {len(category_serial_list)} unique category-serial combinations with expediture and missing items")
     print("Category-Serial list:", category_serial_list)
     
     # Sortiramo podatke po kategoriji i nazivu
@@ -339,12 +432,15 @@ def category_reports_expediture_item(inventory_id):
     category_reports_item_pdf(data, inventory, report_type)
 
     return render_template('category_reports_item.html',
+                            endpoint=endpoint,
                             data=data,
                             totals=totals,
                             inventory_id=inventory_id,
+                            inventory_year=inventory_year,
                             report_type=report_type,
-                            title=f'Rekapitulacija rashodovanih predmeta po kontima',
-                            legend=f'Rekapitulacija rashodovanih predmeta po kontima - datum popisa: {inventory.date}')
+                            title=f'Izveštaj o isknjiženim stavkama po kontu i predmetu',
+                            legend=f'Izveštaj o isknjiženim stavkama po kontu i predmetu - datum popisa: {inventory.date}')
+
 
 @reports.route('/category_reports_new_purchases_past/<int:inventory_id>')
 def category_reports_new_purchases_past(inventory_id):
@@ -435,8 +531,8 @@ def category_reports_new_purchases_past(inventory_id):
                             data=data,
                             totals=totals,
                             inventory_id=inventory_id,
-                            title=f'Rekapitulacija novih nabavki po kontima',
-                            legend=f'Rekapitulacija novih nabavki po kontima - datum popisa: {inventory.date}')
+                            title=f'Izveštaj o novim nabavkama po kontu',
+                            legend=f'Izveštaj o novim nabavkama po kontu - datum popisa: {inventory.date}')
 
 
 @reports.route('/category_reports_new_purchases_item/<int:inventory_id>')
@@ -445,13 +541,14 @@ def category_reports_new_purchases_item(inventory_id):
     Generiše izveštaj o novim nabavkama grupisano po kategorijama i predmetima.
     Prikazuje samo predmete koji su nabavljeni u godini popisa.
     """
+    endpoint = request.endpoint
     inventory = Inventory.query.get_or_404(inventory_id)
     inventory_year = inventory.date.year
     inventory_data = json.loads(inventory.working_data)
     single_items = inventory_data.get('single_items', [])
     
     data = []
-    category_serial_list = []  # Koristimo (category_number, serial) umesto (category, item_id)
+    category_serial_list = []  # Lista jedinstvenih kombinacija kategorija i serija
     
     # Debug ispis
     print(f"Processing {len(single_items)} items for inventory year {inventory_year}")
@@ -531,12 +628,14 @@ def category_reports_new_purchases_item(inventory_id):
     category_reports_item_pdf(data, inventory, report_type)
 
     return render_template('category_reports_item.html',
+                            endpoint=endpoint,
                             data=data,
                             totals=totals,
                             inventory_id=inventory_id,
+                            inventory_year=inventory_year,
                             report_type=report_type,
-                            title=f'Rekapitulacija nabavljenih predmeta po kontima',
-                            legend=f'Rekapitulacija nabavljenih predmeta po kontima - datum popisa: {inventory.date}')
+                            title=f'Izveštaj o novim nabavkama po kontu i predmetu po kontima',
+                            legend=f'Izveštaj o novim nabavkama po kontu i predmetu po kontima - datum popisa: {inventory.date}')
 
 
 @reports.route('/single_item_working/<int:inventory_id>', methods=['GET', 'POST'])

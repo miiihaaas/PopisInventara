@@ -1,10 +1,13 @@
+from io import BytesIO
 import os
-import time
+import qrcode
 from datetime import date, datetime
-from flask import Blueprint, flash, json, render_template_string, Markup
+from flask import Blueprint, flash, json, jsonify, render_template_string, send_file
 from flask import request, render_template, redirect, url_for
 from flask_login import current_user
-from popisinventara import db
+from markupsafe import Markup
+from PIL import Image, ImageDraw, ImageFont
+from popisinventara import db, app
 from popisinventara.reports.functions import write_off_until_current_year
 from popisinventara.single_items.functions import create_reverse_document, current_price_calculation, distribute_prices
 from popisinventara.models import Category, DepreciationRate, School, SingleItem, Item, Room, Inventory
@@ -1458,3 +1461,83 @@ def update_price():
     flash('Cena na kraju tekuće godine kod svih nerashodovanih predmeta je izmenjena.', 'success')
     db.session.commit()
     return redirect(url_for('single_items.single_item_list'))
+
+
+@single_items.route("/generate_qr_code/<inventory_number>")
+# @login_required
+def generate_qr_code(inventory_number):
+    try:
+        # Pronalazimo predmet u bazi
+        single_item = SingleItem.query.filter_by(inventory_number=inventory_number).first_or_404()
+        item_name = single_item.name
+
+        # Kreiramo QR kod
+        qr = qrcode.QRCode(
+            version=1,
+            error_correction=qrcode.constants.ERROR_CORRECT_L,
+            box_size=10,
+            border=4,
+        )
+        qr.add_data(inventory_number)
+        qr.make(fit=True)
+
+        # Kreiramo QR kod sliku
+        qr_image = qr.make_image(fill_color="black", back_color="white")
+        qr_image = qr_image.convert('RGB')
+        
+        # Određujemo dimenzije QR koda
+        qr_width, qr_height = qr_image.size
+        
+        # Kreiramo novu sliku sa prostorom za dva reda teksta
+        final_image = Image.new('RGB', (qr_width, qr_height + 80), 'white')  # Povećali smo visinu za dva reda teksta
+        
+        # Dodajemo QR kod na finalnu sliku
+        final_image.paste(qr_image, (0, 0))
+        
+        # Pripremamo za dodavanje teksta
+        draw = ImageDraw.Draw(final_image)
+        
+        # Učitavamo custom font
+        font_path = os.path.join(app.root_path, 'static', 'fonts', 'DejaVuSansCondensed-Bold.ttf')
+        try:
+            font = ImageFont.truetype(font_path, 20)
+        except Exception as e:
+            app.logger.error(f"Greška pri učitavanju fonta: {str(e)}")
+            font = ImageFont.load_default()
+        
+        # Dodajemo naziv predmeta (prvi red)
+        text_width = draw.textlength(item_name, font=font)
+        text_position = ((qr_width - text_width) / 2, qr_height + 5)
+        draw.text(
+            text_position,
+            item_name,
+            fill='black',
+            font=font
+        )
+        
+        # Dodajemo inventarski broj (drugi red)
+        text_width = draw.textlength(inventory_number, font=font)
+        text_position = ((qr_width - text_width) / 2, qr_height + 35)  # +35 za drugi red
+        draw.text(
+            text_position,
+            inventory_number,
+            fill='black',
+            font=font
+        )
+        
+        # Čuvamo sliku u memoriji
+        img_buffer = BytesIO()
+        final_image.save(img_buffer, format='PNG')
+        img_buffer.seek(0)
+        
+        # Šaljemo kao odgovor
+        return send_file(
+            img_buffer,
+            mimetype='image/png',
+            as_attachment=True,
+            download_name=f'qr_code_{inventory_number}.png'
+        )
+
+    except Exception as e:
+        app.logger.error(f"Greška pri generisanju QR koda: {str(e)}")
+        return jsonify({'error': 'Greška pri generisanju QR koda'}), 500

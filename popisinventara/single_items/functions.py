@@ -98,61 +98,6 @@ font_path = os.path.join(project_folder, 'static', 'fonts', 'DejaVuSansCondensed
 font_path_B = os.path.join(project_folder, 'static', 'fonts', 'DejaVuSansCondensed-Bold.ttf')
 
 
-# def create_reverse_document(school, single_item):
-#     class PDF(FPDF):
-#         def __init__(self, **kwargs):
-#             super(PDF, self).__init__(**kwargs)
-#             self.add_font('DejaVuSansCondensed', '', font_path, uni=True)
-#             self.add_font('DejaVuSansCondensed', 'B', font_path_B, uni=True)
-#         def header(self):
-#             self.set_font('DejaVuSansCondensed', '', 12)
-#             self.cell(190/2, 10, school.schoolname, new_y='LAST', align='L', border=0)
-#             self.cell(190/2, 10, f'Matični broj: {school.mb}', new_x='LMARGIN', new_y='NEXT', align='R', border=0)
-#             self.cell(190/2, 10, school.address, new_y='LAST', align='L', border=0)
-#             self.cell(190/2, 10, f'JBKJS: {school.jbkjs}', new_x='LMARGIN', new_y='NEXT', align='R', border=0)
-#             self.cell(190/2, 10, f'{school.zip_code} {school.city}, {school.municipality}', new_x='LMARGIN', new_y='NEXT', align='L', border=0)
-#     pdf = PDF()
-#     pdf.add_page()
-#     pdf.set_font('DejaVuSansCondensed', 'B', 14)
-#     pdf.cell(0, 10, f'Reversni račun', new_x='LMARGIN', new_y='NEXT', align='C', border=0)
-#     pdf.set_font('DejaVuSansCondensed', '', 12)
-#     pdf.cell(0, 10, f'Datum izdavanja reversa: {single_item.reverse_date}', new_x='LMARGIN', new_y='NEXT', align='R', border=0)
-#     pdf.cell(0, 10, f'Ovim putem potvrđujem da sam od {school.schoolname} dobio/la na korišćenje: ', new_x='LMARGIN', new_y='NEXT', align='L', border=0)
-#     pdf.cell(60, 10, f'Naziv', new_y='LAST', align='L', border=1)
-#     pdf.cell(60, 10, f'Inventarski broj', new_y='LAST', align='L', border=1)
-#     pdf.cell(60, 10, f'Količina', new_x='LMARGIN', new_y='NEXT', align='L', border=1)
-#     pdf.cell(60, 10, f'{single_item.name}', new_y='LAST', align='L', border=1)
-#     pdf.cell(60, 10, f'{single_item.inventory_number}', new_y='LAST', align='L', border=1)
-#     pdf.cell(60, 10, f'1 kom', new_x='LMARGIN', new_y='NEXT', align='L', border=1)
-    
-#     pdf.cell(100, 10, f'Opremu preuzeo', new_y='LAST', align='C', border=0)
-#     pdf.cell(100, 10, f'Opremu izdao', new_x='LMARGIN', new_y='NEXT', align='C', border=0)
-#     pdf.cell(100, 10, f'{single_item.reverse_person}', new_y='LAST', align='C', border=0)
-#     pdf.cell(100, 10, f'____________________', new_x='LMARGIN', new_y='NEXT', align='C', border=0)
-    
-#     pdf.cell(0, 10, f'Datum povratka reversa: __________________', new_x='LMARGIN', new_y='NEXT', align='R', border=0)
-#     pdf.cell(0, 10, f'Ovim putem potvrđujem da sam vratio/la predmet koji sam dobio/la od {school.schoolname} na korišćenje: ', new_x='LMARGIN', new_y='NEXT', align='L', border=0)
-#     pdf.cell(60, 10, f'Naziv', new_y='LAST', align='L', border=1)
-#     pdf.cell(60, 10, f'Inventarski broj', new_y='LAST', align='L', border=1)
-#     pdf.cell(60, 10, f'Količina', new_x='LMARGIN', new_y='NEXT', align='L', border=1)
-#     pdf.cell(60, 10, f'{single_item.name}', new_y='LAST', align='L', border=1)
-#     pdf.cell(60, 10, f'{single_item.inventory_number}', new_y='LAST', align='L', border=1)
-#     pdf.cell(60, 10, f'1 kom', new_x='LMARGIN', new_y='NEXT', align='L', border=1)
-    
-#     pdf.cell(100, 10, f'Opremu vratio', new_y='LAST', align='C', border=0)
-#     pdf.cell(100, 10, f'Opremu primio', new_x='LMARGIN', new_y='NEXT', align='C', border=0)
-#     pdf.cell(100, 10, f'{single_item.reverse_person}', new_y='LAST', align='C', border=0)
-#     pdf.cell(100, 10, f'____________________', new_x='LMARGIN', new_y='NEXT', align='C', border=0)
-    
-    
-#     # Proverite postojanje foldera, ako ne postoji, kreirajte ga
-#     path = os.path.join(project_folder, 'static', 'reverses')
-#     if not os.path.exists(path):
-#         os.makedirs(path)
-#     file_name = f'revers.pdf'
-#     pdf.output(os.path.join(path, file_name))
-
-
 class ReverseDocumentPDF(BaseReportPDF):
     """
     Klasa za generisanje reversnog dokumenta.
