@@ -143,7 +143,7 @@ def popisna_lista_gen(inventory_item_list_data, room, inventory_id, school, inve
                     str(item.get('category_number', '')),
                     f"{item.get('depreciation_rate', 0)}%",
                     str(quantity),
-                    str(quantity_input),
+                    '' if quantity_input == 0 else str(quantity_input),
                     str(item.get('comment', ''))
                 ]
             else:
@@ -152,7 +152,7 @@ def popisna_lista_gen(inventory_item_list_data, room, inventory_id, school, inve
                     '{0:05d}'.format(int(item.get('serial', 0))),
                     str(item.get('category_number', '')),
                     f"{item.get('depreciation_rate', 0)}%",
-                    str(quantity_input),
+                    '' if quantity_input == 0 else str(quantity_input),
                     str(item.get('comment', ''))
                 ]
 
