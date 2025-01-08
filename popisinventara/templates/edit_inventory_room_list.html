@@ -25,6 +25,9 @@
         <a class="btn btn-primary" href="{{ url_for('static', filename='inventory_lists/inventory_room_list_with_quantities.pdf') }}" target="_blank">
             <i class="fa fa-file-pdf me-2"></i>Lista sa količinama
         </a>
+        <a href="#" id="copyQuantities" class="btn btn-primary">
+            <i class="fa fa-copy me-2"></i>Prepiši količine
+        </a>
         {% endif %}
     </div>
 
@@ -229,6 +232,16 @@ $(document).ready(function () {
     });
 
     updateTotals();
+
+    // Kopiranje količina
+    $('#copyQuantities').on('click', function(e) {
+        e.preventDefault();
+        $('#data_1 tbody tr').each(function() {
+            let quantity = $(this).find('td:eq(4)').text(); // Kolona "Količina"
+            $(this).find('input[type="number"]').val(quantity); // Input polje "Popisana količina"
+        });
+        updateTotals();
+    });
 });
 </script>
 
