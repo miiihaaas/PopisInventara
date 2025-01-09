@@ -119,19 +119,22 @@ if items_count == 0:
     
     items_success = 0
     for index, row in df_pps.iterrows():
+        # Funkcija za bezbedno konvertovanje vrednosti
+        def safe_value(value, default=''):
+            return str(default if pd.isna(value) else value)
         item_payload = {
-            'serial': str(row['Serija']),
-            'room_id': str(row.get('room_id', 1)),  # Default 1 ako nije definisan
-            'name': str(row['Naziv']),
-            'quantity': str(row['Količina']),
-            'purchase_date': str(row['Datum nabavke']).split()[0],
-            'initial_price': str(row['Nabavna vrednost']),
+            'serial': safe_value(row['Serija']),
+            'room_id': safe_value(row.get('room_id'), 1),  # Default 1 ako je nan
+            'name': safe_value(row['Naziv']),
+            'quantity': safe_value(row['Količina'], 1),
+            'purchase_date': safe_value(row['Datum nabavke']).split()[0],
+            'initial_price': safe_value(row['Nabavna vrednost'], 0),
             'input_in_app_date': last_day_of_year,
-            'deprecation_value': str(row.get(value_column, 0)),  # Koristi dinamički pronađenu kolonu
-            'supplier': str(row.get('Dobavljač', '')),  # Prazan string ako nije definisan
-            'invoice_number': str(row.get('Faktura', '')),  # Prazan string ako nije definisan
-            'category_id': str(row['id konta']),  # ID konta
-            'depreciation_rate_id': str(row['id amortizacije'])  # ID amortizacije
+            'deprecation_value': safe_value(row.get(value_column, 0), 0),
+            'supplier': safe_value(row.get('Dobavljač'), ''),  # Prazan string ako je nan
+            'invoice_number': safe_value(row.get('Faktura'), ''),  # Prazan string ako je nan
+            'category_id': safe_value(row['id konta']),
+            'depreciation_rate_id': safe_value(row['id amortizacije'])
         }
         # Debug ispis
         print("\nDebug - item_payload:")
