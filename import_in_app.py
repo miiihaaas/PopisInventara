@@ -133,6 +133,12 @@ if items_count == 0:
             'category_id': str(row['id konta']),  # ID konta
             'depreciation_rate_id': str(row['id amortizacije'])  # ID amortizacije
         }
+        # Debug ispis
+        print("\nDebug - item_payload:")
+        for key, value in item_payload.items():
+            print(f"{key}: {value}")
+        print("-" * 50)
+        
         # Slanje POST zahteva za kreiranje predmeta
         item_url = f'{base_url}/import_item'
         response = requests.post(item_url, data=item_payload)
