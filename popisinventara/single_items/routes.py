@@ -726,93 +726,93 @@ def expediture_serial():
     return redirect(url_for('single_items.single_item_list'))
 
 
-@single_items.route('/add_single_items_to_app', methods=['GET', 'POST'])
-def add_single_items_to_app():
-    '''
-    Ovo dodatno proveriti jer je menjana aplikacija pa je import drugačiji
-    Ovo dodatno proveriti jer je menjana aplikacija pa je import drugačiji
-    Ovo dodatno proveriti jer je menjana aplikacija pa je import drugačiji
-    Ovo dodatno proveriti jer je menjana aplikacija pa je import drugačiji
-    '''
-    #? da li ovo treba uopšte - možda je za import iz excela ?#
-    single_items_list = SingleItem.query.all()
-    if len(single_items_list) == 0:
-        max_serial_number = 1
-    else:
-        max_serial_number = max([int(single_item.inventory_number.split('-')[1]) for single_item in single_items_list])+1
+# @single_items.route('/add_single_items_to_app', methods=['GET', 'POST'])
+# def import_in_app():
+#     '''
+#     Ovo dodatno proveriti jer je menjana aplikacija pa je import drugačiji
+#     Ovo dodatno proveriti jer je menjana aplikacija pa je import drugačiji
+#     Ovo dodatno proveriti jer je menjana aplikacija pa je import drugačiji
+#     Ovo dodatno proveriti jer je menjana aplikacija pa je import drugačiji
+#     '''
+#     #? da li ovo treba uopšte - možda je za import iz excela ?#
+#     single_items_list = SingleItem.query.all()
+#     if len(single_items_list) == 0:
+#         max_serial_number = 1
+#     else:
+#         max_serial_number = max([int(single_item.inventory_number.split('-')[1]) for single_item in single_items_list])+1
     
-    # Pribavljanje podataka iz forme
-    category_id = request.form.get('add_single_item_category_id')
-    depreciation_rate_id = request.form.get('add_single_item_depreciation_rate_id')
-    rate = DepreciationRate.query.filter_by(id=depreciation_rate_id).first().rate
+#     # Pribavljanje podataka iz forme
+#     category_id = request.form.get('add_single_item_category_id')
+#     depreciation_rate_id = request.form.get('add_single_item_depreciation_rate_id')
+#     rate = DepreciationRate.query.filter_by(id=depreciation_rate_id).first().rate
     
-    item_name = request.form.get('add_single_item_name')
-    item_room = request.form.get('add_single_item_room', '1')  # Podrazumevani magacin ako nije izabrana prostorija
+#     item_name = request.form.get('add_single_item_name')
+#     item_room = request.form.get('add_single_item_room', '1')  # Podrazumevani magacin ako nije izabrana prostorija
     
-    # Validacija quantity
-    try:
-        quantity = int(request.form.get('add_single_item_quantity'))
-        if quantity < 1:
-            flash('Količina predmeta mora biti veća od 0.', 'danger')
-            return redirect(url_for('single_items.single_item_list'))
-    except ValueError:
-        flash('Količina predmeta mora biti ceo broj.', 'danger')
-        return redirect(url_for('single_items.single_item_list'))
+#     # Validacija quantity
+#     try:
+#         quantity = int(request.form.get('add_single_item_quantity'))
+#         if quantity < 1:
+#             flash('Količina predmeta mora biti veća od 0.', 'danger')
+#             return redirect(url_for('single_items.single_item_list'))
+#     except ValueError:
+#         flash('Količina predmeta mora biti ceo broj.', 'danger')
+#         return redirect(url_for('single_items.single_item_list'))
 
-    # Obrada cene
-    initial_price = float(request.form.get('add_single_item_total_initial_price')) / float(quantity)
-    if initial_price < 0:
-        flash('Cena predmeta mora biti veća od 0.', 'danger')
-        return redirect(url_for('single_items.single_item_list'))
+#     # Obrada cene
+#     initial_price = float(request.form.get('add_single_item_total_initial_price')) / float(quantity)
+#     if initial_price < 0:
+#         flash('Cena predmeta mora biti veća od 0.', 'danger')
+#         return redirect(url_for('single_items.single_item_list'))
 
-    # Validacija datuma
-    purchase_date_str = request.form.get('add_single_item_date')
-    if not purchase_date_str or not purchase_date_str.strip():
-        flash('Da bi ste dodali novi predmet, morate uneti datum kupovine predmeta.', 'danger')
-        return redirect(url_for('single_items.single_item_list'))
+#     # Validacija datuma
+#     purchase_date_str = request.form.get('add_single_item_date')
+#     if not purchase_date_str or not purchase_date_str.strip():
+#         flash('Da bi ste dodali novi predmet, morate uneti datum kupovine predmeta.', 'danger')
+#         return redirect(url_for('single_items.single_item_list'))
 
-    try:
-        purchase_date = datetime.strptime(purchase_date_str, '%Y-%m-%d').date()
-        if purchase_date > datetime.now().date():
-            flash('Datum kupovine ne može biti u budućnosti.', 'danger')
-            return redirect(url_for('single_items.single_item_list'))
-    except ValueError:
-        flash('Neispravan format datuma. Molimo unesite datum u formatu YYYY-MM-DD.', 'danger')
-        return redirect(url_for('single_items.single_item_list'))
+#     try:
+#         purchase_date = datetime.strptime(purchase_date_str, '%Y-%m-%d').date()
+#         if purchase_date > datetime.now().date():
+#             flash('Datum kupovine ne može biti u budućnosti.', 'danger')
+#             return redirect(url_for('single_items.single_item_list'))
+#     except ValueError:
+#         flash('Neispravan format datuma. Molimo unesite datum u formatu YYYY-MM-DD.', 'danger')
+#         return redirect(url_for('single_items.single_item_list'))
 
-    input_in_app_date = request.form.get('input_in_app_date')
-    deprecation_value = float(request.form.get('deprecation_value', 0)) / float(quantity)
-    supplier = request.form.get('add_single_item_supplier')
-    invoice_number = request.form.get('add_single_item_invoice_number')
+#     input_in_app_date = request.form.get('input_in_app_date')
+#     deprecation_value = float(request.form.get('deprecation_value', 0)) / float(quantity)
+#     supplier = request.form.get('add_single_item_supplier')
+#     invoice_number = request.form.get('add_single_item_invoice_number')
     
-    current_price, _ = current_price_calculation(initial_price, rate, purchase_date)
+#     current_price, _ = current_price_calculation(initial_price, rate, purchase_date)
     
-    new_single_items = []
-    for i in range(1, quantity + 1):
-        # Novi format inventarskog broja: SERIJA-BROJ_ARTIKLA
-        inventory_number = f'{max_serial_number:05d}-{i:04d}'
+#     new_single_items = []
+#     for i in range(1, quantity + 1):
+#         # Novi format inventarskog broja: SERIJA-BROJ_ARTIKLA
+#         inventory_number = f'{max_serial_number:05d}-{i:04d}'
         
-        new_single_item = SingleItem(
-            serial=max_serial_number,
-            name=item_name,
-            room_id=item_room,
-            category_id=category_id,
-            depreciation_rate_id=depreciation_rate_id,
-            initial_price=initial_price,
-            current_price=current_price,
-            purchase_date=purchase_date,
-            inventory_number=inventory_number,
-            supplier=supplier,
-            invoice_number=invoice_number,
-            input_in_app_date=input_in_app_date,
-            deprecation_value=deprecation_value
-        )
-        new_single_items.append(new_single_item)
+#         new_single_item = SingleItem(
+#             serial=max_serial_number,
+#             name=item_name,
+#             room_id=item_room,
+#             category_id=category_id,
+#             depreciation_rate_id=depreciation_rate_id,
+#             initial_price=initial_price,
+#             current_price=current_price,
+#             purchase_date=purchase_date,
+#             inventory_number=inventory_number,
+#             supplier=supplier,
+#             invoice_number=invoice_number,
+#             input_in_app_date=input_in_app_date,
+#             deprecation_value=deprecation_value
+#         )
+#         new_single_items.append(new_single_item)
         
-    db.session.add_all(new_single_items)
-    db.session.commit()
+#     db.session.add_all(new_single_items)
+#     db.session.commit()
     
-    return redirect(url_for('single_items.single_item_list'))
+#     return redirect(url_for('single_items.single_item_list'))
 
 @single_items.route('/add_single_item', methods=['GET', 'POST'])
 def add_single_item():
