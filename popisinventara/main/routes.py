@@ -137,8 +137,24 @@ def import_item():
         depreciation_rate_id = int(request.form.get('depreciation_rate_id'))
         
         # Provera da li su svi potrebni podaci prisutni
-        if not all([serial, room_id, name, quantity, purchase_date, initial_price, deprecation_value, supplier, invoice_number, category_id, depreciation_rate_id]):
-            return jsonify({'error': 'Nedostaju obavezni podaci'}), 400
+        required_fields = {
+            'serial': serial,
+            'room_id': room_id,
+            'name': name,
+            'quantity': quantity,
+            'purchase_date': purchase_date,
+            'initial_price': initial_price,
+            'deprecation_value': deprecation_value,
+            'supplier': supplier,
+            'invoice_number': invoice_number,
+            'category_id': category_id,
+            'depreciation_rate_id': depreciation_rate_id
+        }
+        
+        missing_fields = [field for field, value in required_fields.items() if not value]
+        
+        if missing_fields:
+            return jsonify({'error': f'Nedostaju obavezni podaci: {", ".join(missing_fields)}'}), 400
             
         # Kreiranje nove serije predmeta
         items_created = 0
