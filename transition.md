@@ -42,8 +42,11 @@ SET inventory_number = CONCAT(
 
 #### 5.1 Inicijalna migracija
 ```bash
-# Dodavanje konta i amortizacije na pojedinačni predmet
+# Dodavanje konta i amortizacije na pojedinačni predmet - ova nije tačna?!
 flask --app run.py db upgrade 6f9fc1d035c1
+------
+# Dodavanje konta i amortizacije na pojedinačni predmet
+flask --app run.py db upgrade ed06b0307a96
 ```
 
 #### 5.2 Migracija veza

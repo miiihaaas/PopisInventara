@@ -5,7 +5,9 @@ import pandas as pd
 
 # Dobijanje apsolutne putanje do trenutnog direktorijuma skripte
 current_directory = os.path.dirname(os.path.abspath(__file__))
-directory_name = os.path.basename(current_directory)
+# Uzimamo pretposlednji direktorijum iz putanje
+parent_directory = os.path.dirname(current_directory)
+directory_name = os.path.basename(parent_directory)
 file_path = os.path.join(current_directory, f'{directory_name}_input_data.xlsx')
 
 print(f'Radni direktorijum: {file_path=}.')
