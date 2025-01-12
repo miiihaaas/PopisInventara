@@ -8,45 +8,50 @@ from popisinventara import db
 from popisinventara.reports.functions import BaseReportPDF
 
 
-def distribute_prices(total_price: float, quantity: int) -> tuple:
+def distribute_prices(total_price: float, quantity: int) -> list:
     """
     Raspoređuje ukupnu cenu na quantity predmeta tako da:
-    - Svi predmeti osim poslednjeg imaju istu cenu zaokruženu na 2 decimale
-    - Poslednji predmet ima cenu koja osigurava da je zbir svih cena jednak total_price
+    - Većina predmeta ima istu osnovnu cenu zaokruženu na 2 decimale
+    - Poslednjih nekoliko predmeta dele razliku da bi se postigla tačna ukupna cena
     
     Args:
         total_price (float): Ukupna cena svih predmeta
         quantity (int): Broj predmeta
     
     Returns:
-        tuple: (base_price, last_item_price) gde je:
-            - base_price: cena za sve predmete osim poslednjeg
-            - last_item_price: cena poslednjeg predmeta
+        list: Lista cena za sve predmete
     """
-    # Izračunavanje prosečne cene
-    exact_price = total_price / quantity
+    # Prvo proverimo da li je cena deljiva sa količinom bez ostatka nakon zaokruživanja
+    base_price = round(total_price / quantity, 2)
+    if round(base_price * quantity, 2) == total_price:
+        # Ako jeste, sve cene su iste
+        return [base_price] * quantity
     
-    # Zaokruživanje na 2 decimale (na gore i na dole)
-    price_floor = float(format(exact_price, '.2f'))
-    price_ceil = float(format(exact_price + 0.01, '.2f'))
-    
-    # Provera koja kombinacija daje tačnu ukupnu cenu
-    # Pokušavamo prvo sa zaokruživanjem na dole
-    total_with_floor = price_floor * (quantity - 1)
-    last_price_with_floor = float(format(total_price - total_with_floor, '.2f'))
-    
-    # Pokušavamo sa zaokruživanjem na gore
-    total_with_ceil = price_ceil * (quantity - 1)
-    last_price_with_ceil = float(format(total_price - total_with_ceil, '.2f'))
-    
-    # Biramo kombinaciju koja daje manju razliku između cena
-    diff_with_floor = abs(last_price_with_floor - price_floor)
-    diff_with_ceil = abs(last_price_with_ceil - price_ceil)
-    
-    if diff_with_floor <= diff_with_ceil:
-        return price_floor, last_price_with_floor
+    # Ako nije deljivo, nastavljamo sa originalnom logikom
+    if quantity <= 4:
+        num_items_to_adjust = quantity
     else:
-        return price_ceil, last_price_with_ceil
+        num_items_to_adjust = min(max(3, round(quantity * 0.1)), 8)
+    
+    total_base = base_price * quantity
+    diff = round(total_price - total_base, 2)
+    
+    prices = [base_price] * quantity
+    
+    if diff != 0:
+        adjustment_base = round(diff / num_items_to_adjust, 2)
+        remaining_diff = diff
+        
+        for i in range(num_items_to_adjust):
+            if i == num_items_to_adjust - 1:
+                adjustment = round(remaining_diff, 2)
+            else:
+                adjustment = adjustment_base
+                remaining_diff = round(remaining_diff - adjustment, 2)
+            
+            prices[-(i+1)] = round(base_price + adjustment, 2)
+    
+    return prices
 
 
 def current_price_calculation(initial_price, rate, purchase_date, expediture_date=None, year=None, input_in_app_date=None, deprecation_value=None):

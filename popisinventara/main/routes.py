@@ -2,6 +2,7 @@ from flask import Blueprint, request
 from flask import  render_template, flash, redirect, url_for, jsonify
 from flask_login import current_user
 from popisinventara import db
+from popisinventara.single_items.functions import distribute_prices
 from popisinventara.models import Inventory, SingleItem, Building, Room
 from datetime import datetime
 
@@ -190,6 +191,13 @@ def import_item():
         
         # Kreiranje nove serije predmeta
         items_created = 0
+        try:
+            # Nova funkcija vraća listu svih cena
+            item_prices = distribute_prices(initial_price, quantity)
+        except Exception as e:
+            print(f"Greška pri računanju pojedinačnih cena: {str(e)}")
+            return jsonify({'error': str(e)}), 500
+        
         for i in range(quantity):
             inventory_number = f'{serial:05d}-{i+1:04d}'
             new_item = SingleItem(
@@ -198,7 +206,7 @@ def import_item():
                 name=name,
                 supplier=supplier,
                 invoice_number=invoice_number,
-                initial_price=initial_price,
+                initial_price=item_prices[i],
                 current_price=deprecation_value,
                 input_in_app_date=datetime.strptime(input_in_app_date, '%Y-%m-%d').date(),
                 deprecation_value=deprecation_value,

@@ -884,7 +884,8 @@ def add_single_item():
 
     # Izračunavanje pojedinačnih cena
     try:
-        base_initial_price, last_initial_price = distribute_prices(total_initial_price, quantity)
+        # Nova funkcija vraća listu svih cena
+        item_prices = distribute_prices(total_initial_price, quantity)
     except Exception as e:
         flash('Došlo je do greške pri računanju pojedinačnih cena.', 'danger')
         return redirect(url_for('single_items.single_item_list'))
@@ -910,15 +911,15 @@ def add_single_item():
     try:
         # Kreiranje novih predmeta
         new_single_items = []
-        for i in range(1, quantity + 1):
+        for i in range(quantity):
             # Određivanje početne cene za trenutni predmet
-            initial_price = last_initial_price if i == quantity else base_initial_price
+            initial_price = item_prices[i]
             
             # Izračunavanje trenutne cene
             current_price, _ = current_price_calculation(initial_price, rate, purchase_date)
             
             # Novi format inventarskog broja: SERIJA-BROJ_ARTIKLA
-            inventory_number = f'{max_serial_number:05d}-{i:04d}'
+            inventory_number = f'{max_serial_number:05d}-{i+1:04d}'
             
             new_single_item = SingleItem(
                 serial=max_serial_number,
