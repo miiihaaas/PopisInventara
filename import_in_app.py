@@ -144,8 +144,15 @@ year = int(''.join(filter(str.isdigit, value_column)))
 last_day_of_year = f'{year}-12-31'
 
 # Funkcija za bezbedno konvertovanje vrednosti
-def safe_value(value, default=''):
-    return str(default if pd.isna(value) else value)
+def safe_value(value, default='', data_type=str):
+    if pd.isna(value):
+        return default
+    if data_type == int:
+        # Ako je float, prvo zaokružimo pa konvertujemo u int
+        return int(float(value)) if isinstance(value, (float, str)) else int(value)
+    if data_type == float:
+        return float(value)
+    return str(value)
 
 # Ako nema predmeta na serveru, prvo unesite predmete
 if items_count != 0:
@@ -156,18 +163,18 @@ else:
 items_success = 0
 for index, row in df_pps.iterrows():
     item_payload = {
-        'serial': safe_value(row['Serija']),
-        'room_id': safe_value(row.get('room_id'), 1),  # Default 1 ako je nan
+        'serial': safe_value(row['Serija'], default=None, data_type=int),
+        'room_id': safe_value(row.get('room_id'), default=1, data_type=int),
         'name': safe_value(row['Naziv']),
-        'quantity': safe_value(row['Količina'], 1),
+        'quantity': safe_value(row['Količina'], default=None, data_type=int),
         'purchase_date': safe_value(row['Datum nabavke']).split()[0],
-        'initial_price': safe_value(row['Nabavna vrednost'], 0),
+        'initial_price': safe_value(row['Nabavna vrednost'], default=None, data_type=float),
         'input_in_app_date': last_day_of_year,
-        'deprecation_value': safe_value(row.get(value_column, 0), 0),
-        'supplier': safe_value(row.get('Dobavljač'), ''),  # Prazan string ako je nan
-        'invoice_number': safe_value(row.get('Faktura'), ''),  # Prazan string ako je nan
-        'category_id': safe_value(row['id konta']),
-        'depreciation_rate_id': safe_value(row['id amortizacije'])
+        'deprecation_value': safe_value(row.get(value_column, 0), default=None, data_type=float),
+        'supplier': safe_value(row.get('Dobavljač'), ''),
+        'invoice_number': safe_value(row.get('Faktura'), ''),
+        'category_id': safe_value(row['id konta'], default=None, data_type=int),
+        'depreciation_rate_id': safe_value(row['id amortizacije'], default=None, data_type=int)
     }
 
     
