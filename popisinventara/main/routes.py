@@ -202,8 +202,10 @@ def import_item():
             )
             if new_item.serial in [item.serial for item in SingleItem.query.all()]:
                 return jsonify({'message': f'Predmet sa serijom {serial} vec postoji u bazi i nije dodat'}), 202
-            db.session.add(new_item)
-            items_created += 1
+            else:
+                # Dodavanje u bazu
+                db.session.add(new_item)
+                items_created += 1
         
         db.session.commit()
         return jsonify({'message': f'Uspešno dodato {items_created} predmeta za seriju {serial}'}), 200

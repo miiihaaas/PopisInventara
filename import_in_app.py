@@ -180,12 +180,12 @@ for index, row in df_pps.iterrows():
         # Debug ispis
         print(f'Uspešno dodat predmet: {row["Naziv"]}')
     elif response.status_code == 202:
+        print(f'Predmet {row["Naziv"]} vec postoji u bazi. Uspesno dodat: {response.text}')
+    else:
         print("\nDebug - item_payload:")
         for key, value in item_payload.items():
             print(f"{key}: {value} | {type(value)}")
         print("-" * 50)
-        print(f'Predmet {row["Naziv"]} vec postoji u bazi. Uspesno dodat: {response.text}')
-    else:
         print(f'Greška pri dodavanju predmeta {row["Naziv"]}: {response.text}')
 if items_count > 0:
     print(f'U bazi je imalo {items_count} predmeta. \nUspešno dodato {items_success} od {len(df_pps)} predmeta. \nNeuspešno dodato {items_count - items_success} predmeta.')
