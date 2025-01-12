@@ -111,9 +111,9 @@ if rooms_count == 0:
         
         if response.status_code == 200:
             rooms_success += 1
-            print(f'Uspešno dodata prostorija: {row["Naziv prostorije"]}')
+            print(f'Uspešno dodata prostorija: {row["Naziv prostorije (dinamički)"]}')
         else:
-            print(f'Greška pri dodavanju prostorije {row["Naziv prostorije"]}: {response.text}')
+            print(f'Greška pri dodavanju prostorije {row["Naziv prostorije (dinamički)"]}: {response.text}')
     
     print(f'Uspešno dodato {rooms_success} od {len(df_prostorije)} prostorija')
 else:
