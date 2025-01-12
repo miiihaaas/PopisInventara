@@ -149,12 +149,33 @@ def import_item():
             'purchase_date': purchase_date,
             'initial_price': initial_price,
             'deprecation_value': deprecation_value,
-            'supplier': supplier,
-            'invoice_number': invoice_number,
+            # 'supplier': supplier,
+            # 'invoice_number': invoice_number,
             'category_id': category_id,
             'depreciation_rate_id': depreciation_rate_id
         }
-        
+        # Debug ispis vrednosti
+        print("\nDebug - vrednosti pre provere:")
+        print(f"serial: {serial} ({type(serial)})")
+        print(f"room_id: {room_id} ({type(room_id)})")
+        print(f"name: {name} ({type(name)})")
+        print(f"quantity: {quantity} ({type(quantity)})")
+        print(f"purchase_date: {purchase_date} ({type(purchase_date)})")
+        print(f"initial_price: {initial_price} ({type(initial_price)})")
+        print(f"category_id: {category_id} ({type(category_id)})")
+        print(f"depreciation_rate_id: {depreciation_rate_id} ({type(depreciation_rate_id)})")
+        print("-" * 50)
+        # Provera da li su svi potrebni podaci prisutni
+        required_fields = {
+            'serial': bool(serial),
+            'room_id': bool(room_id),
+            'name': bool(name and name.strip()),
+            'quantity': bool(quantity),
+            'purchase_date': bool(purchase_date),
+            'initial_price': initial_price is not None,
+            'category_id': bool(category_id),
+            'depreciation_rate_id': bool(depreciation_rate_id)
+        }
         missing_fields = [field for field, value in required_fields.items() if not value]
         
         if missing_fields:
@@ -171,6 +192,7 @@ def import_item():
                 supplier=supplier,
                 invoice_number=invoice_number,
                 initial_price=initial_price,
+                current_price=deprecation_value, #! zato što je vrednost na kaju godine ona vrednost koju je škola dala
                 input_in_app_date=datetime.strptime(input_in_app_date, '%Y-%m-%d').date(),
                 deprecation_value=deprecation_value,
                 purchase_date=datetime.strptime(purchase_date, '%Y-%m-%d').date(),

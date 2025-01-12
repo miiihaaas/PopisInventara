@@ -167,7 +167,7 @@ if items_count == 0:
         # Debug ispis
         print("\nDebug - item_payload:")
         for key, value in item_payload.items():
-            print(f"{key}: {value}")
+            print(f"{key}: {value} | {type(value)}")
         print("-" * 50)
         
         # Slanje POST zahteva za kreiranje predmeta
