@@ -182,6 +182,13 @@ def import_item():
             return jsonify({'error': f'Nedostaju obavezni podaci: {", ".join(missing_fields)}'}), 400
             
         # Kreiranje nove serije predmeta
+        # Prvo proverimo da li serija već postoji
+        existing_item = SingleItem.query.filter_by(serial=str(serial)).first()
+        if existing_item:
+            print(f"Debug - Pronađena postojeća serija {serial}: {existing_item.name}")
+            return jsonify({'message': f'Predmet sa serijom {serial} vec postoji u bazi'}), 202
+        
+        # Kreiranje nove serije predmeta
         items_created = 0
         for i in range(quantity):
             inventory_number = f'{serial:05d}-{i+1:04d}'
@@ -192,7 +199,7 @@ def import_item():
                 supplier=supplier,
                 invoice_number=invoice_number,
                 initial_price=initial_price,
-                current_price=deprecation_value, #! zato što je vrednost na kaju godine ona vrednost koju je škola dala
+                current_price=deprecation_value,
                 input_in_app_date=datetime.strptime(input_in_app_date, '%Y-%m-%d').date(),
                 deprecation_value=deprecation_value,
                 purchase_date=datetime.strptime(purchase_date, '%Y-%m-%d').date(),
@@ -200,12 +207,8 @@ def import_item():
                 category_id=category_id,
                 depreciation_rate_id=depreciation_rate_id
             )
-            if new_item.serial in [item.serial for item in SingleItem.query.all()]:
-                return jsonify({'message': f'Predmet sa serijom {serial} vec postoji u bazi i nije dodat'}), 202
-            else:
-                # Dodavanje u bazu
-                db.session.add(new_item)
-                items_created += 1
+            db.session.add(new_item)
+            items_created += 1
         
         db.session.commit()
         return jsonify({'message': f'Uspešno dodato {items_created} predmeta za seriju {serial}'}), 200
