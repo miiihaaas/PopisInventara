@@ -26,6 +26,24 @@ url = f'{base_url}/import_in_app'  # URL za unos podataka
 # Prvo proverite broj zgrada na serveru
 check_buildings_url = f'{base_url}/check_buildings_count'
 response = requests.get(check_buildings_url)
+print(f'Response status: {response.status_code}')
+print(f'Response text: {response.text}')
+
+try:
+    if response.status_code != 200:
+        print(f'Greška pri proveri broja zgrada: {response.text}')
+        exit()
+    if response.text:  # Proveravamo da li ima sadržaja
+        response_json = response.json()
+        print(f'Response JSON: {response_json}')
+    else:
+        print('Server je vratio prazan odgovor')
+        response_json = {}
+except requests.exceptions.JSONDecodeError as e:
+    print(f'Greška pri parsiranju JSON odgovora: {str(e)}')
+    print(f'Sadržaj odgovora: {response.text}')
+    response_json = {}
+
 buildings_count = 0
 
 if response.status_code == 200:

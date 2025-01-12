@@ -39,8 +39,12 @@ def about():
 
 @main.route("/check_buildings_count", methods=['GET'])
 def check_buildings_count():
-    buildings_count = Building.query.count()
-    return jsonify(count=buildings_count)
+    try:
+        buildings_count = Building.query.count()
+        return jsonify({'count': buildings_count})
+    except Exception as e:
+        print(f"Greška pri brojanju zgrada: {str(e)}")  # Za lakši debug na serveru
+        return jsonify({'error': str(e)}), 500
 
 
 @main.route("/import_building", methods=['POST'])
