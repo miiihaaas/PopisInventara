@@ -135,8 +135,8 @@ def import_item():
         initial_price = float(request.form.get('initial_price'))
         input_in_app_date = request.form.get('input_in_app_date')
         deprecation_value = float(request.form.get('deprecation_value'))
-        supplier = request.form.get('supplier')
-        invoice_number = request.form.get('invoice_number')
+        supplier = request.form.get('supplier', '')
+        invoice_number = request.form.get('invoice_number', '')
         category_id = int(request.form.get('category_id'))
         depreciation_rate_id = int(request.form.get('depreciation_rate_id'))
         

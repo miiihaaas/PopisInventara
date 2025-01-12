@@ -29,6 +29,8 @@ response = requests.get(check_buildings_url)
 print(f'Response status: {response.status_code}')
 print(f'Response text: {response.text}')
 
+input('pritisni bilo koje dugme da bi nastavio')
+
 try:
     if response.status_code != 200:
         print(f'Greška pri proveri broja zgrada: {response.text}')
@@ -81,6 +83,10 @@ else:
 #Drugo proverite broj prostorija na serveru
 check_rooms_url = f'{base_url}/check_rooms_count'
 response = requests.get(check_rooms_url)
+print(f'Response status: {response.status_code}')
+print(f'Response text: {response.text}')
+input('pritisni bilo koje dugme da bi nastavio')
+
 rooms_count = 0
 
 if response.status_code == 200:
@@ -117,6 +123,10 @@ else:
 # Treće proveriti broj predmeta na serveru
 check_items_url = f'{base_url}/check_items_count'
 response = requests.get(check_items_url)
+print(f'Response status: {response.status_code}')
+print(f'Response text: {response.text}')
+input('pritisni bilo koje dugme da bi nastavio')
+
 items_count = 0
 
 if response.status_code == 200:
