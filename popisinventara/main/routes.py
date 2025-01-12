@@ -200,6 +200,8 @@ def import_item():
                 category_id=category_id,
                 depreciation_rate_id=depreciation_rate_id
             )
+            if new_item.serial in [item.serial for item in SingleItem.query.all()]:
+                return jsonify({'message': f'Predmet sa serijom {serial} vec postoji u bazi i nije dodat'}), 202
             db.session.add(new_item)
             items_created += 1
         

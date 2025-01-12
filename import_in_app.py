@@ -29,7 +29,7 @@ response = requests.get(check_buildings_url)
 print(f'Response status: {response.status_code}')
 print(f'Response text: {response.text}')
 
-input('pritisni bilo koje dugme da bi nastavio')
+input('pritisni ENTER dugme da bi nastavio')
 
 try:
     if response.status_code != 200:
@@ -85,7 +85,7 @@ check_rooms_url = f'{base_url}/check_rooms_count'
 response = requests.get(check_rooms_url)
 print(f'Response status: {response.status_code}')
 print(f'Response text: {response.text}')
-input('pritisni bilo koje dugme da bi nastavio')
+input('pritisni ENTER dugme da bi nastavio')
 
 rooms_count = 0
 
@@ -125,61 +125,69 @@ check_items_url = f'{base_url}/check_items_count'
 response = requests.get(check_items_url)
 print(f'Response status: {response.status_code}')
 print(f'Response text: {response.text}')
-input('pritisni bilo koje dugme da bi nastavio')
+input('pritisni ENTER dugme da bi nastavio')
 
 items_count = 0
 
 if response.status_code == 200:
     items_count = int(response.json().get('count', 0))
 
+print("Nema predmeta u bazi. Započinjem unos predmeta...")
+# Učitajte podatke iz Excel fajla (Pojedinačni predmeti po SERIJI) u DataFrame
+df_pps = pd.read_excel(file_path, sheet_name='Pojedinačni predmeti po SERIJI')
+
+# Pronađi kolonu koja počinje sa "Vrednost na kraju"
+value_column = next(col for col in df_pps.columns if col.startswith('Vrednost na kraju'))
+# Izvuci godinu iz naziva kolone
+year = int(''.join(filter(str.isdigit, value_column)))
+# Kreiraj datum za poslednji dan te godine
+last_day_of_year = f'{year}-12-31'
+
+# Funkcija za bezbedno konvertovanje vrednosti
+def safe_value(value, default=''):
+    return str(default if pd.isna(value) else value)
+
 # Ako nema predmeta na serveru, prvo unesite predmete
-if items_count == 0:
+if items_count != 0:
+    print(f'U bazi ima {items_count} predmeta. Ako ima potrebe, ručno dodajte ostale predmeta.')
+else:
     print("Nema predmeta u bazi. Započinjem unos predmeta...")
-    # Učitajte podatke iz Excel fajla (Pojedinačni predmeti po SERIJI) u DataFrame
-    df_pps = pd.read_excel(file_path, sheet_name='Pojedinačni predmeti po SERIJI')
+
+items_success = 0
+for index, row in df_pps.iterrows():
+    item_payload = {
+        'serial': safe_value(row['Serija']),
+        'room_id': safe_value(row.get('room_id'), 1),  # Default 1 ako je nan
+        'name': safe_value(row['Naziv']),
+        'quantity': safe_value(row['Količina'], 1),
+        'purchase_date': safe_value(row['Datum nabavke']).split()[0],
+        'initial_price': safe_value(row['Nabavna vrednost'], 0),
+        'input_in_app_date': last_day_of_year,
+        'deprecation_value': safe_value(row.get(value_column, 0), 0),
+        'supplier': safe_value(row.get('Dobavljač'), ''),  # Prazan string ako je nan
+        'invoice_number': safe_value(row.get('Faktura'), ''),  # Prazan string ako je nan
+        'category_id': safe_value(row['id konta']),
+        'depreciation_rate_id': safe_value(row['id amortizacije'])
+    }
+
     
-    # Pronađi kolonu koja počinje sa "Vrednost na kraju"
-    value_column = next(col for col in df_pps.columns if col.startswith('Vrednost na kraju'))
-    # Izvuci godinu iz naziva kolone
-    year = int(''.join(filter(str.isdigit, value_column)))
-    # Kreiraj datum za poslednji dan te godine
-    last_day_of_year = f'{year}-12-31'
+    # Slanje POST zahteva za kreiranje predmeta
+    item_url = f'{base_url}/import_item'
+    response = requests.post(item_url, data=item_payload)
     
-    items_success = 0
-    for index, row in df_pps.iterrows():
-        # Funkcija za bezbedno konvertovanje vrednosti
-        def safe_value(value, default=''):
-            return str(default if pd.isna(value) else value)
-        item_payload = {
-            'serial': safe_value(row['Serija']),
-            'room_id': safe_value(row.get('room_id'), 1),  # Default 1 ako je nan
-            'name': safe_value(row['Naziv']),
-            'quantity': safe_value(row['Količina'], 1),
-            'purchase_date': safe_value(row['Datum nabavke']).split()[0],
-            'initial_price': safe_value(row['Nabavna vrednost'], 0),
-            'input_in_app_date': last_day_of_year,
-            'deprecation_value': safe_value(row.get(value_column, 0), 0),
-            'supplier': safe_value(row.get('Dobavljač'), ''),  # Prazan string ako je nan
-            'invoice_number': safe_value(row.get('Faktura'), ''),  # Prazan string ako je nan
-            'category_id': safe_value(row['id konta']),
-            'depreciation_rate_id': safe_value(row['id amortizacije'])
-        }
+    if response.status_code == 200:
+        items_success += 1
         # Debug ispis
         print("\nDebug - item_payload:")
         for key, value in item_payload.items():
             print(f"{key}: {value} | {type(value)}")
         print("-" * 50)
-        
-        # Slanje POST zahteva za kreiranje predmeta
-        item_url = f'{base_url}/import_item'
-        response = requests.post(item_url, data=item_payload)
-        
-        if response.status_code == 200:
-            items_success += 1
-            print(f'Uspešno dodat predmet: {row["Naziv"]}')
-        else:
-            print(f'Greška pri dodavanju predmeta {row["Naziv"]}: {response.text}')
-    
-    print(f'Uspešno dodato {items_success} od {len(df_pps)} predmeta')
+        print(f'Uspešno dodat predmet: {row["Naziv"]}')
+    elif response.status_code == 202:
+        print(f'Predmet {row["Naziv"]} vec postoji u bazi. Uspesno dodat: {response.text}')
+    else:
+        print(f'Greška pri dodavanju predmeta {row["Naziv"]}: {response.text}')
+if items_count > 0:
+    print(f'U bazi je imalo {items_count} predmeta. \nUspešno dodato {items_success} od {len(df_pps)} predmeta. \nNeuspešno dodato {items_count - items_success} predmeta.')
 else:
-    print(f'U bazi ima {items_count} predmeta. Ako ima potrebe, ručno dodajte ostale predmeta.')
+    print(f'Uspešno dodato {items_success} od {len(df_pps)} predmeta.')
