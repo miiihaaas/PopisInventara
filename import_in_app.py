@@ -3,6 +3,18 @@ import os
 import pandas as pd
 
 
+# Funkcija za bezbedno konvertovanje vrednosti
+def safe_value(value, default='', data_type=str):
+    if pd.isna(value):
+        return default
+    if data_type == int:
+        # Ako je float, prvo zaokružimo pa konvertujemo u int
+        return int(float(value)) if isinstance(value, (float, str)) else int(value)
+    if data_type == float:
+        return float(value)
+    return str(value)
+
+
 # Dobijanje apsolutne putanje do trenutnog direktorijuma skripte
 current_directory = os.path.dirname(os.path.abspath(__file__))
 # Uzimamo pretposlednji direktorijum iz putanje
@@ -209,6 +221,7 @@ print("\n" + "="*50)
 print("PROVERA BROJA PREDMETA U BAZI")
 print("="*50)
 
+
 check_items_url = f'{base_url}/check_items_count'
 response = requests.get(check_items_url)
 
@@ -248,6 +261,13 @@ if items_count == 0:
     try:
         df_predmeti = pd.read_excel(file_path, sheet_name='Pojedinačni predmeti po SERIJI')
         print(f"📑 Učitano {len(df_predmeti)} predmeta iz Excel fajla")
+        
+        # Pronađi kolonu koja počinje sa "Vrednost na kraju"
+        value_column = next(col for col in df_predmeti.columns if col.startswith('Vrednost na kraju'))
+        # Izvuci godinu iz naziva kolone
+        year = int(''.join(filter(str.isdigit, value_column)))
+        # Kreiraj datum za poslednji dan te godine
+        last_day_of_year = f'{year}-12-31'
     except Exception as e:
         print("\n❌ GREŠKA: Problem pri učitavanju Excel fajla")
         print(f"Detalji greške: {str(e)}")
@@ -257,23 +277,23 @@ if items_count == 0:
     print("\nPočinjem unos predmeta u bazu...")
     
     for index, row in df_predmeti.iterrows():
-        current_item = f"{row['Naziv predmeta']} (Serija: {row['Serija']})"
+        current_item = f"{safe_value(row['Naziv'])} (Serija: {safe_value(row['Serija'])})"
         print(f"\nObrada predmeta ({index + 1}/{len(df_predmeti)}): {current_item}")
         
         try:
             item_payload = {
-                'serial': str(row['Serija']),
-                'room_id': str(row['ID prostorije']),
-                'name': str(row['Naziv predmeta']),
-                'quantity': str(row['Količina']),
-                'purchase_date': str(row['Datum kupovine']),
-                'initial_price': str(row['Početna cena']),
-                'input_in_app_date': str(row['Datum unosa']),
-                'deprecation_value': str(row['Amortizovana vrednost']),
-                'supplier': str(row['Dobavljač']),
-                'invoice_number': str(row['Broj fakture']),
-                'category_id': str(row['ID kategorije']),
-                'depreciation_rate_id': str(row['ID stope amortizacije'])
+                'serial': safe_value(row['Serija'], default=None, data_type=int),
+                'room_id': safe_value(row.get('room_id'), default=1, data_type=int),
+                'name': safe_value(row['Naziv']),
+                'quantity': safe_value(row['Količina'], default=None, data_type=int),
+                'purchase_date': safe_value(row['Datum nabavke']).split()[0],
+                'initial_price': safe_value(row['Nabavna vrednost'], default=None, data_type=float),
+                'input_in_app_date': last_day_of_year,
+                'deprecation_value': safe_value(row['Amortizovana vrednost'], default=None, data_type=float),
+                'supplier': safe_value(row.get('Dobavljač'), ''),
+                'invoice_number': safe_value(row.get('Broj fakture'), ''),
+                'category_id': safe_value(row['id konta'], default=None, data_type=int),
+                'depreciation_rate_id': safe_value(row['id amortizacije'], default=None, data_type=int)
             }
             
             # Slanje POST zahteva za kreiranje predmeta
