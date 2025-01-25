@@ -14,22 +14,43 @@ def safe_value(value, default='', data_type=str):
         return float(value)
     return str(value)
 
+print("\n" + "="*50)
+print("IMPORT PODATAKA U APLIKACIJU")
+print("="*50)
 
 # Dobijanje apsolutne putanje do trenutnog direktorijuma skripte
 current_directory = os.path.dirname(os.path.abspath(__file__))
-# Uzimamo pretposlednji direktorijum iz putanje
 parent_directory = os.path.dirname(current_directory)
 directory_name = os.path.basename(parent_directory)
 file_path = os.path.join(current_directory, f'{directory_name}_input_data.xlsx')
 
-print(f'Radni direktorijum: {file_path=}.')
-print(f'Naziv direktorijuma: {directory_name=}.')
-print(f'Trenutni direktorijum: {current_directory=}.')
+print("\n📂 INFORMACIJE O RADNOM OKRUŽENJU:")
+print("-"*30)
+print(f"🏢 Naziv aplikacije: {directory_name}")
+print(f"📁 Radni direktorijum: {current_directory}")
+print(f"📊 Excel fajl: {file_path}")
 
-input(f'Da li želiš da nastaviš? (Y/N) ')
-if input().lower() != 'y':
-    print(f'Prekinut unos podataka.')
+# Provera da li Excel fajl postoji
+if not os.path.exists(file_path):
+    print("\n❌ GREŠKA: Excel fajl nije pronađen!")
+    print(f"   Fajl koji se traži: {file_path}")
+    print("   Molimo proverite da li je fajl na pravom mestu i da li ima ispravan naziv.")
     exit()
+else:
+    print("\n✅ Excel fajl je uspešno pronađen")
+
+print("\n" + "-"*50)
+print("❓ Da li želite da započnete import podataka?")
+print("   - Pritisnite 'Y' za početak")
+print("   - Pritisnite bilo koji drugi taster za izlaz")
+odgovor = input("   Vaš izbor (Y/N): ").lower()
+
+if odgovor != 'y':
+    print("\n🛑 Import podataka je prekinut na zahtev korisnika.")
+    exit()
+
+print("\n✨ Započinjem proces importa podataka...")
+print("-"*50 + "\n")
 
 # Postavite URL na koji želite slati zahteve
 base_url = f'https://popis.online/{directory_name}'
