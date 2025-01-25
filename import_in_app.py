@@ -166,15 +166,15 @@ if rooms_count == 0:
     print("\nPočinjem unos prostorija u bazu...")
     
     for index, row in df_prostorije.iterrows():
-        current_room = str(row['Naziv prostorije'])
+        current_room = str(row['Naziv prostorije (dinamički)'])
         print(f"\nObrada prostorije ({index + 1}/{len(df_prostorije)}): {current_room}")
         
         try:
             room_payload = {
-                'id': str(row['ID prostorije']),
-                'building_id': str(row['ID zgrade']),
-                'name': str(row['Naziv prostorije']),
-                'dynamic_name': str(row['Dinamički naziv'])
+                'id': str(row['id_prostorije']),
+                'building_id': str(row['id_zgrade']),
+                'name': str(row['Naziv prostorije (numerički)']),
+                'dynamic_name': str(row['Naziv prostorije (dinamički)'])
             }
             
             # Slanje POST zahteva za kreiranje prostorije
