@@ -257,12 +257,12 @@ if items_count == 0:
     print("\nPočinjem unos predmeta u bazu...")
     
     for index, row in df_predmeti.iterrows():
-        current_item = f"{row['Naziv predmeta']} (Serija: {row['Serijski broj']})"
+        current_item = f"{row['Naziv predmeta']} (Serija: {row['Serija']})"
         print(f"\nObrada predmeta ({index + 1}/{len(df_predmeti)}): {current_item}")
         
         try:
             item_payload = {
-                'serial': str(row['Serijski broj']),
+                'serial': str(row['Serija']),
                 'room_id': str(row['ID prostorije']),
                 'name': str(row['Naziv predmeta']),
                 'quantity': str(row['Količina']),
