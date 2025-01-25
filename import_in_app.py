@@ -246,7 +246,7 @@ if items_count == 0:
     
     # Učitajte podatke iz Excel fajla (Pojedinačni predmeti) u DataFrame
     try:
-        df_predmeti = pd.read_excel(file_path, sheet_name='Pojedinačni predmeti')
+        df_predmeti = pd.read_excel(file_path, sheet_name='Pojedinačni predmeti po SERIJI')
         print(f"📑 Učitano {len(df_predmeti)} predmeta iz Excel fajla")
     except Exception as e:
         print("\n❌ GREŠKA: Problem pri učitavanju Excel fajla")
