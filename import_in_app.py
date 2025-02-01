@@ -310,7 +310,7 @@ if items_count == 0:
                 'purchase_date': safe_value(row['Datum nabavke']).split()[0],
                 'initial_price': safe_value(row['Nabavna vrednost'], default=None, data_type=float),
                 'input_in_app_date': last_day_of_year,
-                'deprecation_value': safe_value(row.get(value_column, 0), default=None, data_type=float),
+                'deprecation_value': safe_value(row.get(value_column, 0), default=None, data_type=float), #! ovo je ukupna vrednost svih predmeta iz serije na kraju godine
                 'supplier': safe_value(row.get('Dobavljač'), ''),
                 'invoice_number': safe_value(row.get('Faktura'), ''),
                 'category_id': safe_value(row['id konta'], default=None, data_type=int),

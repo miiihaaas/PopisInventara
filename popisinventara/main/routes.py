@@ -133,9 +133,9 @@ def import_item():
         name = request.form.get('name')
         quantity = int(request.form.get('quantity'))
         purchase_date = request.form.get('purchase_date')
-        initial_price = float(request.form.get('initial_price')) # ukupna vrednost svih predmeta (quantity)
+        initial_price = float(request.form.get('initial_price')) # ukupna nabavna vrednost svih predmeta iz serije (quantity)
         input_in_app_date = request.form.get('input_in_app_date')
-        deprecation_value = float(request.form.get('deprecation_value')) # ukupna otpisana vrednost (quantity)
+        deprecation_value = float(request.form.get('deprecation_value')) #! (oprez: naziv je pogrešno definisan kao otpis) ukupna vrednost svi predmeta iz serije na kraju godine (quantity)
         supplier = request.form.get('supplier', '')
         invoice_number = request.form.get('invoice_number', '')
         category_id = int(request.form.get('category_id'))
@@ -194,7 +194,7 @@ def import_item():
         try:
             # Nova funkcija vraća listu svih cena
             item_initial_prices = distribute_prices(initial_price, quantity)
-            item_current_prices = distribute_prices(deprecation_value, quantity)
+            item_current_values = distribute_prices(deprecation_value, quantity) #! (oprez: naziv je pogrešno definisan kao otpis) ovo je vrednost pojedinačnih predmeta iz serije na kraju godine
             # item_deprecation_value = distribute_prices(deprecation_value, quantity)
         except Exception as e:
             print(f"Greška pri računanju pojedinačnih cena: {str(e)}")
@@ -209,9 +209,9 @@ def import_item():
                 supplier=supplier,
                 invoice_number=invoice_number,
                 initial_price=item_initial_prices[i],
-                current_price=item_current_prices[i],
+                current_price=item_current_values[i],
                 input_in_app_date=datetime.strptime(input_in_app_date, '%Y-%m-%d').date(),
-                deprecation_value=item_initial_prices[i] - item_current_prices[i],
+                deprecation_value=item_initial_prices[i] - item_current_values[i],
                 purchase_date=datetime.strptime(purchase_date, '%Y-%m-%d').date(),
                 room_id=room_id,
                 category_id=category_id,
