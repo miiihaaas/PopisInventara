@@ -135,7 +135,7 @@ def import_item():
         purchase_date = request.form.get('purchase_date')
         initial_price = float(request.form.get('initial_price')) # ukupna vrednost svih predmeta (quantity)
         input_in_app_date = request.form.get('input_in_app_date')
-        deprecation_value = float(request.form.get('deprecation_value'))
+        deprecation_value = float(request.form.get('deprecation_value')) # ukupna otpisana vrednost (quantity)
         supplier = request.form.get('supplier', '')
         invoice_number = request.form.get('invoice_number', '')
         category_id = int(request.form.get('category_id'))
@@ -195,6 +195,7 @@ def import_item():
             # Nova funkcija vraća listu svih cena
             item_initial_prices = distribute_prices(initial_price, quantity)
             item_current_prices = distribute_prices(deprecation_value, quantity)
+            # item_deprecation_value = distribute_prices(deprecation_value, quantity)
         except Exception as e:
             print(f"Greška pri računanju pojedinačnih cena: {str(e)}")
             return jsonify({'error': str(e)}), 500
@@ -210,7 +211,7 @@ def import_item():
                 initial_price=item_initial_prices[i],
                 current_price=item_current_prices[i],
                 input_in_app_date=datetime.strptime(input_in_app_date, '%Y-%m-%d').date(),
-                deprecation_value=deprecation_value,
+                deprecation_value=item_initial_prices[i] - item_current_prices[i],
                 purchase_date=datetime.strptime(purchase_date, '%Y-%m-%d').date(),
                 room_id=room_id,
                 category_id=category_id,
