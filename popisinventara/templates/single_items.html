@@ -1378,21 +1378,28 @@
                                 console.log('predmet je izdat na revers')
                                 var html = '<td>' + 
                                     '<a class="btn-x btn-primary-x" href="" data-bs-toggle="modal" onclick="'+ returnReverseSingleItemFunction +'" data-bs-target="#returnReverseSingleItem" title="Povraćaj reversa"><i class="fa fa-file-circle-minus awesomedelete" aria-hidden="true"></i></a>' +
-                                    '<a class="btn-x btn-primary-x" href="javascript:void(0)" data-bs-toggle="modal" onclick="generateQRCode(\'' + row.inventory_number + '\', \'' + row.name + '\')" data-bs-target="#qrCodeModal" title="Generiši QR kod"><i class="fa fa-qrcode awesomeedit" aria-hidden="true"></i></a>' +
+                                    // '<a class="btn-x btn-primary-x" href="javascript:void(0)" data-bs-toggle="modal" onclick="generateQRCode(\'' + row.inventory_number + '\', \'' + row.name + '\')" data-bs-target="#qrCodeModal" title="Generiši QR kod"><i class="fa fa-qrcode awesomeedit" aria-hidden="true"></i></a>' +
                                 '</td>';
                             } else if (row.room_id === 2) { //ako je predmet isknjižen: room_id = 2 magacin isknjiženih predmeta
                                 console.log('predmet je isknjižen')
                                 var html = '<td>' + 
                                     '<a class="btn-x btn-primary-x" href="" data-bs-toggle="modal" onclick="'+ undoExpeditureSingleItemFunction +'" data-bs-target="#undoExpeditureSingleItem" title="Isknjižiti - Storno"><i class="fa fa-trash-can-arrow-up awesomedelete" aria-hidden="true"></i></a>' +
-                                    '<a class="btn-x btn-primary-x" href="javascript:void(0)" data-bs-toggle="modal" onclick="generateQRCode(\'' + row.inventory_number + '\', \'' + row.name + '\')" data-bs-target="#qrCodeModal" title="Generiši QR kod"><i class="fa fa-qrcode awesomeedit" aria-hidden="true"></i></a>' +
+                                    // '<a class="btn-x btn-primary-x" href="javascript:void(0)" data-bs-toggle="modal" onclick="generateQRCode(\'' + row.inventory_number + '\', \'' + row.name + '\')" data-bs-target="#qrCodeModal" title="Generiši QR kod"><i class="fa fa-qrcode awesomeedit" aria-hidden="true"></i></a>' +
                                 '</td>';
+                            } else if (row.room_id === 6) { // ako je predmet u magacinu predmeta koji nisu pusšteni u upotrebu (0% amortizacije dok se ne pusti u upotrebu)
+                                console.log('predmet nije pušten u upotrebu')
+                                var html = '<td>' + 
+                                    '<a class="btn-x btn-primary-x" href="" <i class="fa-solid fa-screwdriver-wrench awesomedelete" aria-hidden="true"></i></a>' +
+                                    // '<a class="btn-x btn-primary-x" href="javascript:void(0)" data-bs-toggle="modal" onclick="generateQRCode(\'' + row.inventory_number + '\', \'' + row.name + '\')" data-bs-target="#qrCodeModal" title="Generiši QR kod"><i class="fa fa-qrcode awesomeedit" aria-hidden="true"></i></a>' +
+                                '</td>';
+                            
                             } else {
                                 console.log('predmet nije izdat na revers')
                                 var html = '<td>' + 
                                     '<a class="btn-x btn-primary-x" href="" data-bs-toggle="modal" onclick="'+ editSingleItemRoomFunction +'" data-bs-target="#changeRoom" title="Premeštanje predmeta u drugu prostoriju"><i class="fa fa-people-carry-box awesomedelete" aria-hidden="true"></i></a>' +
                                     '<a class="btn-x btn-primary-x" href="" data-bs-toggle="modal" onclick="'+ reverseSingleItemFunction +'" data-bs-target="#reverseSingleItem" title="Izdati predmet na revers"><i class="fa fa-file-lines awesomeedit" aria-hidden="true"></i></a>' +
                                     '<a class="btn-x btn-primary-x" href="" data-bs-toggle="modal" onclick="'+ expeditureSingleItemFunction +'" data-bs-target="#expeditureSingleItem" title="Isknjižiti"><i class="fa fa-trash-can awesomedelete" aria-hidden="true"></i></a>' +
-                                    '<a class="btn-x btn-primary-x" href="javascript:void(0)" data-bs-toggle="modal" onclick="generateQRCode(\'' + row.inventory_number + '\', \'' + row.name + '\')" data-bs-target="#qrCodeModal" title="Generiši QR kod"><i class="fa fa-qrcode awesomeedit" aria-hidden="true"></i></a>' +
+                                    // '<a class="btn-x btn-primary-x" href="javascript:void(0)" data-bs-toggle="modal" onclick="generateQRCode(\'' + row.inventory_number + '\', \'' + row.name + '\')" data-bs-target="#qrCodeModal" title="Generiši QR kod"><i class="fa fa-qrcode awesomeedit" aria-hidden="true"></i></a>' +
                                 '</td>';
                             }
                             return html;
