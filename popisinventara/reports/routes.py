@@ -117,7 +117,9 @@ def category_reports_past(inventory_id):
             for record in data:
                 if record['category'] == category_number:
                     record['initial_price'] += Decimal(str(single_item['initial_price']))
-                    if not is_written_off:
+                    if is_written_off:
+                        record['write_off_until_current_year'] += Decimal(str(single_item['initial_price']))
+                    else:
                         record['current_price'] += Decimal(str(single_item['current_price']))
                         record['write_off_until_current_year'] += Decimal(str(single_item['write_off_until_current_year']))
                         record['depreciation_per_year'] += Decimal(str(single_item['depreciation_per_year']))
