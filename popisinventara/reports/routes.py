@@ -70,7 +70,7 @@ def category_reports():
                             data=data,
                             inventory_year=datetime.now().year,
                             title='Izveštaj po kontima',
-                            legend='Izveštaj po kontima')
+                            legend='Izveštaj po kontima | Projekcija na kraju tekuće godine')
 
 
 @reports.route('/category_reports_past/<int:inventory_id>', methods=['GET', 'POST'])
@@ -91,36 +91,38 @@ def category_reports_past(inventory_id):
     
     for single_item in single_items:
         # Preskačemo rashodovane predmete
-        if single_item.get('expediture_date') is not None:
-            continue
+        # if single_item.get('expediture_date') is not None:
+        #     continue
             
         # U working_data, category_number je već sačuvan
         category_number = single_item.get('category_number')
         if not category_number:
             print(f"Missing category for item {single_item.get('name')}")
             continue
+        is_written_off = single_item.get('expediture_date') is not None
 
         if category_number not in category_list:
             category_list.append(category_number)
             new_record = {
                 'category': category_number,
                 'initial_price': Decimal(str(single_item['initial_price'])),
-                'current_price': Decimal(str(single_item['current_price'])),
-                'write_off_until_current_year': Decimal(str(single_item['write_off_until_current_year'])),
-                'depreciation_per_year': Decimal(str(single_item['depreciation_per_year'])),
-                'price_at_end_of_year': Decimal(str(single_item['price_at_end_of_year'])),
-                'quantity': 1
+                'current_price': Decimal('0') if is_written_off else Decimal(str(single_item['current_price'])),
+                'write_off_until_current_year': Decimal('0') if is_written_off else Decimal(str(single_item['write_off_until_current_year'])),
+                'depreciation_per_year': Decimal('0') if is_written_off else Decimal(str(single_item['depreciation_per_year'])),
+                'price_at_end_of_year': Decimal('0') if is_written_off else Decimal(str(single_item['price_at_end_of_year'])),
+                'quantity': 0 if is_written_off else 1
             }
             data.append(new_record)
         else:
             for record in data:
                 if record['category'] == category_number:
                     record['initial_price'] += Decimal(str(single_item['initial_price']))
-                    record['current_price'] += Decimal(str(single_item['current_price']))
-                    record['write_off_until_current_year'] += Decimal(str(single_item['write_off_until_current_year']))
-                    record['depreciation_per_year'] += Decimal(str(single_item['depreciation_per_year']))
-                    record['price_at_end_of_year'] += Decimal(str(single_item['price_at_end_of_year']))
-                    record['quantity'] += 1
+                    if not is_written_off:
+                        record['current_price'] += Decimal(str(single_item['current_price']))
+                        record['write_off_until_current_year'] += Decimal(str(single_item['write_off_until_current_year']))
+                        record['depreciation_per_year'] += Decimal(str(single_item['depreciation_per_year']))
+                        record['price_at_end_of_year'] += Decimal(str(single_item['price_at_end_of_year']))
+                        record['quantity'] += 1
                     break
     
     # Debug ispis
@@ -150,7 +152,7 @@ def category_reports_past(inventory_id):
                             inventory_id=inventory_id,
                             inventory_year=inventory.date.year,
                             title='Izveštaj po kontima',
-                            legend=f'Izveštaj po kontima - popis {inventory.date}')
+                            legend=f'Izveštaj po kontima - popis {inventory.date} | {inventory.description}')
 
 
 @reports.route('/category_reports_expediture/<int:inventory_id>')
