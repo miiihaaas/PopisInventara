@@ -107,7 +107,7 @@ def category_reports_past(inventory_id):
                 'category': category_number,
                 'initial_price': Decimal(str(single_item['initial_price'])),
                 'current_price': Decimal('0') if is_written_off else Decimal(str(single_item['current_price'])),
-                'write_off_until_current_year': Decimal(str(single_item['write_off_until_current_year'])),
+                'write_off_until_current_year': Decimal(str(single_item['initial_price'])) if is_written_off else Decimal(str(single_item['write_off_until_current_year'])),
                 'depreciation_per_year': Decimal('0') if is_written_off else Decimal(str(single_item['depreciation_per_year'])),
                 'price_at_end_of_year': Decimal('0') if is_written_off else Decimal(str(single_item['price_at_end_of_year'])),
                 'quantity': 0 if is_written_off else 1
