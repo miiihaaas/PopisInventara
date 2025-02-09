@@ -154,35 +154,4 @@ $(document).ready(function () {
    color: white;
 }
 </style>
-<style>
-    /* Omogućava da dropdown bude vidljiv izvan DataTables kontejnera */
-    .table-responsive,
-    .dataTables_wrapper,
-    .page-content {
-        overflow: visible !important;
-    }
-    
-    /* Osigurava da table-responsive ne scrolluje horizontalno */
-    .table-responsive {
-        overflow-x: auto !important;
-    }
-    
-    /* Dodatno osiguranje za mobilne uređaje */
-    @media screen and (max-width: 767px) {
-        .table-responsive .dropdown-menu {
-            position: static !important;
-        }
-    }
-    
-    /* Osigurava da dropdown bude iznad svih elemenata */
-    .dropdown-menu {
-        z-index: 1100;
-    }
-    
-    /* Osigurava da dropdown button ima pravilan z-index */
-    .dropdown {
-        position: relative;
-        z-index: 1100;
-    }
-</style>
 {% endblock %}
