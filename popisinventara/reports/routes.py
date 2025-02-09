@@ -176,28 +176,28 @@ def category_reports_expediture(inventory_id):
     # Debug ispis
     print(f"Processing {len(single_items)} items for inventory year {inventory_year}")
     
-    # Kreiramo mapu stvarnog stanja po serijskom broju
-    actual_quantities = {}
-    for single_item in single_items:
-        serial = str(single_item.get('serial'))
-        if serial not in actual_quantities:
-            actual_quantities[serial] = {
-                'quantity': 1,
-                'item_data': single_item
-            }
-        else:
-            actual_quantities[serial]['quantity'] += 1
+    # # Kreiramo mapu stvarnog stanja po serijskom broju
+    # actual_quantities = {}
+    # for single_item in single_items:
+    #     serial = str(single_item.get('serial'))
+    #     if serial not in actual_quantities:
+    #         actual_quantities[serial] = {
+    #             'quantity': 1,
+    #             'item_data': single_item
+    #         }
+    #     else:
+    #         actual_quantities[serial]['quantity'] += 1
 
-    # Kreiramo mapu popisanih količina po serijskom broju
-    counted_quantities = {}
-    for room in inventory_rooms:
-        for item in room['items']:
-            serial = str(item.get('serial'))
-            quantity_input = int(item.get('quantity_input', 0))
-            if serial not in counted_quantities:
-                counted_quantities[serial] = quantity_input
-            else:
-                counted_quantities[serial] += quantity_input
+    # # Kreiramo mapu popisanih količina po serijskom broju
+    # counted_quantities = {}
+    # for room in inventory_rooms:
+    #     for item in room['items']:
+    #         serial = str(item.get('serial'))
+    #         quantity_input = int(item.get('quantity_input', 0))
+    #         if serial not in counted_quantities:
+    #             counted_quantities[serial] = quantity_input
+    #         else:
+    #             counted_quantities[serial] += quantity_input
 
     def process_item_for_report(single_item, category_list, data):
         """Pomoćna funkcija za obradu predmeta i dodavanje u izveštaj"""
@@ -231,7 +231,8 @@ def category_reports_expediture(inventory_id):
                     record['quantity'] += 1
                     break
 
-    # Prvo obrađujemo već rashodovane predmete
+    # Prvo obrađujemo već rashodovane predmete i pravimo set njihovih serijskih brojeva
+    expedited_serials = set()
     for single_item in single_items:
         expediture_date_str = single_item.get('expediture_date')
         if expediture_date_str:
@@ -243,10 +244,38 @@ def category_reports_expediture(inventory_id):
                     continue
                     
                 process_item_for_report(single_item, category_list, data)
-                    
+                expedited_serials.add(str(single_item.get('serial')))
             except (ValueError, TypeError) as e:
                 print(f"Error processing date {expediture_date_str}: {e}")
                 continue
+
+    # Kreiramo mapu stvarnog stanja po serijskom broju
+    # ALI samo za predmete koji NISU rashodovani u tekućoj godini
+    actual_quantities = {}
+    for single_item in single_items:
+        serial = str(single_item.get('serial'))
+        # Preskačemo predmete koji su već obrađeni kao rashodovani
+        if serial in expedited_serials:
+            continue
+            
+        if serial not in actual_quantities:
+            actual_quantities[serial] = {
+                'quantity': 1,
+                'item_data': single_item
+            }
+        else:
+            actual_quantities[serial]['quantity'] += 1
+
+    # Kreiramo mapu popisanih količina po serijskom broju
+    counted_quantities = {}
+    for room in inventory_rooms:
+        for item in room['items']:
+            serial = str(item.get('serial'))
+            quantity_input = int(item.get('quantity_input', 0))
+            if serial not in counted_quantities:
+                counted_quantities[serial] = quantity_input
+            else:
+                counted_quantities[serial] += quantity_input
 
     # Zatim obrađujemo predmete koji imaju manjak
     for serial, actual_data in actual_quantities.items():
@@ -258,9 +287,9 @@ def category_reports_expediture(inventory_id):
             missing_qty = actual_qty - counted_qty
             item_data = actual_data['item_data']
             
-            # Preskačemo ako je predmet već rashodovan
-            if item_data.get('expediture_date'):
-                continue
+            # # Preskačemo ako je predmet već rashodovan
+            # if item_data.get('expediture_date'):
+            #     continue
                 
             # Dodajemo predmet u izveštaj onoliko puta koliki je manjak
             for _ in range(missing_qty):
