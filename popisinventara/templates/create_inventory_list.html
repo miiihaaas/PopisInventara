@@ -50,17 +50,18 @@
 
         <!-- Hidden Elements Section -->
         <div id="hidden_elements" style="display: none;" class="inventory-details">
-            <div class="inventory-section mb-4">
+            <!-- Description Section -->
+            <div class="inventory-section mb-4" id="description-section" style="position: sticky; top: 70px; background-color: white; z-index: 999; padding: 15px; border-bottom: 1px solid #dee2e6; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                 <div class="section-title mb-3">
                     <i class="fa fa-file-alt me-2"></i>
                     <label class="form-label h6 mb-0" for="description">Opis popisne liste</label>
                 </div>
                 <textarea class="form-control" name="description" id="description" rows="3"
-                          placeholder="Unesite opis popisne liste..."></textarea>
+                          placeholder="Unesite opis popisne liste. Ovo polje je obavezno da bi ste mogli da kreirate popis."></textarea>
             </div>
             
             <!-- Bulk Assignment Section -->
-            <div class="inventory-section mb-4">
+            <div class="inventory-section mb-4 sticky-commission" id="bulk-assignment-section" style="position: sticky; top: 70px; background-color: white; z-index: 999; padding: 15px; border-bottom: 1px solid #dee2e6; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                 <div class="section-title mb-3">
                     <i class="fa fa-users me-2"></i>
                     <h6 class="mb-0">Grupno dodeljivanje komisije</h6>
@@ -79,6 +80,9 @@
                         <button type="button" class="btn btn-primary" id="assignSelectedRooms">
                             <i class="fa fa-user-plus me-2"></i>Dodeli izabranim prostorijama
                         </button>
+                        <button type="submit" class="btn btn-primary" id="createButton" disabled>
+                            <i class="fa fa-plus me-2"></i>Kreiraj popis
+                        </button>
                     </div>
                 </div>
             </div>
@@ -94,7 +98,7 @@
                         <thead>
                             <tr>
                                 <th width="40">
-                                    <input type="checkbox" id="selectAll" class="form-check-input">
+                                    <input type="checkbox" id="selectAll" class="form-check-input"> <- Selktuje sve
                                 </th>
                                 <th>ID</th>
                                 <th>Zgrada</th>
@@ -136,12 +140,6 @@
                     </table>
                 </div>
             </div>
-
-            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                <button type="submit" class="btn btn-primary" id="createButton" disabled>
-                    <i class="fa fa-plus me-2"></i>Kreiraj popis
-                </button>
-            </div>
         </div>
     </form>
 </div>
@@ -149,6 +147,46 @@
 {% endblock content %}
 
 {% block scripts %}
+<script>
+    let isDescriptionFocused = false;
+
+    // Funkcija za ažuriranje pozicija
+    function updateStickyPositions() {
+        const description = document.getElementById('description');
+        const descriptionSection = document.getElementById('description-section');
+        const bulkAssignmentSection = document.getElementById('bulk-assignment-section');
+        
+        // Ako je textarea u fokusu ili je prazna, prikaži sticky
+        if (isDescriptionFocused || description.value.trim() === '') {
+            descriptionSection.style.position = 'sticky';
+            descriptionSection.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
+            descriptionSection.style.borderBottom = '1px solid #dee2e6';
+            bulkAssignmentSection.style.top = '230px';
+        } else {
+            descriptionSection.style.position = 'static';
+            descriptionSection.style.boxShadow = 'none';
+            descriptionSection.style.borderBottom = 'none';
+            bulkAssignmentSection.style.top = '70px';
+        }
+    }
+
+    // Pokreni pri učitavanju stranice
+    document.addEventListener('DOMContentLoaded', updateStickyPositions);
+    
+    // Pokreni pri promeni input polja
+    document.getElementById('description').addEventListener('input', updateStickyPositions);
+
+    // Dodaj praćenje focus stanja
+    document.getElementById('description').addEventListener('focus', function() {
+        isDescriptionFocused = true;
+        updateStickyPositions();
+    });
+
+    document.getElementById('description').addEventListener('blur', function() {
+        isDescriptionFocused = false;
+        updateStickyPositions();
+    });
+</script>
 <script>
     // Postojeći JavaScript kod ostaje isti
     function showHiddenElements() {
@@ -220,7 +258,8 @@
                 url: "//cdn.datatables.net/plug-ins/1.12.1/i18n/sr-SP.json"
             },
             paging: false,
-            responsive: true
+            responsive: true,
+            searching: false
         });
 
         $('#selectAll').on('change', function() {

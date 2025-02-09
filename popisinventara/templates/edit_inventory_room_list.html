@@ -14,7 +14,7 @@
     </div>
 
     <!-- Action Buttons -->
-    <div class="action-buttons mb-4">
+    <div class="action-buttons mb-4" style="position: sticky; top: 70px; background-color: white; z-index: 999; padding: 15px; border-bottom: 1px solid #dee2e6; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
         <a class="btn btn-secondary" href="javascript:history.back()">
             <i class="fa fa-arrow-left me-2"></i>Nazad
         </a>
@@ -28,6 +28,14 @@
         <a href="#" id="copyQuantities" class="btn btn-primary">
             <i class="fa fa-copy me-2"></i>Prepiši količine
         </a>
+        {% endif %}
+        {% if inventory.status != 'finished' %}
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newSingleItem">
+                <i class="fa fa-plus me-2"></i>Dodaj stavku
+            </button>
+            <button class="btn btn-danger" type="submit">
+                <i class="fa fa-save me-2"></i>Sačuvaj izmene
+            </button>
         {% endif %}
     </div>
 
@@ -96,7 +104,7 @@
             </table>
         </div>
 
-        {% if inventory.status != 'finished' %}
+        <!-- {% if inventory.status != 'finished' %}
         <div class="form-actions mt-4 d-flex gap-2">
             <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newSingleItem">
                 <i class="fa fa-plus me-2"></i>Dodaj stavku
@@ -105,7 +113,7 @@
                 <i class="fa fa-save me-2"></i>Sačuvaj izmene
             </button>
         </div>
-        {% endif %}
+        {% endif %} -->
     </form>
 
     <!-- Add New Item Modal -->
@@ -178,6 +186,7 @@ $(document).ready(function () {
         responsive: true,
         paging: false,
         stateSave: true,
+        searching: false,
         columnDefs: [
             { className: "text-end", targets: [3,4,5] }
         ]
