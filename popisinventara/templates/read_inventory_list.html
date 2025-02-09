@@ -45,7 +45,7 @@
                                         data-bs-toggle="dropdown" aria-expanded="false">
                                     <i class="fa fa-file-alt me-1"></i>Izveštaji
                                 </button>
-                                <ul class="dropdown-menu dropdown-menu-end" style="z-index: 1100;">
+                                <ul class="dropdown-menu dropdown-menu-end">
                                     <li class="dropdown-header">Isknjiženja</li>
                                     <li>
                                         <a class="dropdown-item" href="{{ url_for('reports.category_reports_expediture', inventory_id=list.id) }}">
@@ -153,5 +153,23 @@ $(document).ready(function () {
 .btn-outline-danger:hover {
    color: white;
 }
+</style>
+<style>
+    /* Omogućava da dropdown bude vidljiv izvan DataTables kontejnera */
+    .table-responsive {
+        overflow: visible !important;
+    }
+    
+    /* Dodatno osiguranje za mobilne uređaje */
+    @media screen and (max-width: 767px) {
+        .table-responsive .dropdown-menu {
+            position: static !important;
+        }
+    }
+    
+    /* Osigurava da dropdown bude iznad svih elemenata */
+    .dropdown-menu {
+        z-index: 1100;
+    }
 </style>
 {% endblock %}
