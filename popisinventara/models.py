@@ -154,7 +154,32 @@ class Category(db.Model):
         return f'<Category {self.category_number}>'
 
 class SingleItem(db.Model):
-    """Model pojedinačnog predmeta sa podrškom za stari i novi sistem."""
+    """Model pojedinačnog predmeta sa podrškom za stari i novi sistem.
+    
+    Attributes:
+        id (int): Jedinstveni identifikator predmeta
+        serial (str): Serijski broj predmeta
+        inventory_number (str): Inventarni broj predmeta u sistemu
+        name (str): Naziv predmeta
+        supplier (str): Dobavljač predmeta (opciono)
+        invoice_number (str): Broj fakture (opciono)
+        initial_price (Numeric): Početna nabavna cena predmeta
+        current_price (Numeric): Trenutna vrednost predmeta nakon amortizacije
+        expediture_price (Numeric): Izlazna cena predmeta pri rashodovanju (opciono - preračunava se pri rashodovanju)
+        input_in_app_date (Date): Datum unosa predmeta u aplikaciju (opciono - samo kod predmeta koji smo masovno uneli u app)
+        deprecation_value (Numeric): Otpisana vrednost do trenutka importa u aplikaciju.
+            Važno za predmete koji su imali prethodne otpise pre uvođenja u sistem, pogodtovu ako je postojala greška u proračunu.
+            Koristi se kao početna tačka za dalju amortizaciju.
+        purchase_date (Date): Datum nabavke predmeta
+        expediture_date (Date): Datum rashodovanja predmeta (opciono)
+        reverse_person (str): Osoba koja je uzela predmet na revers (opciono)
+        reverse_date (Date): Datum uzimanja predmeta na revers (opciono)
+    
+    Note:
+        - Sva polja označena sa (opciono) imaju nullable=True
+        - Novčani iznosi se čuvaju kao Numeric sa 10 cifara i 2 decimale
+        - Datumi se čuvaju kao Date objekti
+    """
     __tablename__ = 'single_item'
     
     id = db.Column(db.Integer, primary_key=True)
@@ -167,7 +192,7 @@ class SingleItem(db.Model):
     current_price = db.Column(db.Numeric(precision=10, scale=2), nullable=False)
     expediture_price = db.Column(db.Numeric(precision=10, scale=2), nullable=True)
     input_in_app_date = db.Column(db.Date, nullable=True)
-    deprecation_value = db.Column(db.Numeric(precision=10, scale=2), nullable=True)
+    deprecation_value = db.Column(db.Numeric(precision=10, scale=2), nullable=True) #! otpisana vrednost do importa u app (bitno ako su imali greške pre importa da se ne pravi - grška se uračunava u naš app i dalje se vrši amortizacija po obrazcu)
     purchase_date = db.Column(db.Date, nullable=False)
     expediture_date = db.Column(db.Date, nullable=True)
     reverse_person = db.Column(db.String(50), nullable=True)
