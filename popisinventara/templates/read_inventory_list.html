@@ -156,8 +156,15 @@ $(document).ready(function () {
 </style>
 <style>
     /* Omogućava da dropdown bude vidljiv izvan DataTables kontejnera */
-    .table-responsive {
+    .table-responsive,
+    .dataTables_wrapper,
+    .page-content {
         overflow: visible !important;
+    }
+    
+    /* Osigurava da table-responsive ne scrolluje horizontalno */
+    .table-responsive {
+        overflow-x: auto !important;
     }
     
     /* Dodatno osiguranje za mobilne uređaje */
@@ -169,6 +176,12 @@ $(document).ready(function () {
     
     /* Osigurava da dropdown bude iznad svih elemenata */
     .dropdown-menu {
+        z-index: 1100;
+    }
+    
+    /* Osigurava da dropdown button ima pravilan z-index */
+    .dropdown {
+        position: relative;
         z-index: 1100;
     }
 </style>
