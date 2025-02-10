@@ -73,6 +73,87 @@ def category_reports():
                             legend='Izveštaj po kontima | Projekcija na kraju tekuće godine')
 
 
+# @reports.route('/category_reports_past/<int:inventory_id>', methods=['GET', 'POST'])
+# def category_reports_past(inventory_id):
+#     """
+#     Generiše izveštaj po kontima za određeni inventar.
+#     Prikazuje stanje predmeta grupisano po kategorijama za datum kada je inventar napravljen.
+#     """
+#     inventory = Inventory.query.get_or_404(inventory_id)
+#     inventory_data = json.loads(inventory.working_data)
+#     single_items = inventory_data.get('single_items', [])
+    
+#     data = []
+#     category_list = []
+    
+#     # Debug ispis
+#     print(f"Loaded inventory data with {len(single_items)} items")
+    
+#     for single_item in single_items:
+#         # Preskačemo rashodovane predmete
+#         if single_item.get('expediture_date') is not None:
+#             continue
+            
+#         # U working_data, category_number je već sačuvan
+#         category_number = single_item.get('category_number')
+#         if not category_number:
+#             print(f"Missing category for item {single_item.get('name')}")
+#             continue
+#         # is_written_off = single_item.get('expediture_date') is not None
+
+#         if category_number not in category_list:
+#             category_list.append(category_number)
+#             new_record = {
+#                 'category': category_number,
+#                 'initial_price': Decimal(str(single_item['initial_price'])),
+#                 'current_price': Decimal(str(single_item['current_price'])),
+#                 'write_off_until_current_year': Decimal(str(single_item['write_off_until_current_year'])),
+#                 'depreciation_per_year': Decimal(str(single_item['depreciation_per_year'])),
+#                 'price_at_end_of_year': Decimal(str(single_item['price_at_end_of_year'])),
+#                 'quantity': 1
+#             }
+#             data.append(new_record)
+#         else:
+#             for record in data:
+#                 if record['category'] == category_number:
+#                     record['initial_price'] += Decimal(str(single_item['initial_price']))
+#                     record['current_price'] += Decimal(str(single_item['current_price']))
+#                     record['write_off_until_current_year'] += Decimal(str(single_item['write_off_until_current_year']))
+#                     record['depreciation_per_year'] += Decimal(str(single_item['depreciation_per_year']))
+#                     record['price_at_end_of_year'] += Decimal(str(single_item['price_at_end_of_year']))
+#                     record['quantity'] += 1
+#                     break
+    
+#     # Debug ispis
+#     print(f"Processed data for {len(category_list)} categories")
+#     print("Category list:", category_list)
+#     print("Data:", data)
+
+#     # Sortiramo podatke po broju kategorije
+#     data.sort(key=lambda x: x['category'])
+    
+#     # Računamo totale
+#     totals = {
+#         'initial_price': sum(record['initial_price'] for record in data),
+#         'current_price': sum(record['current_price'] for record in data),
+#         'write_off_until_current_year': sum(record['write_off_until_current_year'] for record in data),
+#         'depreciation_per_year': sum(record['depreciation_per_year'] for record in data),
+#         'price_at_end_of_year': sum(record['price_at_end_of_year'] for record in data),
+#         'quantity': sum(record['quantity'] for record in data),
+#     }
+
+#     # Generišemo PDF izveštaj
+#     category_reports_past_pdf(data, inventory)
+
+#     return render_template('category_reports.html', 
+#                             data=data,
+#                             totals=totals,
+#                             inventory_id=inventory_id,
+#                             inventory_year=inventory.date.year,
+#                             title='Izveštaj po kontima',
+#                             legend=f'Izveštaj po kontima - popis {inventory.date} | {inventory.description}')
+
+
 @reports.route('/category_reports_past/<int:inventory_id>', methods=['GET', 'POST'])
 def category_reports_past(inventory_id):
     """
@@ -82,6 +163,10 @@ def category_reports_past(inventory_id):
     inventory = Inventory.query.get_or_404(inventory_id)
     inventory_data = json.loads(inventory.working_data)
     single_items = inventory_data.get('single_items', [])
+    inventory_items = inventory_data.get('inventory', [])
+    
+    # Kreiramo mapu room_id -> items za brži pristup
+    room_items_map = {room['room_id']: room['items'] for room in inventory_items}
     
     data = []
     category_list = []
@@ -99,29 +184,54 @@ def category_reports_past(inventory_id):
         if not category_number:
             print(f"Missing category for item {single_item.get('name')}")
             continue
-        # is_written_off = single_item.get('expediture_date') is not None
+
+        # Pronalazimo popisane količine za ovaj predmet u njegovoj prostoriji
+        room_id = single_item.get('room_id')
+        room_items = room_items_map.get(room_id, [])
+        item_in_room = next((item for item in room_items if str(item['serial']) == str(single_item['serial'])), None)
+        
+        # Ako predmet nije pronađen u inventory delu ili nema quantity_input, preskačemo ga
+        if not item_in_room:
+            continue
+            
+        quantity = float(item_in_room.get('quantity', 0))
+        quantity_input = float(item_in_room.get('quantity_input', 0))
+        
+        # Ako nema popisanih predmeta, preskačemo
+        if quantity_input == 0:
+            continue
+            
+        # Računamo proporciju vrednosti samo za popisane predmete
+        proportion = quantity_input / quantity if quantity > 0 else 0
+        
+        # Množimo sve vrednosti sa proporcijom popisanih predmeta
+        initial_price = Decimal(str(single_item['initial_price'])) * Decimal(str(proportion))
+        current_price = Decimal(str(single_item['current_price'])) * Decimal(str(proportion))
+        write_off = Decimal(str(single_item['write_off_until_current_year'])) * Decimal(str(proportion))
+        depreciation = Decimal(str(single_item['depreciation_per_year'])) * Decimal(str(proportion))
+        price_at_end = Decimal(str(single_item['price_at_end_of_year'])) * Decimal(str(proportion))
 
         if category_number not in category_list:
             category_list.append(category_number)
             new_record = {
                 'category': category_number,
-                'initial_price': Decimal(str(single_item['initial_price'])),
-                'current_price': Decimal(str(single_item['current_price'])),
-                'write_off_until_current_year': Decimal(str(single_item['write_off_until_current_year'])),
-                'depreciation_per_year': Decimal(str(single_item['depreciation_per_year'])),
-                'price_at_end_of_year': Decimal(str(single_item['price_at_end_of_year'])),
-                'quantity': 1
+                'initial_price': initial_price,
+                'current_price': current_price,
+                'write_off_until_current_year': write_off,
+                'depreciation_per_year': depreciation,
+                'price_at_end_of_year': price_at_end,
+                'quantity': quantity_input  # Koristimo quantity_input umesto 1
             }
             data.append(new_record)
         else:
             for record in data:
                 if record['category'] == category_number:
-                    record['initial_price'] += Decimal(str(single_item['initial_price']))
-                    record['current_price'] += Decimal(str(single_item['current_price']))
-                    record['write_off_until_current_year'] += Decimal(str(single_item['write_off_until_current_year']))
-                    record['depreciation_per_year'] += Decimal(str(single_item['depreciation_per_year']))
-                    record['price_at_end_of_year'] += Decimal(str(single_item['price_at_end_of_year']))
-                    record['quantity'] += 1
+                    record['initial_price'] += initial_price
+                    record['current_price'] += current_price
+                    record['write_off_until_current_year'] += write_off
+                    record['depreciation_per_year'] += depreciation
+                    record['price_at_end_of_year'] += price_at_end
+                    record['quantity'] += quantity_input  # Dodajemo quantity_input
                     break
     
     # Debug ispis
@@ -152,7 +262,6 @@ def category_reports_past(inventory_id):
                             inventory_year=inventory.date.year,
                             title='Izveštaj po kontima',
                             legend=f'Izveštaj po kontima - popis {inventory.date} | {inventory.description}')
-
 
 @reports.route('/category_reports_expediture/<int:inventory_id>')
 def category_reports_expediture(inventory_id):
