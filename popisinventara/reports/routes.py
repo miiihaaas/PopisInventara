@@ -185,32 +185,37 @@ def category_reports_past(inventory_id):
             print(f"Missing category for item {single_item.get('name')}")
             continue
 
-        # Pronalazimo popisane količine za ovaj predmet u njegovoj prostoriji
+# Pronalazimo popisane količine za ovaj predmet u njegovoj prostoriji
         room_id = single_item.get('room_id')
         room_items = room_items_map.get(room_id, [])
         item_in_room = next((item for item in room_items if str(item['serial']) == str(single_item['serial'])), None)
         
+        # Debug print za pronađeni item
+        print(f"Item in room: {item_in_room}")
+        print(f"Single item: {single_item}")
+        
         # Ako predmet nije pronađen u inventory delu ili nema quantity_input, preskačemo ga
         if not item_in_room:
+            print(f"Skipping item - not found in room: {single_item.get('name')}")
             continue
             
-        quantity = float(item_in_room.get('quantity', 0))
-        quantity_input = float(item_in_room.get('quantity_input', 0))
+        quantity = Decimal(str(item_in_room.get('quantity', 0)))
+        quantity_input = Decimal(str(item_in_room.get('quantity_input', 0)))
         
         # Ako nema popisanih predmeta, preskačemo
         if quantity_input == 0:
+            print(f"Skipping item - no counted quantity: {single_item.get('name')}")
             continue
             
-        # Računamo proporciju vrednosti samo za popisane predmete
-        proportion = quantity_input / quantity if quantity > 0 else 0
+        # Množimo vrednosti sa brojem popisanih predmeta
+        initial_price = Decimal(str(single_item['initial_price'])) * quantity_input
+        current_price = Decimal(str(single_item['current_price'])) * quantity_input
+        write_off = Decimal(str(single_item['write_off_until_current_year'])) * quantity_input
+        depreciation = Decimal(str(single_item['depreciation_per_year'])) * quantity_input
+        price_at_end = Decimal(str(single_item['price_at_end_of_year'])) * quantity_input
         
-        # Množimo sve vrednosti sa proporcijom popisanih predmeta
-        initial_price = Decimal(str(single_item['initial_price'])) * Decimal(str(proportion))
-        current_price = Decimal(str(single_item['current_price'])) * Decimal(str(proportion))
-        write_off = Decimal(str(single_item['write_off_until_current_year'])) * Decimal(str(proportion))
-        depreciation = Decimal(str(single_item['depreciation_per_year'])) * Decimal(str(proportion))
-        price_at_end = Decimal(str(single_item['price_at_end_of_year'])) * Decimal(str(proportion))
-
+        print(f"Initial price after: {initial_price}")
+        
         if category_number not in category_list:
             category_list.append(category_number)
             new_record = {
