@@ -253,6 +253,8 @@ def category_reports_past(inventory_id):
         'price_at_end_of_year': sum(record['price_at_end_of_year'] for record in data),
         'quantity': sum(record['quantity'] for record in data),
     }
+    # Generišemo PDF izveštaj
+    category_reports_past_pdf(data, inventory)
 
     return render_template('category_reports.html', 
                             data=data,
