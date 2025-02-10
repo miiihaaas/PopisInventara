@@ -450,6 +450,17 @@ class BaseReportPDF(FPDF):
         return locale.format_string(f'%.{decimal_places}f', 
                                     value.quantize(Decimal(f'0.{"0" * decimal_places}')), 
                                     grouping=True)
+    def _update_totals(self, totals, row):
+        """Ažurira ukupne vrednosti."""
+        # Konvertujemo sve vrednosti u Decimal
+        for key in ['initial_price', 'write_off_until_current_year', 
+                'depreciation_per_year', 'price_at_end_of_year']:
+            if key in row:
+                totals[key] += Decimal(str(row[key]))
+        
+        # Posebno rukujemo quantity jer može biti None ili 0
+        if 'quantity' in row:
+            totals['quantity'] += Decimal(str(row.get('quantity', 0)))
 
 
 class CategoryReportPDF(BaseReportPDF):
@@ -567,15 +578,6 @@ class CategoryReportPDF(BaseReportPDF):
                 
         return values
 
-    def _update_totals(self, totals, row):
-        """Ažurira ukupne vrednosti."""
-        totals['initial_price'] += row['initial_price']
-        if self.report_type in ['basic', 'expediture']:
-            totals['write_off_until_current_year'] += row['write_off_until_current_year']
-            totals['depreciation_per_year'] += row['depreciation_per_year']
-            totals['price_at_end_of_year'] += row['price_at_end_of_year']
-        if self.report_type == 'basic':
-            totals['quantity'] += row.get('quantity', 0)
 
     def _print_totals(self, totals, widths, aligns):
         """Ispisuje red sa ukupnim vrednostima."""
@@ -722,13 +724,6 @@ class SerialReportPDF(BaseReportPDF):
             self.format_number(row['price_at_end_of_year'])
         ]
 
-    def _update_totals(self, totals, row):
-        """Ažurira ukupne vrednosti."""
-        totals['quantity'] += row['quantity']
-        totals['initial_price'] += row['initial_price']
-        totals['write_off_until_current_year'] += row['write_off_until_current_year']
-        totals['depreciation_per_year'] += row['depreciation_per_year']
-        totals['price_at_end_of_year'] += row['price_at_end_of_year']
 
     def _print_totals(self, totals, widths, aligns):
         """Ispisuje red sa ukupnim vrednostima."""
@@ -857,13 +852,6 @@ class ItemReportPDF(BaseReportPDF):
             self.format_number(row['price_at_end_of_year'])
         ]
 
-    def _update_totals(self, totals, row):
-        """Ažurira ukupne vrednosti."""
-        totals['quantity'] += row['quantity']
-        totals['initial_price'] += row['initial_price']
-        totals['write_off_until_current_year'] += row['write_off_until_current_year']
-        totals['depreciation_per_year'] += row['depreciation_per_year']
-        totals['price_at_end_of_year'] += row['price_at_end_of_year']
 
     def _print_totals(self, totals, widths, aligns):
         """Ispisuje red sa ukupnim vrednostima."""
