@@ -1,44 +1,56 @@
 {% extends "layout.html" %}
 {% block content %}
 <div class="reset-password-container">
-    <div class="reset-card">
-        <!-- Icon and Title -->
-        <div class="text-center mb-4">
-            <div class="reset-icon">
-                <i class="fa fa-key"></i>
-            </div>
+   <div class="reset-card">
+      <!-- Icon and Title -->
+      <div class="text-center mb-4">
+         <div class="reset-icon">
+               <i class="fa fa-key"></i>
+         </div>
+         {% if is_create %}
+            <h4 class="reset-title">Kreiranje lozinke</h4>
+            <p class="reset-subtitle">
+               Unesite email adresu i poslaćemo Vam link za kreiranje lozinke
+            </p>
+         {% else %}
             <h4 class="reset-title">Resetovanje lozinke</h4>
             <p class="reset-subtitle">
-                Unesite email adresu i poslaćemo Vam link za resetovanje lozinke
+               Unesite email adresu i poslaćemo Vam link za resetovanje lozinke
             </p>
-        </div>
+         {% endif %}
+      </div>
 
-        <!-- Reset Form -->
-        <form method="POST" action="">
-            {{ form.hidden_tag() }}
-            
-            <div class="form-group mb-4">
-                {{ form.email.label(class="form-label") }}
-                {% if form.email.errors %}
-                    {{ form.email(class="form-control is-invalid", placeholder="Unesite email adresu") }}
-                    <div class="invalid-feedback">
-                        {% for error in form.email.errors %}
-                            <span>{{ error }}</span>
-                        {% endfor %}
-                    </div>
-                {% else %}
-                    {{ form.email(class="form-control", placeholder="Unesite email adresu") }}
-                {% endif %}
-            </div>
+      <!-- Reset Form -->
+      <form method="POST" action="">
+         {{ form.hidden_tag() }}
+         <div class="form-group mb-4">
+               {{ form.email.label(class="form-label") }}
+               {% if form.email.errors %}
+                  {{ form.email(class="form-control is-invalid", placeholder="Unesite email adresu") }}
+                  <div class="invalid-feedback">
+                     {% for error in form.email.errors %}
+                           <span>{{ error }}</span>
+                     {% endfor %}
+                  </div>
+               {% else %}
+                  {{ form.email(class="form-control", placeholder="Unesite email adresu") }}
+               {% endif %}
+         </div>
 
-            <div class="d-grid gap-2">
-                {{ form.submit(class="btn btn-primary btn-lg") }}
-                <a href="{{ url_for('users.login') }}" class="btn btn-outline-secondary">
-                    <i class="fa fa-arrow-left me-2"></i>Nazad na prijavu
-                </a>
-            </div>
-        </form>
-    </div>
+         <div class="d-grid gap-2">
+            {% if is_create %}
+               <button class="btn btn-primary" type="submit">
+                  <i class="fa fa-key me-2"></i>Kreiranje lozinke
+               </button>
+            {% else %}
+               {{ form.submit(class="btn btn-primary btn-lg") }}
+               <a href="{{ url_for('users.login') }}" class="btn btn-outline-secondary">
+                  <i class="fa fa-arrow-left me-2"></i>Nazad na prijavu
+               </a>
+            {% endif %}
+         </div>
+      </form>
+   </div>
 </div>
 {% endblock content %}
 
