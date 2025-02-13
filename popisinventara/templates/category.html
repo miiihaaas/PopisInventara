@@ -31,11 +31,13 @@
                     <td>{{ category.category_number }}</td>
                     <td>{{ category.name }}</td>
                     <td class="text-end">
-                        <button class="btn-x" data-bs-toggle="modal" data-bs-target="#myCategory" 
-                                onclick="editCategory('{{category.id}}', '{{category.category_number}}', '{{category.name}}')" 
-                                title="Izmena konta">
-                            <i class="fa fa-edit awesomeedit"></i>
-                        </button>
+                        <a href="#" class="btn-x btn-primary-x" 
+                            data-bs-toggle="modal" 
+                            data-bs-target="#myCategory" 
+                            onclick="editCategory('{{category.id}}', '{{category.category_number}}', '{{category.name}}')" 
+                            title="Izmena konta">
+                                <i class="fa fa-edit awesomeedit" aria-hidden="true"></i>
+                        </a>
                     </td>
                 </tr>
                 {% endfor %}

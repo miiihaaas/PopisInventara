@@ -57,11 +57,13 @@
                     {% if not active_inventory_list %}
                     <td class="text-end">
                         <div class="d-flex gap-2 justify-content-end">
-                            <button class="btn-x" data-bs-toggle="modal" data-bs-target="#myBuilding" 
-                                    onclick="openBuildingModal('{{building.id}}', '{{building.name}}', '{{building.address}}', '{{building.city}}')" 
-                                    title="Izmena podataka zgrade">
-                                <i class="fa fa-building awesomeedit"></i>
-                            </button>
+                            <a href="#" class="btn-x btn-primary-x" 
+                                data-bs-toggle="modal" 
+                                data-bs-target="#myBuilding" 
+                                onclick="openBuildingModal('{{building.id}}', '{{building.name}}', '{{building.address}}', '{{building.city}}')" 
+                                title="Izmena podataka zgrade">
+                                    <i class="fa fa-building awesomeedit" aria-hidden="true"></i>
+                            </a>
                         </div>
                     </td>
                     {% endif %}
@@ -110,7 +112,7 @@
                     <td>{{room.name}}</td>
                     <td>{{room.dynamic_name}}</td>
                     {% if not active_inventory_list %}
-                        {% if room.id < 5 %}
+                        {% if room.id < 10 %}
                             <td></td>
                         {% else %}
                             <td>

@@ -1283,6 +1283,8 @@
             closeOnSelect: true,
         })
         var data_1 =$("#data_1").DataTable({
+            stateSave: true,
+            stateDuration: 300,
             ajax: {
                 url: '{{url_for("single_items.api_single_items")}}',
                 type: 'GET',
@@ -1410,7 +1412,7 @@
             order: [[1, "asc"]],
             language: {
                 url: "//cdn.datatables.net/plug-ins/1.12.1/i18n/sr-SP.json",
-                stateSave: true
+                // stateSave: true
             },
         });
         $('#room_select').on('change', function () {
@@ -1427,6 +1429,8 @@
         });
         ////////////////////////////////
         var data_2 = $("#data_2").DataTable({
+            stateSave: true,
+            stateDuration: 300,
             ajax: {
                 url: '{{url_for("single_items.api_serial")}}',
                 type: 'GET',
