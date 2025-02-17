@@ -4,9 +4,6 @@ from wtforms.validators import DataRequired, Length, Email, EqualTo, ValidationE
 from popisinventara.models import User
 
 
-
-
-
 class LoginForm(FlaskForm):
     email = StringField('Mejl', validators=[DataRequired(), Email()])
     password = PasswordField('Lozinka', validators=[DataRequired()])

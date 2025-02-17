@@ -1,4 +1,3 @@
-
 from collections import defaultdict
 from decimal import Decimal
 from datetime import date
@@ -777,7 +776,8 @@ class ItemReportPDF(BaseReportPDF):
         """Određuje naslov izveštaja na osnovu tipa."""
         titles = {
             'expediture_item': 'izveštaj o isknjiženim stavkama po kontu i predmetu',
-            'new_purchases_item': 'Izveštaj o novim nabavkama po kontu i predmetu po kontima'
+            'new_purchases_item': 'Izveštaj o novim nabavkama po kontu i predmetu po kontima',
+            'basic': 'Izveštaj po kontima i predmetu'
         }
         return titles.get(report_type, 'Rekapitulacija predmeta po kontima')
 
@@ -883,7 +883,8 @@ class ItemReportPDF(BaseReportPDF):
         
         filenames = {
             'expediture_item': 'category_reports_expediture_item.pdf',
-            'new_purchases_item': 'category_reports_new_purchases_item.pdf'
+            'new_purchases_item': 'category_reports_new_purchases_item.pdf',
+            'basic': 'category_reports_past_item.pdf'
         }
         
         filename = filenames.get(self.report_type, 'item_report.pdf')
