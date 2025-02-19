@@ -333,8 +333,9 @@ def category_reports_past_item(inventory_id):
         price_at_end = Decimal(str(single_item['price_at_end_of_year'])) * total_quantity_input
         
         #! proverava da li je depreciation_per_year > current_price
-        if depreciation > current_price:
-            depreciation = current_price
+        remaining_for_writeoff = initial_price - write_off  # 5.807.421,38 - 5.727.778,61 = 69.642,77
+        if remaining_for_writeoff < depreciation:  # 69.642,77 < 87.111,32
+            depreciation = remaining_for_writeoff  # depreciation postaje 69.642,77
 
         category_serial_tuple = (category_number, serial)
         if category_serial_tuple not in category_serial_list:
