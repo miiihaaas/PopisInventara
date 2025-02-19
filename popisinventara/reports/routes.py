@@ -213,16 +213,8 @@ def category_reports_past(inventory_id):
             
         # Množimo vrednosti sa ukupnim brojem popisanih predmeta
         initial_price = Decimal(str(single_item['initial_price'])) * total_quantity_input
-        current_price = Decimal(str(single_item['current_price']))
-        write_off = Decimal(str(single_item['write_off_until_current_year']))
-        
-        # Provera da write_off ne može biti veći od current_price
-        if write_off > current_price:
-            write_off = current_price
-            
-        # Množenje sa količinom
-        current_price = current_price * total_quantity_input
-        write_off = write_off * total_quantity_input
+        current_price = Decimal(str(single_item['current_price'])) * total_quantity_input
+        write_off = Decimal(str(single_item['write_off_until_current_year'])) * total_quantity_input
         depreciation = Decimal(str(single_item['depreciation_per_year'])) * total_quantity_input
         price_at_end = Decimal(str(single_item['price_at_end_of_year'])) * total_quantity_input
 
@@ -309,7 +301,7 @@ def category_reports_past_item(inventory_id):
         if not category_number or not serial:
             print(f"Missing category or serial for item {single_item.get('name')}")
             continue
-            
+
         # Kreiramo jedinstveni ključ za praćenje
         item_key = f"{serial}_{category_number}"
         
@@ -335,18 +327,14 @@ def category_reports_past_item(inventory_id):
             
         # Množimo vrednosti sa ukupnim brojem popisanih predmeta
         initial_price = Decimal(str(single_item['initial_price'])) * total_quantity_input
-        current_price = Decimal(str(single_item['current_price']))
-        write_off = Decimal(str(single_item['write_off_until_current_year']))
-        
-        # Provera da write_off ne može biti veći od current_price
-        if write_off > current_price:
-            write_off = current_price
-            
-        # Množenje sa količinom
-        current_price = current_price * total_quantity_input
-        write_off = write_off * total_quantity_input
+        current_price = Decimal(str(single_item['current_price'])) * total_quantity_input
+        write_off = Decimal(str(single_item['write_off_until_current_year'])) * total_quantity_input
         depreciation = Decimal(str(single_item['depreciation_per_year'])) * total_quantity_input
         price_at_end = Decimal(str(single_item['price_at_end_of_year'])) * total_quantity_input
+        
+        #! proverava da li je depreciation_per_year > current_price
+        if depreciation > current_price:
+            depreciation = current_price
 
         category_serial_tuple = (category_number, serial)
         if category_serial_tuple not in category_serial_list:
