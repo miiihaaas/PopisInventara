@@ -217,6 +217,11 @@ def category_reports_past(inventory_id):
         write_off = Decimal(str(single_item['write_off_until_current_year'])) * total_quantity_input
         depreciation = Decimal(str(single_item['depreciation_per_year'])) * total_quantity_input
         price_at_end = Decimal(str(single_item['price_at_end_of_year'])) * total_quantity_input
+        
+        #! proverava da li je depreciation_per_year > current_price
+        remaining_for_writeoff = initial_price - write_off  # 5.807.421,38 - 5.727.778,61 = 79.642,77
+        if remaining_for_writeoff < depreciation:  # 79.642,77 < 87.111,32
+            depreciation = remaining_for_writeoff  # depreciation postaje 79.642,77
 
         if category_number not in category_list:
             category_list.append(category_number)
@@ -419,12 +424,25 @@ def category_reports_expediture(inventory_id):
         
         if category_number not in category_list:
             category_list.append(category_number)
+            initial_price = Decimal(str(single_item['initial_price']))
+            write_off = Decimal(str(single_item['write_off_until_current_year']))
+            depreciation = Decimal(str(single_item['depreciation_per_year']))
+            
+            # Primenjujemo istu logiku za obračun amortizacije
+            remaining_for_writeoff = initial_price - write_off
+            if remaining_for_writeoff < depreciation:
+                depreciation = remaining_for_writeoff
+            if remaining_for_writeoff <= 0:
+                depreciation = Decimal('0')
+                
+            price_at_end = initial_price - (write_off + depreciation)
+            
             new_record = {
                 'category': category_number,
-                'initial_price': Decimal(str(single_item['initial_price'])),
-                'write_off_until_current_year': Decimal(str(single_item['write_off_until_current_year'])),
-                'depreciation_per_year': Decimal(str(single_item['depreciation_per_year'])),
-                'price_at_end_of_year': Decimal(str(single_item['price_at_end_of_year'])),
+                'initial_price': initial_price,
+                'write_off_until_current_year': write_off,
+                'depreciation_per_year': depreciation,
+                'price_at_end_of_year': price_at_end,
                 'current_price': Decimal(str(single_item['current_price'])),
                 'quantity': 1
             }
@@ -432,11 +450,24 @@ def category_reports_expediture(inventory_id):
         else:
             for record in data:
                 if record['category'] == category_number:
-                    record['initial_price'] += Decimal(str(single_item['initial_price']))
+                    initial_price = Decimal(str(single_item['initial_price']))
+                    write_off = Decimal(str(single_item['write_off_until_current_year']))
+                    depreciation = Decimal(str(single_item['depreciation_per_year']))
+                    
+                    # Primenjujemo istu logiku za obračun amortizacije
+                    remaining_for_writeoff = initial_price - write_off
+                    if remaining_for_writeoff < depreciation:
+                        depreciation = remaining_for_writeoff
+                    if remaining_for_writeoff <= 0:
+                        depreciation = Decimal('0')
+                        
+                    price_at_end = initial_price - (write_off + depreciation)
+                    
+                    record['initial_price'] += initial_price
                     record['current_price'] += Decimal(str(single_item['current_price']))
-                    record['write_off_until_current_year'] += Decimal(str(single_item['write_off_until_current_year']))
-                    record['depreciation_per_year'] += Decimal(str(single_item['depreciation_per_year']))
-                    record['price_at_end_of_year'] += Decimal(str(single_item['price_at_end_of_year']))
+                    record['write_off_until_current_year'] += write_off
+                    record['depreciation_per_year'] += depreciation
+                    record['price_at_end_of_year'] += price_at_end
                     record['quantity'] += 1
                     break
     
@@ -572,26 +603,52 @@ def category_reports_expediture_item(inventory_id):
                 # Ažuriramo postojeći zapis
                 for record in data:
                     if record['category'] == category_number and record['serial'] == serial:
+                        initial_price = Decimal(str(single_item['initial_price']))
+                        write_off = Decimal(str(single_item['write_off_until_current_year']))
+                        depreciation = Decimal(str(single_item['depreciation_per_year']))
+                        
+                        # Primenjujemo istu logiku za obračun amortizacije
+                        remaining_for_writeoff = initial_price - write_off
+                        if remaining_for_writeoff < depreciation:
+                            depreciation = remaining_for_writeoff
+                        if remaining_for_writeoff <= 0:
+                            depreciation = Decimal('0')
+                            
+                        price_at_end = initial_price - (write_off + depreciation)
+                        
                         record['quantity'] += 1
-                        record['initial_price'] += Decimal(str(single_item['initial_price']))
-                        record['write_off_until_current_year'] += Decimal(str(single_item['write_off_until_current_year']))
-                        record['depreciation_per_year'] += Decimal(str(single_item['depreciation_per_year']))
-                        record['price_at_end_of_year'] += Decimal(str(single_item['price_at_end_of_year']))
+                        record['initial_price'] += initial_price
+                        record['write_off_until_current_year'] += write_off
+                        record['depreciation_per_year'] += depreciation
+                        record['price_at_end_of_year'] += price_at_end
                         break
                 break
 
         if not found:
             # Dodajemo novi zapis
+            initial_price = Decimal(str(single_item['initial_price']))
+            write_off = Decimal(str(single_item['write_off_until_current_year']))
+            depreciation = Decimal(str(single_item['depreciation_per_year']))
+            
+            # Primenjujemo istu logiku za obračun amortizacije
+            remaining_for_writeoff = initial_price - write_off
+            if remaining_for_writeoff < depreciation:
+                depreciation = remaining_for_writeoff
+            if remaining_for_writeoff <= 0:
+                depreciation = Decimal('0')
+                
+            price_at_end = initial_price - (write_off + depreciation)
+            
             category_serial_list.append((category_number, serial))
             new_record = {
                 'category': category_number,
                 'serial': serial,
                 'item': single_item['name'],
                 'quantity': 1,
-                'initial_price': Decimal(str(single_item['initial_price'])),
-                'write_off_until_current_year': Decimal(str(single_item['write_off_until_current_year'])),
-                'depreciation_per_year': Decimal(str(single_item['depreciation_per_year'])),
-                'price_at_end_of_year': Decimal(str(single_item['price_at_end_of_year'])),
+                'initial_price': initial_price,
+                'write_off_until_current_year': write_off,
+                'depreciation_per_year': depreciation,
+                'price_at_end_of_year': price_at_end,
             }
             data.append(new_record)
     
@@ -732,24 +789,50 @@ def category_reports_new_purchases_past(inventory_id):
                 
             if category_number not in category_list:
                 category_list.append(category_number)
+                initial_price = Decimal(str(single_item['initial_price']))
+                write_off = Decimal(str(single_item['write_off_until_current_year']))
+                depreciation = Decimal(str(single_item['depreciation_per_year']))
+                
+                # Primenjujemo istu logiku za obračun amortizacije
+                remaining_for_writeoff = initial_price - write_off
+                if remaining_for_writeoff < depreciation:
+                    depreciation = remaining_for_writeoff
+                if remaining_for_writeoff <= 0:
+                    depreciation = Decimal('0')
+                    
+                price_at_end = initial_price - (write_off + depreciation)
+                
                 new_record = {
                     'category': category_number,
-                    'initial_price': Decimal(str(single_item['initial_price'])),
-                    'write_off_until_current_year': Decimal(str(single_item['write_off_until_current_year'])),
-                    'depreciation_per_year': Decimal(str(single_item['depreciation_per_year'])),
-                    'price_at_end_of_year': Decimal(str(single_item['price_at_end_of_year'])),
+                    'initial_price': initial_price,
+                    'write_off_until_current_year': write_off,
+                    'depreciation_per_year': depreciation,
+                    'price_at_end_of_year': price_at_end,
                     'current_price': Decimal(str(single_item['current_price'])),
-                    'quantity': 1  # Dodajemo brojač količine
+                    'quantity': 1
                 }
                 data.append(new_record)
             else:
                 for record in data:
                     if record['category'] == category_number:
-                        record['initial_price'] += Decimal(str(single_item['initial_price']))
+                        initial_price = Decimal(str(single_item['initial_price']))
+                        write_off = Decimal(str(single_item['write_off_until_current_year']))
+                        depreciation = Decimal(str(single_item['depreciation_per_year']))
+                        
+                        # Primenjujemo istu logiku za obračun amortizacije
+                        remaining_for_writeoff = initial_price - write_off
+                        if remaining_for_writeoff < depreciation:
+                            depreciation = remaining_for_writeoff
+                        if remaining_for_writeoff <= 0:
+                            depreciation = Decimal('0')
+                            
+                        price_at_end = initial_price - (write_off + depreciation)
+                        
+                        record['initial_price'] += initial_price
                         record['current_price'] += Decimal(str(single_item['current_price']))
-                        record['write_off_until_current_year'] += Decimal(str(single_item['write_off_until_current_year']))
-                        record['depreciation_per_year'] += Decimal(str(single_item['depreciation_per_year']))
-                        record['price_at_end_of_year'] += Decimal(str(single_item['price_at_end_of_year']))
+                        record['write_off_until_current_year'] += write_off
+                        record['depreciation_per_year'] += depreciation
+                        record['price_at_end_of_year'] += price_at_end
                         record['quantity'] += 1
                         break
                         
@@ -829,15 +912,28 @@ def category_reports_new_purchases_item(inventory_id):
             # Proveravamo da li već imamo ovu kombinaciju kategorije i serije
             if (category_number, serial) not in category_serial_list:
                 category_serial_list.append((category_number, serial))
+                initial_price = Decimal(str(single_item['initial_price']))
+                write_off = Decimal(str(single_item['write_off_until_current_year']))
+                depreciation = Decimal(str(single_item['depreciation_per_year']))
+                
+                # Primenjujemo istu logiku za obračun amortizacije
+                remaining_for_writeoff = initial_price - write_off
+                if remaining_for_writeoff < depreciation:
+                    depreciation = remaining_for_writeoff
+                if remaining_for_writeoff <= 0:
+                    depreciation = Decimal('0')
+                    
+                price_at_end = initial_price - (write_off + depreciation)
+                
                 new_record = {
                     'category': category_number,
                     'serial': serial,
                     'item': single_item['name'],
                     'quantity': 1,
-                    'initial_price': Decimal(str(single_item['initial_price'])),
-                    'write_off_until_current_year': Decimal(str(single_item['write_off_until_current_year'])),
-                    'depreciation_per_year': Decimal(str(single_item['depreciation_per_year'])),
-                    'price_at_end_of_year': Decimal(str(single_item['price_at_end_of_year'])),
+                    'initial_price': initial_price,
+                    'write_off_until_current_year': write_off,
+                    'depreciation_per_year': depreciation,
+                    'price_at_end_of_year': price_at_end,
                     'current_price': Decimal(str(single_item['current_price']))
                 }
                 data.append(new_record)
@@ -845,11 +941,24 @@ def category_reports_new_purchases_item(inventory_id):
                 # Ažuriramo postojeći zapis
                 for record in data:
                     if record['category'] == category_number and record['serial'] == serial:
+                        initial_price = Decimal(str(single_item['initial_price']))
+                        write_off = Decimal(str(single_item['write_off_until_current_year']))
+                        depreciation = Decimal(str(single_item['depreciation_per_year']))
+                        
+                        # Primenjujemo istu logiku za obračun amortizacije
+                        remaining_for_writeoff = initial_price - write_off
+                        if remaining_for_writeoff < depreciation:
+                            depreciation = remaining_for_writeoff
+                        if remaining_for_writeoff <= 0:
+                            depreciation = Decimal('0')
+                            
+                        price_at_end = initial_price - (write_off + depreciation)
+                        
                         record['quantity'] += 1
-                        record['initial_price'] += Decimal(str(single_item['initial_price']))
-                        record['write_off_until_current_year'] += Decimal(str(single_item['write_off_until_current_year']))
-                        record['depreciation_per_year'] += Decimal(str(single_item['depreciation_per_year']))
-                        record['price_at_end_of_year'] += Decimal(str(single_item['price_at_end_of_year']))
+                        record['initial_price'] += initial_price
+                        record['write_off_until_current_year'] += write_off
+                        record['depreciation_per_year'] += depreciation
+                        record['price_at_end_of_year'] += price_at_end
                         record['current_price'] += Decimal(str(single_item['current_price']))
                         break
                         
