@@ -71,14 +71,15 @@
                                         </a>
                                     </li>
                                     <li><hr class="dropdown-divider"></li>
-                                    <li>
-                                        <a class="dropdown-item" href="{{ url_for('reports.single_item_working', inventory_id=list.id) }}">
-                                            <i class="fa fa-boxes me-2"></i>Stanje inventara
-                                        </a>
-                                    </li>
+                                    <li class="dropdown-header">Stanje popisa</li>
                                     <li>
                                         <a class="dropdown-item" href="{{ url_for('reports.category_reports_past', inventory_id=list.id) }}">
                                             <i class="fa fa-folder me-2"></i>Izveštaj po kontima
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="{{ url_for('reports.category_reports_past_item', inventory_id=list.id) }}">
+                                            <i class="fa fa-boxes me-2"></i>Izveštaj po kontima i predmetima
                                         </a>
                                     </li>
                                 </ul>
