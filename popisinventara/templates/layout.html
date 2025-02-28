@@ -111,6 +111,15 @@
       </nav>
     </header>
     <main role="main" class="container">
+      <!-- Loading Spinner -->
+      <div id="loading-spinner" class="loading-overlay d-none">
+        <div class="spinner-container">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Učitavanje...</span>
+          </div>
+          <div class="spinner-text mt-2">Molimo vas sačekajte, obrađuju se podaci...</div>
+        </div>
+      </div>
       <div class="row">
         <div class="col-md-12">
           {% with messages = get_flashed_messages(with_categories=true) %}
@@ -151,6 +160,27 @@
         alert.classList.add('closing');
         setTimeout(() => alert.remove(), 300);
       }
+    </script>
+    <script>
+      // Funkcija za prikazivanje loading spinnera
+      function showLoadingSpinner() {
+        document.getElementById('loading-spinner').classList.remove('d-none');
+      }
+
+      // Funkcija za sakrivanje loading spinnera
+      function hideLoadingSpinner() {
+        document.getElementById('loading-spinner').classList.add('d-none');
+      }
+
+      // Dodavanje event listenera na sve forme
+      document.addEventListener('DOMContentLoaded', function() {
+        const forms = document.querySelectorAll('form');
+        forms.forEach(form => {
+          form.addEventListener('submit', function() {
+            showLoadingSpinner();
+          });
+        });
+      });
     </script>
   </body>
 </html>

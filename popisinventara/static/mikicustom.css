@@ -899,9 +899,16 @@ main.login-screen .row {
 	justify-content: center;
 	align-items: center;
 	z-index: 9999;
-	opacity: 0;
-	pointer-events: none;
 	transition: opacity 0.3s ease;
+}
+
+.spinner-container {
+	text-align: center;
+}
+
+.spinner-text {
+	font-family: 'Montserrat', sans-serif;
+	font-weight: 500;
 }
 
 .spinner {

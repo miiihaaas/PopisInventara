@@ -689,76 +689,176 @@ def compare_inventory_list(inventory_id):
     inventory = Inventory.query.get_or_404(inventory_id)
     
     if request.method == 'POST':
-        single_items = SingleItem.query.filter(SingleItem.room_id > 2).all()
-        single_items_from_inventory = json.loads(inventory.initial_data)['single_items']
-        working_inventory_list_data = json.loads(inventory.working_data)['inventory']
-        
-        # Prebacivanje svih predmeta u magacin viškova (room_id=4)
-        for single_item in single_items:
-            single_item.room_id = 4
+        try:
+            # Učitavanje podataka iz inventara
+            single_items_from_inventory = json.loads(inventory.initial_data)['single_items']
+            working_inventory_list_data = json.loads(inventory.working_data)['inventory']
+            
+            # Prebacivanje svih predmeta u magacin viškova (room_id=4)
+            SingleItem.query.filter(SingleItem.room_id > 2).update({SingleItem.room_id: 4}, synchronize_session=False)
             db.session.commit()
             
-        # Prolazak kroz popisane prostorije i predmete
-        for room in working_inventory_list_data:
-            room_id = int(room['room_id'])
-            for item in room['items']:
-                serial = int(item['serial'])
-                quantity_input = int(item['quantity_input'])
-                print(f"\n--- Obrada: Serija {serial} u prostoriji {room_id}, potrebna količina: {quantity_input} ---")
-                # Premeštanje predmeta prema popisanim količinama
-                for i in range(quantity_input):
+            # Priprema podataka za efikasno procesiranje
+            items_to_move = {}  # {(serial, room_id): quantity}
+            
+            # Formiramo mapu koja sadrži potreban broj predmeta za svaku prostoriju
+            for room in working_inventory_list_data:
+                room_id = int(room['room_id'])
+                for item in room['items']:
+                    serial = int(item['serial'])
+                    quantity_input = int(item['quantity_input'])
+                    
+                    if quantity_input > 0:
+                        items_to_move[(serial, room_id)] = quantity_input
+            # Procesiramo predmete u manjim grupama od po 100 predmeta
+            batch_size = 100
+            keys = list(items_to_move.keys())
+            
+            for i in range(0, len(keys), batch_size):
+                batch_keys = keys[i:i+batch_size]
+                
+                for serial, room_id in batch_keys:
+                    quantity_needed = items_to_move[(serial, room_id)]
+                    
                     if room_id == 3:
                         # Za prostoriju 3 tražimo samo predmete koji su na reversu
-                        single_item = SingleItem.query.filter_by(room_id=4, serial=serial).filter(SingleItem.reverse_date.isnot(None)).first()
-                        print(f"Prostorija 3 - Tražim predmet sa reversom: {'Pronađen' if single_item else 'Nije pronađen'}")
-                        if single_item:
-                            print(f"Predmet ID: {single_item.id}, Serija: {single_item.serial}, Reverse date: {single_item.reverse_date}")
-                            single_item.room_id = room_id
-                            db.session.commit()
-                            print(f"Premešten u prostoriju {room_id}")
+                        single_items = SingleItem.query.filter_by(
+                            room_id=4, serial=serial
+                        ).filter(
+                            SingleItem.reverse_date.isnot(None)
+                        ).limit(quantity_needed).all()
                     else:
                         # Za sve ostale prostorije tražimo SAMO predmete koji NISU na reversu
-                        single_item = SingleItem.query.filter_by(room_id=4, serial=serial, reverse_date=None).first()
-                        print(f"Ostale prostorije - Tražim predmet bez reversa: {'Pronađen' if single_item else 'Nije pronađen'}")
-                        if single_item:
-                            print(f"Predmet ID: {single_item.id}, Serija: {single_item.serial}, Reverse date: {single_item.reverse_date}")
-                            single_item.room_id = room_id
-                            db.session.commit()
-                            print(f"Premešten u prostoriju {room_id}")
+                        single_items = SingleItem.query.filter_by(
+                            room_id=4, serial=serial, reverse_date=None
+                        ).limit(quantity_needed).all()
+                    
+                    # Ažuriramo prostoriju za sve pronađene predmete
+                    for single_item in single_items:
+                        single_item.room_id = room_id
+                
+                # Commit radimo samo jednom po batch-u, a ne za svaki predmet
+                db.session.commit()
+            
+            # Završavanje popisa
+            inventory.status = 'finished'
+            db.session.commit()
+            
+            # Ažuriranje trenutnih cena u batch-u
+            single_items = SingleItem.query.filter(SingleItem.room_id > 2).all()
+            batch_size = 200
+            
+            for i in range(0, len(single_items), batch_size):
+                batch_items = single_items[i:i+batch_size]
+                
+                for single_item in batch_items:
+                    single_item.current_price, _ = current_price_calculation(
+                        single_item.initial_price,
+                        single_item.depreciation_rate.rate,
+                        single_item.purchase_date,
+                        single_item.expediture_date,
+                        None,
+                        single_item.input_in_app_date,
+                        single_item.deprecation_value
+                    )
+                
+                # Commit radimo samo jednom po batch-u
+                db.session.commit()
+            
+            # Obrada predmeta koji su ostali u magacinu viškova (manjak)
+            items_in_surplus = SingleItem.query.filter_by(room_id=4).all()
+            today = date.today()
+            
+            # Obrađujemo ih u batch-u
+            batch_size = 200
+            for i in range(0, len(items_in_surplus), batch_size):
+                batch_items = items_in_surplus[i:i+batch_size]
+                
+                for item in batch_items:
+                    item.expediture_price = item.current_price
+                    item.expediture_date = today
+                    item.current_price = 0
+                    item.room_id = 2
+                
+                # Commit radimo samo jednom po batch-u
+                db.session.commit()
+            
+            flash(f'Popis "{inventory.description}" je završen.', 'success')
+            return redirect(url_for('main.home'))
+        
+        except Exception as e:
+            db.session.rollback()
+            # Dodati logging ovde
+            flash(f'Došlo je do greške prilikom završavanja popisa: {str(e)}', 'danger')
+            return redirect(url_for('inventory.compare_inventory_list', inventory_id=inventory_id))
+        
+        # single_items = SingleItem.query.filter(SingleItem.room_id > 2).all()
+        
+        # for single_item in single_items:
+        #     single_item.room_id = 4
+        #     db.session.commit()
+            
+        # Prolazak kroz popisane prostorije i predmete
+        # for room in working_inventory_list_data:
+        #     room_id = int(room['room_id'])
+        #     for item in room['items']:
+        #         serial = int(item['serial'])
+        #         quantity_input = int(item['quantity_input'])
+        #         print(f"\n--- Obrada: Serija {serial} u prostoriji {room_id}, potrebna količina: {quantity_input} ---")
+        #         # Premeštanje predmeta prema popisanim količinama
+        #         for i in range(quantity_input):
+        #             if room_id == 3:
+        #                 # Za prostoriju 3 tražimo samo predmete koji su na reversu
+        #                 single_item = SingleItem.query.filter_by(room_id=4, serial=serial).filter(SingleItem.reverse_date.isnot(None)).first()
+        #                 print(f"Prostorija 3 - Tražim predmet sa reversom: {'Pronađen' if single_item else 'Nije pronađen'}")
+        #                 if single_item:
+        #                     print(f"Predmet ID: {single_item.id}, Serija: {single_item.serial}, Reverse date: {single_item.reverse_date}")
+        #                     single_item.room_id = room_id
+        #                     db.session.commit()
+        #                     print(f"Premešten u prostoriju {room_id}")
+        #             else:
+        #                 # Za sve ostale prostorije tražimo SAMO predmete koji NISU na reversu
+        #                 single_item = SingleItem.query.filter_by(room_id=4, serial=serial, reverse_date=None).first()
+        #                 print(f"Ostale prostorije - Tražim predmet bez reversa: {'Pronađen' if single_item else 'Nije pronađen'}")
+        #                 if single_item:
+        #                     print(f"Predmet ID: {single_item.id}, Serija: {single_item.serial}, Reverse date: {single_item.reverse_date}")
+        #                     single_item.room_id = room_id
+        #                     db.session.commit()
+        #                     print(f"Premešten u prostoriju {room_id}")
 
         
-        inventory.status = 'finished'
-        db.session.commit()
+        # inventory.status = 'finished'
+        # db.session.commit()
         
-        # Ažuriranje trenutnih cena
-        for single_item in single_items:
-            single_item.current_price, _ = current_price_calculation(
-                single_item.initial_price,
-                single_item.depreciation_rate.rate,  # Korišćenje depreciation_rate direktno iz SingleItem
-                single_item.purchase_date,
-                single_item.expediture_date,
-                None,
-                single_item.input_in_app_date,
-                single_item.deprecation_value
-            )
-            db.session.commit()
-        # Obrada predmeta koji su ostali u magacinu viškova (manjak)
-        items_in_surplus = SingleItem.query.filter_by(room_id=4).all()
-        today = date.today()
+        # # Ažuriranje trenutnih cena
+        # for single_item in single_items:
+        #     single_item.current_price, _ = current_price_calculation(
+        #         single_item.initial_price,
+        #         single_item.depreciation_rate.rate,  # Korišćenje depreciation_rate direktno iz SingleItem
+        #         single_item.purchase_date,
+        #         single_item.expediture_date,
+        #         None,
+        #         single_item.input_in_app_date,
+        #         single_item.deprecation_value
+        #     )
+        #     db.session.commit()
+        # # Obrada predmeta koji su ostali u magacinu viškova (manjak)
+        # items_in_surplus = SingleItem.query.filter_by(room_id=4).all()
+        # today = date.today()
         
-        for item in items_in_surplus:
-            # Čuvamo trenutnu cenu pre nego što je postavimo na 0
-            item.expediture_price = item.current_price
-            # Postavljamo datum isknjiženja na danas
-            item.expediture_date = today
-            # Postavljamo trenutnu cenu na 0
-            item.current_price = 0
-            # Prebacujemo u magacin isknjiženja
-            item.room_id = 2
+        # for item in items_in_surplus:
+        #     # Čuvamo trenutnu cenu pre nego što je postavimo na 0
+        #     item.expediture_price = item.current_price
+        #     # Postavljamo datum isknjiženja na danas
+        #     item.expediture_date = today
+        #     # Postavljamo trenutnu cenu na 0
+        #     item.current_price = 0
+        #     # Prebacujemo u magacin isknjiženja
+        #     item.room_id = 2
             
-        db.session.commit()
-        flash(f'Popis "{inventory.description}" je završen.', 'success')
-        return redirect(url_for('main.home'))
+        # db.session.commit()
+        # flash(f'Popis "{inventory.description}" je završen.', 'success')
+        # return redirect(url_for('main.home'))
 
     # GET request - priprema podataka za poređenje
     def serialize_data(obj):
