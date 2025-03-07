@@ -161,25 +161,29 @@ def create_inventory_list():
         # Kreiranje single_items_list
         single_items_list = []
         for single_item in single_items:
-            write_off_til_current_year, price_at_end_of_year, depreciation_per_year = write_off_until_current_year(single_item, year)
-                
-            new_single_item = {
-                'id': single_item.id,
-                'serial': single_item.serial,
-                'name': single_item.name,
-                'category_number': single_item.category.category_number,
-                'category_name': single_item.category.name,
-                'depreciation_rate': single_item.depreciation_rate.rate,
-                'initial_price': single_item.initial_price,
-                'current_price': single_item.current_price,
-                'purchase_date': single_item.purchase_date,
-                'expediture_date': single_item.expediture_date,
-                'room_id': single_item.room_id,
-                'depreciation_per_year': depreciation_per_year,
-                'write_off_until_current_year': write_off_til_current_year,
-                'price_at_end_of_year': price_at_end_of_year if price_at_end_of_year > 0 else 0,
-            }
-            single_items_list.append(new_single_item)
+            # Provera da li predmet ima datum rashodovanja i da li je godina rashodovanja manja od godine popisa
+            if single_item.expediture_date is None or (
+                year is not None and single_item.expediture_date.year == int(year)
+            ):
+                write_off_til_current_year, price_at_end_of_year, depreciation_per_year = write_off_until_current_year(single_item, year)
+                    
+                new_single_item = {
+                    'id': single_item.id,
+                    'serial': single_item.serial,
+                    'name': single_item.name,
+                    'category_number': single_item.category.category_number,
+                    'category_name': single_item.category.name,
+                    'depreciation_rate': single_item.depreciation_rate.rate,
+                    'initial_price': single_item.initial_price,
+                    'current_price': single_item.current_price,
+                    'purchase_date': single_item.purchase_date,
+                    'expediture_date': single_item.expediture_date,
+                    'room_id': single_item.room_id,
+                    'depreciation_per_year': depreciation_per_year,
+                    'write_off_until_current_year': write_off_til_current_year,
+                    'price_at_end_of_year': price_at_end_of_year if price_at_end_of_year > 0 else 0,
+                }
+                single_items_list.append(new_single_item)
         
         # Kreiranje i čuvanje popisne liste
         initial_data = {
