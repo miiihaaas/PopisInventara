@@ -771,7 +771,8 @@ def compare_inventory_list(inventory_id):
             
             # Obrada predmeta koji su ostali u magacinu viškova (manjak)
             items_in_surplus = SingleItem.query.filter_by(room_id=4).all()
-            today = date.today()
+            # Koristimo datum iz tekućeg popisa umesto današnjeg datuma
+            inventory_date = inventory.date
             
             # Obrađujemo ih u batch-u
             batch_size = 200
@@ -780,7 +781,7 @@ def compare_inventory_list(inventory_id):
                 
                 for item in batch_items:
                     item.expediture_price = item.current_price
-                    item.expediture_date = today
+                    item.expediture_date = inventory_date
                     item.current_price = 0
                     item.room_id = 2
                 

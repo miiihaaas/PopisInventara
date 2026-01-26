@@ -69,7 +69,12 @@ def current_price_calculation(initial_price, rate, purchase_date, expediture_dat
         return price_at_end_of_current_year, current_price
     
     #! Koliko meseci je ostalo u godini u kojoj je kupljen predmet
-    first_year_months_remaining = 12 - purchase_date.month + 1
+    #! ############################################################################## !#
+    first_year_months_remaining = 12 - purchase_date.month + 1 #? ovde treba modifikovati da se ne računa +1? 
+    #! primer. predmet je kupljenj 17.feb.2021.                                       !#
+    #! preostali broj meseci je (mart-decembar) što je 10 meseci                      !#
+    #! a trenutno računa first_year_months_remaining = 12 - 2 + 1 = 11 što nije tačno !#
+    #! ############################################################################## !#
     last_year_months_passed = today.month
     
     #! Postavljanje vrednosti amortizacije za prvu i ostale godine

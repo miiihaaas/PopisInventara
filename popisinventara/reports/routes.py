@@ -168,8 +168,16 @@ def category_reports_past(inventory_id):
     # Kreiramo mapu room_id -> items za brži pristup
     room_items_map = {room['room_id']: room['items'] for room in inventory_items}
     
-    # Pratimo već obrađene predmete po serijskom broju i kategoriji
-    processed_items = set()
+    # Kreiramo mapu popisanih količina po serijskom broju iz inventory podataka
+    counted_quantities = {}
+    for room_items in room_items_map.values():
+        for item in room_items:
+            serial = str(item.get('serial'))
+            quantity_input = Decimal(str(item.get('quantity_input', 0)))
+            if serial not in counted_quantities:
+                counted_quantities[serial] = quantity_input
+            else:
+                counted_quantities[serial] += quantity_input
     
     data = []
     category_list = []
@@ -188,40 +196,25 @@ def category_reports_past(inventory_id):
             print(f"Missing category for item {single_item.get('name')}")
             continue
 
-        # Kreiramo jedinstveni ključ za praćenje
-        item_key = f"{single_item['serial']}_{category_number}"
-        
-        # Ako smo već obradili ovaj predmet, preskačemo ga
-        if item_key in processed_items:
-            continue
-            
-        processed_items.add(item_key)
-
-        # Pronalazimo popisane količine za ovaj predmet u svim prostorijama
-        total_quantity_input = Decimal('0')
         serial_str = str(single_item['serial'])
         
-        for room_items in room_items_map.values():
-            item_in_room = next((item for item in room_items if str(item['serial']) == serial_str), None)
-            if item_in_room:
-                total_quantity_input += Decimal(str(item_in_room.get('quantity_input', 0)))
-        
-        # Ako nema popisanih predmeta, preskačemo
-        if total_quantity_input == 0:
+        # Proveravamo da li je ovaj predmet popisan (ima quantity_input > 0)
+        # Ako nema popisanih predmeta sa ovim serijskim brojem, preskačemo
+        if counted_quantities.get(serial_str, Decimal('0')) == 0:
             print(f"Skipping item - no counted quantity: {single_item.get('name')}")
             continue
             
-        # Množimo vrednosti sa ukupnim brojem popisanih predmeta
-        initial_price = Decimal(str(single_item['initial_price'])) * total_quantity_input
-        current_price = Decimal(str(single_item['current_price'])) * total_quantity_input
-        write_off = Decimal(str(single_item['write_off_until_current_year'])) * total_quantity_input
-        depreciation = Decimal(str(single_item['depreciation_per_year'])) * total_quantity_input
-        price_at_end = Decimal(str(single_item['price_at_end_of_year'])) * total_quantity_input
+        # Uzimamo individualne vrednosti za ovaj predmet
+        initial_price = Decimal(str(single_item['initial_price']))
+        current_price = Decimal(str(single_item['current_price']))
+        write_off = Decimal(str(single_item['write_off_until_current_year']))
+        depreciation = Decimal(str(single_item['depreciation_per_year']))
+        price_at_end = Decimal(str(single_item['price_at_end_of_year']))
         
         #! proverava da li je depreciation_per_year > current_price
-        remaining_for_writeoff = initial_price - write_off  # 5.807.421,38 - 5.727.778,61 = 79.642,77
-        if remaining_for_writeoff < depreciation:  # 79.642,77 < 87.111,32
-            depreciation = remaining_for_writeoff  # depreciation postaje 79.642,77
+        remaining_for_writeoff = initial_price - write_off
+        if remaining_for_writeoff < depreciation:
+            depreciation = remaining_for_writeoff
 
         if category_number not in category_list:
             category_list.append(category_number)
@@ -232,7 +225,7 @@ def category_reports_past(inventory_id):
                 'write_off_until_current_year': write_off,
                 'depreciation_per_year': depreciation,
                 'price_at_end_of_year': price_at_end,
-                'quantity': total_quantity_input
+                'quantity': 1
             }
             data.append(new_record)
         else:
@@ -243,7 +236,7 @@ def category_reports_past(inventory_id):
                     record['write_off_until_current_year'] += write_off
                     record['depreciation_per_year'] += depreciation
                     record['price_at_end_of_year'] += price_at_end
-                    record['quantity'] += total_quantity_input
+                    record['quantity'] += 1
                     break
     
     # Sortiramo podatke po broju kategorije
@@ -285,8 +278,16 @@ def category_reports_past_item(inventory_id):
     # Kreiramo mapu room_id -> items za brži pristup
     room_items_map = {room['room_id']: room['items'] for room in inventory_items}
     
-    # Pratimo već obrađene predmete po serijskom broju i kategoriji
-    processed_items = set()
+    # Kreiramo mapu popisanih količina po serijskom broju iz inventory podataka
+    counted_quantities = {}
+    for room_items in room_items_map.values():
+        for item in room_items:
+            serial = str(item.get('serial'))
+            quantity_input = Decimal(str(item.get('quantity_input', 0)))
+            if serial not in counted_quantities:
+                counted_quantities[serial] = quantity_input
+            else:
+                counted_quantities[serial] += quantity_input
     
     data = []
     category_serial_list = []
@@ -307,40 +308,25 @@ def category_reports_past_item(inventory_id):
             print(f"Missing category or serial for item {single_item.get('name')}")
             continue
 
-        # Kreiramo jedinstveni ključ za praćenje
-        item_key = f"{serial}_{category_number}"
-        
-        # Ako smo već obradili ovaj predmet, preskačemo ga
-        if item_key in processed_items:
-            continue
-            
-        processed_items.add(item_key)
-
-        # Pronalazimo popisane količine za ovaj predmet u svim prostorijama
-        total_quantity_input = Decimal('0')
         serial_str = str(serial)
         
-        for room_items in room_items_map.values():
-            item_in_room = next((item for item in room_items if str(item['serial']) == serial_str), None)
-            if item_in_room:
-                total_quantity_input += Decimal(str(item_in_room.get('quantity_input', 0)))
-        
-        # Ako nema popisanih predmeta, preskačemo
-        if total_quantity_input == 0:
+        # Proveravamo da li je ovaj predmet popisan (ima quantity_input > 0)
+        # Ako nema popisanih predmeta sa ovim serijskim brojem, preskačemo
+        if counted_quantities.get(serial_str, Decimal('0')) == 0:
             print(f"Skipping item - no counted quantity: {single_item.get('name')}")
             continue
             
-        # Množimo vrednosti sa ukupnim brojem popisanih predmeta
-        initial_price = Decimal(str(single_item['initial_price'])) * total_quantity_input
-        current_price = Decimal(str(single_item['current_price'])) * total_quantity_input
-        write_off = Decimal(str(single_item['write_off_until_current_year'])) * total_quantity_input
-        depreciation = Decimal(str(single_item['depreciation_per_year'])) * total_quantity_input
-        price_at_end = Decimal(str(single_item['price_at_end_of_year'])) * total_quantity_input
+        # Uzimamo individualne vrednosti za ovaj predmet
+        initial_price = Decimal(str(single_item['initial_price']))
+        current_price = Decimal(str(single_item['current_price']))
+        write_off = Decimal(str(single_item['write_off_until_current_year']))
+        depreciation = Decimal(str(single_item['depreciation_per_year']))
+        price_at_end = Decimal(str(single_item['price_at_end_of_year']))
         
         #! proverava da li je depreciation_per_year > current_price
-        remaining_for_writeoff = initial_price - write_off  # 5.807.421,38 - 5.727.778,61 = 69.642,77
-        if remaining_for_writeoff < depreciation:  # 69.642,77 < 87.111,32
-            depreciation = remaining_for_writeoff  # depreciation postaje 69.642,77
+        remaining_for_writeoff = initial_price - write_off
+        if remaining_for_writeoff < depreciation:
+            depreciation = remaining_for_writeoff
 
         category_serial_tuple = (category_number, serial)
         if category_serial_tuple not in category_serial_list:
@@ -349,7 +335,7 @@ def category_reports_past_item(inventory_id):
                 'category': category_number,
                 'serial': serial,
                 'item': single_item['name'],
-                'quantity': total_quantity_input,
+                'quantity': 1,
                 'initial_price': initial_price,
                 'current_price': current_price,
                 'write_off_until_current_year': write_off,
@@ -365,7 +351,7 @@ def category_reports_past_item(inventory_id):
                     record['write_off_until_current_year'] += write_off
                     record['depreciation_per_year'] += depreciation
                     record['price_at_end_of_year'] += price_at_end
-                    record['quantity'] += total_quantity_input
+                    record['quantity'] += 1
                     break
     
     # Sortiramo podatke po broju kategorije i nazivu predmeta
