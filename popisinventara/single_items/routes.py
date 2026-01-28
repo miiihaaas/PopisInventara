@@ -490,6 +490,8 @@ def move_single_item_to_room():
     #! prekucano !#
     single_item_id = request.form.get('single_item_id')
     room_id = request.form.get('edit_single_item_room')
+    date_in_use_str = request.form.get('date_in_use')  # Opcioni datum puštanja u upotrebu
+    
     active_inventory_list = Inventory.query.filter_by(status='active').first()
     if active_inventory_list:
         flash(f'Nije moguće premeštati predmete dok je aktivan popis.', 'danger')
@@ -497,8 +499,27 @@ def move_single_item_to_room():
     if not room_id or not room_id.strip():
         flash('Da bi ste premestili predmet, morate izabrati prostoriju u koju treba premestiti predmet.', 'danger')
         return redirect(url_for('single_items.single_item_list'))
+    
+    room_id = int(room_id)
     print(f'{single_item_id=} {room_id=}')
     single_item = SingleItem.query.filter_by(id=single_item_id).first()
+    old_room_id = single_item.room_id
+    
+    # Ako se predmet premešta IZ magacina novih (room_id=6) u drugu prostoriju - puštanje u upotrebu
+    if old_room_id == 6 and room_id != 6:
+        if single_item.date_in_use is None:
+            # Koristi prosleđeni datum ili današnji datum
+            if date_in_use_str and date_in_use_str.strip():
+                single_item.date_in_use = datetime.strptime(date_in_use_str, '%Y-%m-%d').date()
+            else:
+                single_item.date_in_use = date.today()
+            # Preračunavanje current_price od datuma puštanja u upotrebu
+            rate = single_item.depreciation_rate.rate
+            _, single_item.current_price = current_price_calculation(
+                single_item.initial_price, rate, single_item.purchase_date,
+                date_in_use=single_item.date_in_use, room_id=room_id
+            )
+    
     single_item.room_id = room_id
     db.session.commit()
     flash(f'Uspešno ste premestili predmet {single_item.name} u prostoriju {single_item.room.name}.', 'success')
@@ -851,6 +872,8 @@ def add_single_item():
     item_room = request.form.get('add_single_item_room')
     if not item_room or not item_room.strip():
         item_room = 1  # Podrazumevani virtuelni magacin
+    else:
+        item_room = int(item_room)
         
     # Validacija količine
     quantity = request.form.get('add_single_item_quantity')
@@ -911,12 +934,19 @@ def add_single_item():
     try:
         # Kreiranje novih predmeta
         new_single_items = []
+        
+        # Određivanje date_in_use - ako predmet ide direktno u upotrebu (room_id != 6)
+        date_in_use = purchase_date if item_room != 6 else None
+        
         for i in range(quantity):
             # Određivanje početne cene za trenutni predmet
             initial_price = item_prices[i]
             
-            # Izračunavanje trenutne cene
-            current_price, _ = current_price_calculation(initial_price, rate, purchase_date)
+            # Izračunavanje trenutne cene sa datumom puštanja u upotrebu
+            current_price, _ = current_price_calculation(
+                initial_price, rate, purchase_date, 
+                date_in_use=date_in_use, room_id=item_room
+            )
             
             # Novi format inventarskog broja: SERIJA-BROJ_ARTIKLA
             inventory_number = f'{max_serial_number:05d}-{i+1:04d}'
@@ -932,7 +962,8 @@ def add_single_item():
                 purchase_date=purchase_date,
                 inventory_number=inventory_number,
                 supplier=supplier,
-                invoice_number=invoice_number
+                invoice_number=invoice_number,
+                date_in_use=date_in_use
             )
             new_single_items.append(new_single_item)
             
@@ -1069,7 +1100,11 @@ def edit_single_item():
         if quantity > len(single_items):
             for i in range(len(single_items) + 1, quantity + 1):
                 initial_price = last_initial_price if i == quantity else base_initial_price
-                current_price, _ = current_price_calculation(initial_price, rate, purchase_date)
+                # Novi predmeti idu u virtuelni magacin (room_id=1), pa imaju date_in_use=purchase_date
+                current_price, _ = current_price_calculation(
+                    initial_price, rate, purchase_date,
+                    date_in_use=purchase_date, room_id=1
+                )
                 
                 inventory_number = f'{serial:05d}-{i:04d}'
                 new_single_item = SingleItem(
@@ -1083,7 +1118,8 @@ def edit_single_item():
                     inventory_number=inventory_number,
                     room_id=1,  # Virtuelni magacin
                     supplier=supplier,
-                    invoice_number=invoice_number
+                    invoice_number=invoice_number,
+                    date_in_use=purchase_date  # Pušten u upotrebu od datuma nabavke
                 )
                 db.session.add(new_single_item)
 
@@ -1234,21 +1270,95 @@ def move_select_serial():
 
     print(f'{single_item_list_from=}')
     all_room_list = Room.query.all()
-    room_list_to = [room for room in all_room_list if room.id not in [2, 3, 4]] #! 2 - magacin rashoda, 3 - magacin reversa, 4 magacin manjkova -> ne može se na ovaj način premestiti u taj magacin
-    room_list_from = [room for room in all_room_list if room.id not in [2, 3, 4]] #! 2 - magacin rashoda, 3 - magacin reversa, 4 magacin manjkova -> ne može se na ovaj način premestiti u taj magacin
-    #! ne treba listati prostorije koje nemaju ovaj predmet za tip kretnje iz prostorije u druge prostorije
+    # Filtriramo room_id=6 (magacin novih) iz obe liste jer se puštanje u upotrebu radi posebno
+    room_list_to = [room for room in all_room_list if room.id not in [2, 3, 4, 6]] #! 2 - magacin rashoda, 3 - magacin reversa, 4 magacin manjkova, 6 - magacin novih
+    room_list_from = [room for room in all_room_list if room.id not in [2, 3, 4, 6]] #! 2 - magacin rashoda, 3 - magacin reversa, 4 magacin manjkova, 6 - magacin novih
+    
+    # Predmeti u magacinu novih (room_id=6) za treću sekciju - puštanje u upotrebu
+    items_in_new_warehouse = SingleItem.query.filter_by(room_id=6).all()
+    # Brojimo količinu predmeta po seriji
+    series_quantity = {}
+    for item in items_in_new_warehouse:
+        series_quantity[item.serial] = series_quantity.get(item.serial, 0) + 1
+    
+    unique_series_new = set()
+    single_item_list_new_warehouse = []
+    for single_item in sorted(items_in_new_warehouse, key=lambda x: x.serial):
+        if single_item.serial not in unique_series_new:
+            unique_series_new.add(single_item.serial)
+            # Dodajemo quantity_in_warehouse kao atribut
+            single_item.quantity_in_warehouse = series_quantity[single_item.serial]
+            single_item_list_new_warehouse.append(single_item)
+    
+    # Lista prostorija za puštanje u upotrebu (bez specijalnih magacina)
+    room_list_for_use = [room for room in all_room_list if room.id not in [2, 3, 4, 6]]
     
     return render_template('move_select.html', 
                             title='Izbor predmeta za premeštanje',
                             route_name=route_name,
                             single_item_list_from=single_item_list_from,
                             room_list_to=room_list_to,
-                            room_list_from=room_list_from)
+                            room_list_from=room_list_from,
+                            single_item_list_new_warehouse=single_item_list_new_warehouse,
+                            room_list_for_use=room_list_for_use)
 
 
-# @single_items.route("/move_from/<int:item_id>/<int:room_id>", methods=['GET', 'POST'])
+@single_items.route('/put_into_use', methods=['POST'])
+def put_into_use():
+    """Puštanje predmeta iz magacina novih (room_id=6) u upotrebu sa određenim datumom."""
+    active_inventory_list = Inventory.query.filter_by(status='active').first()
+    if active_inventory_list:
+        flash('Nije moguće puštati predmete u upotrebu dok je aktivan popis.', 'danger')
+        return redirect(url_for('single_items.move_select_serial'))
+    
+    serial = request.form.get('serial_to_put_into_use')
+    room_id = request.form.get('room_id_for_use')
+    date_in_use_str = request.form.get('date_in_use_input')
+    quantity_str = request.form.get('quantity_to_put_into_use', '1')
+    
+    if not serial or not room_id or not date_in_use_str:
+        flash('Morate popuniti sva polja za puštanje u upotrebu.', 'danger')
+        return redirect(url_for('single_items.move_select_serial'))
+    
+    try:
+        date_in_use = datetime.strptime(date_in_use_str, '%Y-%m-%d').date()
+        room_id = int(room_id)
+        serial = int(serial)
+        quantity = int(quantity_str) if quantity_str else 1
+    except ValueError:
+        flash('Neispravan format podataka.', 'danger')
+        return redirect(url_for('single_items.move_select_serial'))
+    
+    # Uzimamo samo traženu količinu predmeta
+    all_items_in_warehouse = SingleItem.query.filter_by(serial=serial, room_id=6).all()
+    
+    if not all_items_in_warehouse:
+        flash('Nema predmeta sa izabranom serijom u magacinu novih predmeta.', 'danger')
+        return redirect(url_for('single_items.move_select_serial'))
+    
+    if quantity > len(all_items_in_warehouse):
+        quantity = len(all_items_in_warehouse)
+    
+    items_to_put_into_use = all_items_in_warehouse[:quantity]
+    
+    for single_item in items_to_put_into_use:
+        single_item.date_in_use = date_in_use
+        single_item.room_id = room_id
+        rate = single_item.depreciation_rate.rate
+        _, single_item.current_price = current_price_calculation(
+            single_item.initial_price, rate, single_item.purchase_date,
+            date_in_use=date_in_use, room_id=room_id
+        )
+    
+    db.session.commit()
+    
+    item_name = items_to_put_into_use[0].name
+    room = Room.query.get(room_id)
+    flash(f'Uspešno ste pustili {len(items_to_put_into_use)} predmet(a) "{item_name}" u upotrebu u prostoriji {room.name}.', 'success')
+    return redirect(url_for('single_items.single_item_list'))
+
+
 @single_items.route("/move_from/<int:serial>/<int:room_id>", methods=['GET', 'POST'])
-# def move_from(item_id, room_id):
 def move_from(serial, room_id):
     active_inventory_list = Inventory.query.filter_by(status='active').first()
     if active_inventory_list:

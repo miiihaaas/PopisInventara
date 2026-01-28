@@ -15,9 +15,16 @@ def write_off_until_current_year(single_item, year=None):
     else:
         current_year = int(year)
     
-    purchase_date = single_item.purchase_date
-    input_in_app_date = single_item.input_in_app_date
     initial_price = Decimal(str(single_item.initial_price))
+    
+    # Ako je predmet u magacinu novih (room_id=6) ili nema datum puštanja u upotrebu
+    # Amortizacija je 0, vraćamo punu vrednost
+    if single_item.room_id == 6 or single_item.date_in_use is None:
+        return Decimal(0), initial_price, Decimal(0)
+    
+    # Određivanje datuma od kojeg počinje amortizacija
+    depreciation_start_date = single_item.date_in_use
+    input_in_app_date = single_item.input_in_app_date
     
     if year and single_item.deprecation_value is not None:
         current_price = Decimal(str(single_item.initial_price)) - Decimal(str(single_item.deprecation_value))
@@ -30,8 +37,8 @@ def write_off_until_current_year(single_item, year=None):
     # else:
     rate = Decimal(str(single_item.depreciation_rate.rate))
     
-    # Izračunavanje preostalih meseci u godini nabavke
-    first_year_months_remaining = 12 - purchase_date.month + 1
+    # Izračunavanje preostalih meseci u godini puštanja u upotrebu
+    first_year_months_remaining = 12 - depreciation_start_date.month + 1
     
     # Obračun amortizacije za prvu godinu i godišnje amortizacije
     first_year_depreciation = initial_price * Decimal(first_year_months_remaining) / Decimal(12) * rate / Decimal(100)
@@ -42,7 +49,7 @@ def write_off_until_current_year(single_item, year=None):
         first_year_depreciation = single_item.deprecation_value
         item_age_in_years = current_year - input_in_app_date.year
     else:
-        item_age_in_years = current_year - purchase_date.year
+        item_age_in_years = current_year - depreciation_start_date.year
     
     # Izračunavanje ukupnog otpisa i cene na kraju godine
     write_off = first_year_depreciation + depreciation_per_year * Decimal(item_age_in_years - 1)
@@ -54,7 +61,7 @@ def write_off_until_current_year(single_item, year=None):
     elif write_off < 0:
         write_off = Decimal(0)
         
-    if current_year == purchase_date.year:
+    if current_year == depreciation_start_date.year:
         depreciation_per_year = first_year_depreciation
     elif depreciation_per_year > current_price:
         depreciation_per_year = current_price

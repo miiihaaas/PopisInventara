@@ -197,6 +197,7 @@ class SingleItem(db.Model):
     expediture_date = db.Column(db.Date, nullable=True)
     reverse_person = db.Column(db.String(50), nullable=True)
     reverse_date = db.Column(db.Date, nullable=True)
+    date_in_use = db.Column(db.Date, nullable=True)  # Datum puštanja u upotrebu (kada predmet napusti room_id=6)
     
     # Veza za stari sistem
     item_id = db.Column(db.Integer, db.ForeignKey('item.id'), nullable=True)

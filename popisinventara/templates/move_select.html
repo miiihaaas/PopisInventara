@@ -3,107 +3,188 @@
 <div class="h1">{{ title }}</div>
 
 <div class="page-content">
-   <div class="row g-4">
-       <!-- Move TO Section -->
-       <div class="col-lg-6">
-           <div class="move-card card shadow-sm h-100">
-               <div class="card-body">
-                   <h5 class="card-title mb-4">
-                       <i class="fa fa-arrow-right text-primary me-2"></i>
-                       Premeštanje u izabranu prostoriju
-                   </h5>
-                   
-                   <form action="" method="post">
-                       <div class="move-form">
-                           <div class="form-group mb-4">
-                               <label class="form-label" for="serial_to_move_to">
-                                   Serija predmeta
-                               </label>
-                               <select class="form-select" name="serial_to_move_to" 
-                                       id="serial_to_move_to" required>
-                                   <option value="">Izaberite seriju</option>
-                                   {% for single_item in single_item_list_from %}
-                                   <option value="{{single_item.serial}}">
-                                       ({{single_item.serial}}) {{single_item.name}}
-                                   </option>
-                                   {% endfor %}
-                               </select>
-                           </div>
-                           
-                           <div class="form-group mb-4">
-                               <label class="form-label" for="room_id_to_move_to">
-                                   Ciljna prostorija
-                               </label>
-                               <select class="form-select" name="room_id_to_move_to" 
-                                       id="room_id_to_move_to" required>
-                                   <option value="">Izaberite prostoriju</option>
-                                   {% for room in room_list_to %}
-                                   <option value="{{room.id}}">
-                                       {{ room.building.name }} > ({{ room.name }}) {{ room.dynamic_name }}
-                                   </option>
-                                   {% endfor %}
-                               </select>
-                           </div>
-                           
-                           <button class="btn btn-primary" type="submit" id="submit_to" name="submit_to">
-                               <i class="fa fa-arrow-right me-2"></i>Dalje
-                           </button>
-                       </div>
-                   </form>
-               </div>
-           </div>
-       </div>
+    <div class="row g-4">
+        <!-- Move TO Section -->
+        <div class="col-lg-6">
+            <div class="move-card card shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">
+                        <i class="fa fa-arrow-right text-primary me-2"></i>
+                        Premeštanje u izabranu prostoriju
+                    </h5>
+                    
+                    <form action="" method="post">
+                        <div class="move-form">
+                            <div class="form-group mb-4">
+                                <label class="form-label" for="serial_to_move_to">
+                                    Serija predmeta
+                                </label>
+                                <select class="form-select" name="serial_to_move_to" 
+                                        id="serial_to_move_to" required>
+                                    <option value="">Izaberite seriju</option>
+                                    {% for single_item in single_item_list_from %}
+                                    <option value="{{single_item.serial}}">
+                                        ({{single_item.serial}}) {{single_item.name}}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div class="form-group mb-4">
+                                <label class="form-label" for="room_id_to_move_to">
+                                    Ciljna prostorija
+                                </label>
+                                <select class="form-select" name="room_id_to_move_to" 
+                                        id="room_id_to_move_to" required>
+                                    <option value="">Izaberite prostoriju</option>
+                                    {% for room in room_list_to %}
+                                    <option value="{{room.id}}">
+                                        {{ room.building.name }} > ({{ room.name }}) {{ room.dynamic_name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <button class="btn btn-primary" type="submit" id="submit_to" name="submit_to">
+                                <i class="fa fa-arrow-right me-2"></i>Dalje
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
 
-       <!-- Move FROM Section -->
-       <div class="col-lg-6">
-           <div class="move-card card shadow-sm h-100">
-               <div class="card-body">
-                   <h5 class="card-title mb-4">
-                       <i class="fa fa-arrow-left text-primary me-2"></i>
-                       Premeštanje iz izabrane prostorije
-                   </h5>
-                   
-                   <form action="" method="post">
-                       <div class="move-form">
-                           <div class="form-group mb-4">
-                               <label class="form-label" for="serial_to_move_from">
-                                   Serija predmeta
-                               </label>
-                               <select class="form-select" name="serial_to_move_from" 
-                                       id="serial_to_move_from" required>
-                                   <option value="">Izaberite seriju</option>
-                                   {% for single_item in single_item_list_from %}
-                                   <option value="{{single_item.serial}}">
-                                       ({{single_item.serial}}) {{single_item.name}}
-                                   </option>
-                                   {% endfor %}
-                               </select>
-                           </div>
-                           
-                           <div class="form-group mb-4">
-                               <label class="form-label" for="room_id_to_move_from">
-                                   Izvorna prostorija
-                               </label>
-                               <select class="form-select" name="room_id_to_move_from" 
-                                       id="room_id_to_move_from" required>
-                                   <option value="">Izaberite prostoriju</option>
-                                   {% for room in room_list_from %}
-                                   <option value="{{room.id}}">
-                                       {{ room.building.name }} > ({{ room.name }}) {{ room.dynamic_name }}
-                                   </option>
-                                   {% endfor %}
-                               </select>
-                           </div>
-                           
-                           <button class="btn btn-primary" type="submit" id="submit_from" name="submit_from">
-                               <i class="fa fa-arrow-right me-2"></i>Dalje
-                           </button>
-                       </div>
-                   </form>
-               </div>
-           </div>
-       </div>
-   </div>
+        <!-- Move FROM Section -->
+        <div class="col-lg-6">
+            <div class="move-card card shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">
+                        <i class="fa fa-arrow-left text-primary me-2"></i>
+                        Premeštanje iz izabrane prostorije
+                    </h5>
+                    
+                    <form action="" method="post">
+                        <div class="move-form">
+                            <div class="form-group mb-4">
+                                <label class="form-label" for="serial_to_move_from">
+                                    Serija predmeta
+                                </label>
+                                <select class="form-select" name="serial_to_move_from" 
+                                        id="serial_to_move_from" required>
+                                    <option value="">Izaberite seriju</option>
+                                    {% for single_item in single_item_list_from %}
+                                    <option value="{{single_item.serial}}">
+                                        ({{single_item.serial}}) {{single_item.name}}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div class="form-group mb-4">
+                                <label class="form-label" for="room_id_to_move_from">
+                                    Izvorna prostorija
+                                </label>
+                                <select class="form-select" name="room_id_to_move_from" 
+                                        id="room_id_to_move_from" required>
+                                    <option value="">Izaberite prostoriju</option>
+                                    {% for room in room_list_from %}
+                                    <option value="{{room.id}}">
+                                        {{ room.building.name }} > ({{ room.name }}) {{ room.dynamic_name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <button class="btn btn-primary" type="submit" id="submit_from" name="submit_from">
+                                <i class="fa fa-arrow-right me-2"></i>Dalje
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Puštanje u upotrebu - Section (samo ako ima predmeta u magacinu novih) -->
+    {% if single_item_list_new_warehouse %}
+    <div class="row g-4 mt-4">
+        <div class="col-12">
+            <div class="move-card card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">
+                        <i class="fa fa-play-circle text-success me-2"></i>
+                        Puštanje u upotrebu (iz magacina novih predmeta)
+                    </h5>
+                    
+                    <form action="{{ url_for('single_items.put_into_use') }}" method="post">
+                        <div class="row g-4">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label class="form-label" for="serial_to_put_into_use">
+                                        Serija predmeta
+                                    </label>
+                                    <select class="form-select" name="serial_to_put_into_use" 
+                                            id="serial_to_put_into_use" required>
+                                        <option value="">Izaberite seriju</option>
+                                        {% for single_item in single_item_list_new_warehouse %}
+                                        <option value="{{single_item.serial}}" data-quantity="{{single_item.quantity_in_warehouse}}">
+                                            ({{single_item.serial}}) {{single_item.name}} [{{single_item.quantity_in_warehouse}} kom.]
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-2">
+                                <div class="form-group">
+                                    <label class="form-label" for="quantity_to_put_into_use">
+                                        Količina
+                                    </label>
+                                    <input type="number" class="form-control" name="quantity_to_put_into_use" 
+                                            id="quantity_to_put_into_use" min="1" value="1" required>
+                                    <div class="form-text text-muted" id="quantity_hint"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label class="form-label" for="room_id_for_use">
+                                        Ciljna prostorija
+                                    </label>
+                                    <select class="form-select" name="room_id_for_use" 
+                                            id="room_id_for_use" required>
+                                        <option value="">Izaberite prostoriju</option>
+                                        {% for room in room_list_for_use %}
+                                        <option value="{{room.id}}">
+                                            {{ room.building.name }} > ({{ room.name }}) {{ room.dynamic_name }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-2">
+                                <div class="form-group">
+                                    <label class="form-label" for="date_in_use_input">
+                                        Datum puštanja u upotrebu
+                                    </label>
+                                    <input type="date" class="form-control" name="date_in_use_input" 
+                                            id="date_in_use_input" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <button class="btn btn-primary" type="submit" id="submit_into_use" name="submit_into_use">
+                                <i class="fa fa-check me-2"></i>Pusti u upotrebu
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 </div>
 {% endblock content %}
 
@@ -111,92 +192,107 @@
 <script>
 $(document).ready(function () {
    // Inicijalizacija Select2 za sve select elemente
-   const select2Config = {
-       placeholder: 'Izaberite opciju',
-       allowClear: true,
-       width: '100%',
-       tags: false,
-       closeOnSelect: true,
-       theme: 'bootstrap-5'
-   };
+    const select2Config = {
+        placeholder: 'Izaberite opciju',
+        allowClear: true,
+        width: '100%',
+        tags: false,
+        closeOnSelect: true,
+        theme: 'bootstrap-5'
+    };
 
-   $('#serial_to_move_to').select2(select2Config);
-   $('#room_id_to_move_to').select2(select2Config);
-   $('#serial_to_move_from').select2(select2Config);
-   $('#room_id_to_move_from').select2(select2Config);
-});
-</script>
+    $('#serial_to_move_to').select2(select2Config);
+    $('#room_id_to_move_to').select2(select2Config);
+    $('#serial_to_move_from').select2(select2Config);
+    $('#room_id_to_move_from').select2(select2Config);
+    $('#serial_to_put_into_use').select2(select2Config);
+    $('#room_id_for_use').select2(select2Config);
+    
+    // Postavi današnji datum kao default za datum puštanja u upotrebu
+    var today = new Date().toISOString().split('T')[0];
+    $('#date_in_use_input').val(today);
+    
+    // Ažuriraj max količinu kada se izabere serija
+    $('#serial_to_put_into_use').on('change', function() {
+        var selectedOption = $(this).find('option:selected');
+        var maxQuantity = selectedOption.data('quantity') || 1;
+        $('#quantity_to_put_into_use').attr('max', maxQuantity);
+        $('#quantity_to_put_into_use').val(1);
+        $('#quantity_hint').text('Maks: ' + maxQuantity);
+    });
+    });
+    </script>
 
-<style>
-/* Card Styles */
-.move-card {
-   background: white;
-   border: none;
-   transition: transform 0.2s ease;
-}
+    <style>
+    /* Card Styles */
+    .move-card {
+    background: white;
+    border: none;
+    transition: transform 0.2s ease;
+    }
 
-.move-card:hover {
-   transform: translateY(-2px);
-}
+    .move-card:hover {
+    transform: translateY(-2px);
+    }
 
-.card-title {
-   color: var(--color-text);
-   font-weight: 500;
-}
+    .card-title {
+    color: var(--color-text);
+    font-weight: 500;
+    }
 
-/* Form Styles */
-.form-label {
-   font-size: 0.875rem;
-   color: var(--color-text-light);
-   margin-bottom: 0.5rem;
-}
+    /* Form Styles */
+    .form-label {
+    font-size: 0.875rem;
+    color: var(--color-text-light);
+    margin-bottom: 0.5rem;
+    }
 
-.form-select {
-   border: 1px solid var(--color-border);
-   border-radius: 6px;
-   padding: 0.625rem 0.875rem;
-}
+    .form-select {
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    padding: 0.625rem 0.875rem;
+    }
 
-.form-select:focus {
-   border-color: var(--color-primary);
-   box-shadow: 0 0 0 3px rgba(16, 78, 151, 0.1);
-}
+    .form-select:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(16, 78, 151, 0.1);
+    }
 
-/* Select2 Customization */
-.select2-container--bootstrap-5 .select2-selection {
-   border: 1px solid var(--color-border);
-   border-radius: 6px;
-   min-height: 42px;
-   padding: 0.375rem 0.75rem;
-}
+    /* Select2 Customization */
+    .select2-container--bootstrap-5 .select2-selection {
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    min-height: 42px;
+    padding: 0.375rem 0.75rem;
+    }
 
-.select2-container--bootstrap-5 .select2-selection--single {
-   background-color: white;
-}
+    .select2-container--bootstrap-5 .select2-selection--single {
+    background-color: white;
+    }
 
-.select2-container--bootstrap-5 .select2-selection--single .select2-selection__rendered {
-   color: var(--color-text);
-   padding-left: 0;
-}
+    .select2-container--bootstrap-5 .select2-selection--single .select2-selection__rendered {
+    color: var(--color-text);
+    padding-left: 0;
+    }
 
-.select2-container--bootstrap-5 .select2-selection--single .select2-selection__placeholder {
-   color: #6c757d;
-}
+    .select2-container--bootstrap-5 .select2-selection--single .select2-selection__placeholder {
+    color: #6c757d;
+    }
 
-.select2-container--bootstrap-5 .select2-dropdown {
-   border-color: var(--color-primary);
-   box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-}
+    .select2-container--bootstrap-5 .select2-dropdown {
+    border-color: var(--color-primary);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
 
-.select2-container--bootstrap-5 .select2-results__option--highlighted[aria-selected] {
-   background-color: var(--color-primary);
-   color: white;
-}
+    .select2-container--bootstrap-5 .select2-results__option--highlighted[aria-selected] {
+    background-color: var(--color-primary);
+    color: white;
+    }
 
-@media (max-width: 992px) {
-   .move-card {
-       margin-bottom: 1rem;
-   }
-}
+    @media (max-width: 992px) {
+    .move-card {
+        margin-bottom: 1rem;
+    }
+    }
 </style>
 {% endblock %}

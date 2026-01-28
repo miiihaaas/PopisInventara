@@ -426,9 +426,11 @@
                                         id="edit_single_item_room" required>
                                     <option value="">Izaberite prostoriju</option>
                                     {% for room in room_list %}
+                                        {% if room.id != 6 %}
                                         <option value="{{room.id}}">
                                             ({{room.name}}) {{room.dynamic_name}}
                                         </option>
+                                        {% endif %}
                                     {% endfor %}
                                 </select>
                                 <div class="form-text text-muted">

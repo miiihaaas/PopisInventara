@@ -54,7 +54,20 @@ def distribute_prices(total_price: float, quantity: int) -> list:
     return prices
 
 
-def current_price_calculation(initial_price, rate, purchase_date, expediture_date=None, year=None, input_in_app_date=None, deprecation_value=None):
+def current_price_calculation(initial_price, rate, purchase_date, expediture_date=None, year=None, input_in_app_date=None, deprecation_value=None, date_in_use=None, room_id=None):
+    # Ako je predmet u magacinu novih (room_id=6), amortizacija = 0
+    if room_id == 6:
+        return Decimal(str(initial_price)), Decimal(str(initial_price))
+    
+    # Ako predmet nikada nije bio pušten u upotrebu (date_in_use=None) i nije u specijalnom magacinu
+    # Vraćamo punu vrednost jer amortizacija još nije počela
+    if date_in_use is None and room_id is not None:
+        return Decimal(str(initial_price)), Decimal(str(initial_price))
+    
+    # Određivanje datuma od kojeg počinje amortizacija
+    # Ako postoji date_in_use, koristimo ga; inače koristimo purchase_date (backward compatibility)
+    depreciation_start_date = date_in_use if date_in_use else purchase_date
+    
     if expediture_date:
         today = expediture_date
     elif year:
@@ -68,10 +81,10 @@ def current_price_calculation(initial_price, rate, purchase_date, expediture_dat
         current_price = Decimal('0')
         return price_at_end_of_current_year, current_price
     
-    #! Koliko meseci je ostalo u godini u kojoj je kupljen predmet
+    #! Koliko meseci je ostalo u godini u kojoj je predmet pušten u upotrebu
     #! ############################################################################## !#
-    first_year_months_remaining = 12 - purchase_date.month + 1 #? ovde treba modifikovati da se ne računa +1? 
-    #! primer. predmet je kupljenj 17.feb.2021.                                       !#
+    first_year_months_remaining = 12 - depreciation_start_date.month + 1 #? ovde treba modifikovati da se ne računa +1? 
+    #! primer. predmet je pušten u upotrebu 17.feb.2021.                              !#
     #! preostali broj meseci je (mart-decembar) što je 10 meseci                      !#
     #! a trenutno računa first_year_months_remaining = 12 - 2 + 1 = 11 što nije tačno !#
     #! ############################################################################## !#
@@ -86,7 +99,7 @@ def current_price_calculation(initial_price, rate, purchase_date, expediture_dat
         item_age_in_years = today.year - input_in_app_date.year
         first_year_depreciation = Decimal(deprecation_value) #! stavljam vrednost otpisa koju smo dobili kao input koji su škole dostavile
     else:
-        item_age_in_years = today.year - purchase_date.year
+        item_age_in_years = today.year - depreciation_start_date.year
     
     price_at_end_of_current_year = Decimal(initial_price) - first_year_depreciation - item_age_in_years * depreciation_per_year
     if price_at_end_of_current_year < Decimal('0'):
