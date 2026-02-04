@@ -44,12 +44,19 @@ def write_off_until_current_year(single_item, year=None):
     first_year_depreciation = initial_price * Decimal(first_year_months_remaining) / Decimal(12) * rate / Decimal(100)
     depreciation_per_year = initial_price * rate / Decimal(100)
     
-    # Poseban slučaj ako postoji datum unosa u aplikaciju
-    if input_in_app_date:
-        first_year_depreciation = single_item.deprecation_value
+    # Starost predmeta se računa od datuma puštanja u upotrebu, ne od unosa u aplikaciju
+    item_age_in_years = current_year - depreciation_start_date.year
+    
+    # Poseban slučaj ako postoji datum unosa u aplikaciju I ako je unos pre puštanja u upotrebu
+    # (predmet je već imao neki otpis pre unosa u sistem)
+    if input_in_app_date and input_in_app_date.year < depreciation_start_date.year:
+        # Predmet je unet u sistem pre puštanja u upotrebu - deprecation_value se ignoriše
+        pass
+    elif input_in_app_date and depreciation_start_date.year <= input_in_app_date.year:
+        # Predmet je pušten u upotrebu pre ili u istoj godini kad je unet u sistem
+        # Koristimo deprecation_value kao početni otpis
+        first_year_depreciation = Decimal(str(single_item.deprecation_value)) if single_item.deprecation_value else Decimal(0)
         item_age_in_years = current_year - input_in_app_date.year
-    else:
-        item_age_in_years = current_year - depreciation_start_date.year
     
     # Izračunavanje ukupnog otpisa i cene na kraju godine
     write_off = first_year_depreciation + depreciation_per_year * Decimal(item_age_in_years - 1)

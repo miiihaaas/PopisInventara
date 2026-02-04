@@ -95,11 +95,14 @@ def current_price_calculation(initial_price, rate, purchase_date, expediture_dat
     last_year_depreciation = Decimal(initial_price) * (Decimal(last_year_months_passed) / Decimal('12')) * Decimal(rate) / Decimal('100')
     depreciation_per_year = Decimal(initial_price) * Decimal(rate) / Decimal('100')
     
-    if input_in_app_date:
+    # Starost predmeta se računa od datuma puštanja u upotrebu
+    item_age_in_years = today.year - depreciation_start_date.year
+    
+    # Poseban slučaj ako postoji datum unosa u aplikaciju I ako je unos posle ili u istoj godini kao puštanje u upotrebu
+    # (predmet je već imao neki otpis pre unosa u sistem)
+    if input_in_app_date and depreciation_start_date.year <= input_in_app_date.year:
         item_age_in_years = today.year - input_in_app_date.year
-        first_year_depreciation = Decimal(deprecation_value) #! stavljam vrednost otpisa koju smo dobili kao input koji su škole dostavile
-    else:
-        item_age_in_years = today.year - depreciation_start_date.year
+        first_year_depreciation = Decimal(deprecation_value) if deprecation_value else Decimal(0)
     
     price_at_end_of_current_year = Decimal(initial_price) - first_year_depreciation - item_age_in_years * depreciation_per_year
     if price_at_end_of_current_year < Decimal('0'):

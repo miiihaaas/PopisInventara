@@ -1567,15 +1567,24 @@ def update_price():
     single_items = SingleItem.query.all()
     for single_item in single_items:
         if single_item.expediture_date is None:
-            single_item.current_price, _ = current_price_calculation(single_item.initial_price, single_item.depreciation_rate.rate, single_item.purchase_date, None, None, single_item.input_in_app_date, single_item.deprecation_value)
-            print(f'{single_item.inventory_number=}; {single_item.input_in_app_date=}: {single_item.current_price=}')
+            _, single_item.current_price = current_price_calculation(
+                single_item.initial_price, 
+                single_item.depreciation_rate.rate, 
+                single_item.purchase_date, 
+                None,  # expediture_date
+                None,  # year
+                single_item.input_in_app_date, 
+                single_item.deprecation_value,
+                single_item.date_in_use,
+                single_item.room_id
+            )
+            print(f'{single_item.inventory_number=}; {single_item.date_in_use=}: {single_item.current_price=}')
     flash('Cena na kraju tekuće godine kod svih nerashodovanih predmeta je izmenjena.', 'success')
     db.session.commit()
     return redirect(url_for('single_items.single_item_list'))
 
 
 @single_items.route("/generate_qr_code/<inventory_number>")
-# @login_required
 def generate_qr_code(inventory_number):
     try:
         # Pronalazimo predmet u bazi
@@ -1600,7 +1609,7 @@ def generate_qr_code(inventory_number):
         qr_width, qr_height = qr_image.size
         
         # Kreiramo novu sliku sa prostorom za dva reda teksta
-        final_image = Image.new('RGB', (qr_width, qr_height + 80), 'white')  # Povećali smo visinu za dva reda teksta
+        final_image = Image.new('RGB', (qr_width, qr_height + 80), 'white')
         
         # Dodajemo QR kod na finalnu sliku
         final_image.paste(qr_image, (0, 0))
@@ -1628,7 +1637,7 @@ def generate_qr_code(inventory_number):
         
         # Dodajemo inventarski broj (drugi red)
         text_width = draw.textlength(inventory_number, font=font)
-        text_position = ((qr_width - text_width) / 2, qr_height + 35)  # +35 za drugi red
+        text_position = ((qr_width - text_width) / 2, qr_height + 35)
         draw.text(
             text_position,
             inventory_number,
