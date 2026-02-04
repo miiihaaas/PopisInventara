@@ -162,21 +162,41 @@ class ReverseDocumentPDF(BaseReportPDF):
         self.set_fill_color(*self.colors['table_header'])
         self.set_text_color(255, 255, 255)
         
-        # Zaglavlje tabele
+        # Zaglavlje tabele - preraspoređene širine kolona
         self.set_font('DejaVuSansCondensed', 'B', 10)
         headers = ['Naziv', 'Inventarski broj', 'Količina']
-        widths = [60, 60, 60]
+        widths = [100, 50, 30]  # Šira prva kolona za naziv
         
         for width, header in zip(widths, headers):
             self.cell(width, 10, header, 1, 0, 'L', True)
         self.ln()
         
-        # Podaci
+        # Podaci sa word wrap za naziv predmeta
         self.set_text_color(0, 0, 0)
         self.set_font('DejaVuSansCondensed', '', 10)
-        self.cell(60, 10, self.single_item.name, 1, 0, 'L')
-        self.cell(60, 10, self.single_item.inventory_number, 1, 0, 'L')
-        self.cell(60, 10, '1 kom', 1, 1, 'L')
+        
+        # Zapamti početnu poziciju
+        x_start = self.get_x()
+        y_start = self.get_y()
+        
+        # Izračunaj visinu potrebnu za naziv sa word wrap
+        # Koristi multi_cell za merenje visine
+        self.set_xy(x_start, y_start)
+        self.multi_cell(widths[0], 10, self.single_item.name, border=0, align='L')
+        name_height = self.get_y() - y_start
+        row_height = max(name_height, 10)  # Minimalna visina reda je 10
+        
+        # Vrati se na početak i iscrtaj ćelije sa izračunatom visinom
+        self.set_xy(x_start, y_start)
+        self.multi_cell(widths[0], 10, self.single_item.name, border=1, align='L', new_x="RIGHT", new_y="TOP", max_line_height=10)
+        
+        # Pozicioniraj se za drugu i treću kolonu na istoj Y poziciji
+        self.set_xy(x_start + widths[0], y_start)
+        self.cell(widths[1], row_height, self.single_item.inventory_number, 1, 0, 'L')
+        self.cell(widths[2], row_height, '1 kom', 1, 0, 'L')
+        
+        # Pomeri se na sledeći red
+        self.set_xy(x_start, y_start + row_height)
 
     def _add_signature_section(self, izdavanje=True):
         """Dodaje sekciju za potpise."""
