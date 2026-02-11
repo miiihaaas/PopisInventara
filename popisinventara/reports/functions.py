@@ -70,8 +70,8 @@ def write_off_until_current_year(single_item, year=None):
         
     if current_year == depreciation_start_date.year:
         depreciation_per_year = first_year_depreciation
-    elif depreciation_per_year > current_price:
-        depreciation_per_year = current_price
+    elif depreciation_per_year > (initial_price - write_off):
+        depreciation_per_year = initial_price - write_off
     
     if price_at_end_of_year < 0:
         price_at_end_of_year = Decimal(0)
