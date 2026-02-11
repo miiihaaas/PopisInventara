@@ -637,11 +637,7 @@ def expediture_single_item():
     # Pribavljanje potrebnih vrednosti za kalkulaciju
     initial_price = single_item.initial_price
     
-    # Dobavljanje stope amortizacije na osnovu postavki škole
-    if single_item.room.building.school.use_legacy_system:
-        rate = single_item.item.depreciation_rate.rate
-    else:
-        rate = single_item.depreciation_rate.rate
+    rate = single_item.depreciation_rate.rate
         
     purchase_date = single_item.purchase_date
     input_in_app_date = single_item.input_in_app_date 
