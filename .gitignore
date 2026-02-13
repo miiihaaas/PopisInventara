@@ -219,4 +219,9 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
+# Greenfield spec
+greenfield-spec.md
+project.md
+project-review.md
+
 # End of https://www.toptal.com/developers/gitignore/api/python,windows,venv

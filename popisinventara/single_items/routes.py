@@ -725,7 +725,24 @@ def expediture_serial():
         expediture_date = datetime.strptime(request.form.get('serial_expediture_date_expediture'), '%Y-%m-%d').date()
     
     single_items_with_same_serial = SingleItem.query.filter_by(serial=int(serial)).all()
-    for single_item in single_items_with_same_serial:
+    total_count = len(single_items_with_same_serial)
+
+    # Parcijalno ili potpuno isknjiženje
+    expediture_count = request.form.get('expediture_count', 'all')
+    if expediture_count == 'all' or not expediture_count:
+        items_to_expediture = single_items_with_same_serial
+    else:
+        try:
+            count = int(expediture_count)
+        except ValueError:
+            flash('Neispravan broj predmeta za isknjiženje.', 'danger')
+            return redirect(url_for('single_items.single_item_list'))
+        if count < 1 or count > total_count:
+            flash(f'Broj predmeta za isknjiženje mora biti između 1 i {total_count}.', 'danger')
+            return redirect(url_for('single_items.single_item_list'))
+        items_to_expediture = single_items_with_same_serial[:count]
+
+    for single_item in items_to_expediture:
         initial_price = single_item.initial_price
         rate = single_item.depreciation_rate.rate
         purchase_date = single_item.purchase_date
@@ -736,10 +753,13 @@ def expediture_serial():
         single_item.expediture_date = expediture_date
         single_item.room_id = 2 #! room_id = 2 je magacin rashoda
         db.session.commit()
-    if len(single_items_with_same_serial) == 1:
-        flash(f'Uspešno ste rashodovali predmet po seriji: {serial}.', 'success')
+    expedited_count = len(items_to_expediture)
+    if expedited_count == 1:
+        flash(f'Uspešno ste rashodovali 1 predmet po seriji: {serial}.', 'success')
+    elif expedited_count == total_count:
+        flash(f'Uspešno ste rashodovali sve predmete ({total_count} kom.) po seriji: {serial}.', 'success')
     else:
-        flash(f'Uspešno ste rashodovali {len(single_items_with_same_serial)} predmeta po seriji: {serial}.', 'success')
+        flash(f'Uspešno ste rashodovali {expedited_count} od {total_count} predmeta po seriji: {serial}.', 'success')
     return redirect(url_for('single_items.single_item_list'))
 
 

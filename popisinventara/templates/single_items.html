@@ -565,14 +565,16 @@
             </div>
 
             <!-- Modal Form -->
-            <form method="POST" action="{{ url_for('single_items.expediture_serial') }}">
+            <form method="POST" action="{{ url_for('single_items.expediture_serial') }}" onsubmit="return prepareExpeditureSubmit()">
                 <div class="modal-body">
                     <!-- Upozorenje -->
                     <div class="alert alert-warning mb-4">
                         <i class="fa fa-exclamation-triangle me-2"></i>
-                        <strong>Važno upozorenje:</strong> 
-                        Isknjižavanjem serije predmeta isknjižavate SVE predmete iz iste serije.
+                        <strong>Važno upozorenje:</strong>
+                        <span id="expediture_warning_text">Isknjižavanjem serije predmeta isknjižavate SVE predmete iz iste serije.</span>
                     </div>
+                    <input type="hidden" id="quantity_expediture" name="quantity_expediture">
+                    <input type="hidden" id="expediture_count" name="expediture_count" value="all">
 
                     <!-- Osnovni podaci -->
                     <div class="section-title mb-3">Informacije o seriji</div>
@@ -628,6 +630,42 @@
                         </div>
                     </div>
 
+                    <!-- Opcije isknjižavanja (prikazuje se samo za serije sa 2+ predmeta) -->
+                    <div id="expediture_options_section" style="display: none;">
+                        <div class="section-title mb-3">Opcije isknjižavanja</div>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-12">
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="radio" name="expediture_option"
+                                           id="expediture_all" value="all" checked
+                                           onchange="togglePartialCount()">
+                                    <label class="form-check-label" for="expediture_all">
+                                        <i class="fa fa-boxes-stacked me-1"></i>Isknjiži sve predmete iz serije
+                                    </label>
+                                </div>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="radio" name="expediture_option"
+                                           id="expediture_partial" value="partial"
+                                           onchange="togglePartialCount()">
+                                    <label class="form-check-label" for="expediture_partial">
+                                        <i class="fa fa-hashtag me-1"></i>Unesi broj predmeta za isknjiženje
+                                    </label>
+                                </div>
+                                <div class="mt-2" id="partial_count_wrapper" style="display: none;">
+                                    <input class="form-control" type="number"
+                                           id="partial_count" name="partial_count"
+                                           min="1" max="1" step="1"
+                                           placeholder="Unesite broj predmeta"
+                                           style="display: none;">
+                                    <div class="form-text text-muted">
+                                        <i class="fa fa-info-circle me-1"></i>
+                                        <span id="partial_count_help">Unesite broj predmeta koje želite da isknjižite</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Podaci o isknjižavanju -->
                     <div class="section-title mb-3">Podaci o isknjižavanju</div>
                     <div class="row g-3">
@@ -636,8 +674,8 @@
                                 <label class="form-control-label" for="serial_expediture_date_expediture">
                                     <i class="fa fa-calendar me-2"></i>Datum isknjižavanja
                                 </label>
-                                <input class="form-control" type="date" 
-                                       id="serial_expediture_date_expediture" 
+                                <input class="form-control" type="date"
+                                       id="serial_expediture_date_expediture"
                                        name="serial_expediture_date_expediture" required>
                                 <div class="form-text text-muted">
                                     <i class="fa fa-info-circle me-1"></i>
@@ -1198,13 +1236,80 @@
         document.getElementById("single_item_id_expediture_undo").value = singleItemId
         document.getElementById("single_item_inventory_number_expediture_undo").value = inventoryNumber
     }
-    function expeditureSerial(categoryId, categoryName, depreciationRateId, depreciationRateName, itemName, serial) {
+    function expeditureSerial(categoryId, categoryName, depreciationRateId, depreciationRateName, itemName, serial, quantity) {
         document.getElementById("item_name_expediture").value = itemName;
         document.getElementById("category_id_expediture").value = categoryId;
         document.getElementById("category_name_expediture").value = categoryName;
         document.getElementById("depreciation_rate_id_expediture").value = depreciationRateId;
         document.getElementById("depreciation_rate_name_expediture").value = depreciationRateName;
         document.getElementById("serial_expediture").value = serial;
+        document.getElementById("quantity_expediture").value = quantity;
+
+        var optionsSection = document.getElementById("expediture_options_section");
+        var partialCountInput = document.getElementById("partial_count");
+        var expeditureCountField = document.getElementById("expediture_count");
+        var warningText = document.getElementById("expediture_warning_text");
+
+        if (parseInt(quantity) >= 2) {
+            optionsSection.style.display = "block";
+            document.getElementById("expediture_all").checked = true;
+            partialCountInput.style.display = "none";
+            partialCountInput.removeAttribute("required");
+            partialCountInput.max = quantity;
+            expeditureCountField.value = "all";
+            warningText.textContent = "Isknjižavanjem serije predmeta isknjižavate SVE predmete (" + quantity + " kom.) iz iste serije.";
+        } else {
+            optionsSection.style.display = "none";
+            partialCountInput.style.display = "none";
+            partialCountInput.removeAttribute("required");
+            expeditureCountField.value = "all";
+            warningText.textContent = "Isknjižavanjem potvrđujete rashod predmeta iz ove serije.";
+        }
+    }
+    function prepareExpeditureSubmit() {
+        var isPartial = document.getElementById("expediture_partial");
+        var expeditureCountField = document.getElementById("expediture_count");
+
+        if (isPartial && isPartial.checked) {
+            var partialCount = document.getElementById("partial_count");
+            var quantity = parseInt(document.getElementById("quantity_expediture").value);
+            var count = parseInt(partialCount.value);
+
+            if (isNaN(count) || count < 1 || count > quantity) {
+                alert("Unesite validan broj predmeta (od 1 do " + quantity + ").");
+                return false;
+            }
+            expeditureCountField.value = count;
+        } else {
+            expeditureCountField.value = "all";
+        }
+        return true;
+    }
+    function togglePartialCount() {
+        var isPartial = document.getElementById("expediture_partial").checked;
+        var partialCountInput = document.getElementById("partial_count");
+        var partialCountWrapper = document.getElementById("partial_count_wrapper");
+        var expeditureCountField = document.getElementById("expediture_count");
+        var quantity = parseInt(document.getElementById("quantity_expediture").value);
+        var warningText = document.getElementById("expediture_warning_text");
+
+        if (isPartial) {
+            partialCountWrapper.style.display = "block";
+            partialCountInput.style.display = "block";
+            partialCountInput.setAttribute("required", "required");
+            partialCountInput.max = quantity;
+            partialCountInput.value = "";
+            expeditureCountField.value = "";
+            document.getElementById("partial_count_help").textContent = "Minimalno 1, maksimalno " + quantity + " predmeta";
+            warningText.textContent = "Isknjižavanjem isknjižavate odabrani broj predmeta iz serije.";
+        } else {
+            partialCountWrapper.style.display = "none";
+            partialCountInput.style.display = "none";
+            partialCountInput.removeAttribute("required");
+            partialCountInput.value = "";
+            expeditureCountField.value = "all";
+            warningText.textContent = "Isknjižavanjem serije predmeta isknjižavate SVE predmete (" + quantity + " kom.) iz iste serije.";
+        }
     }
     function undoExpeditureSerial (itemId, itemName, serial) {
         document.getElementById("item_id_expediture_undo").value = itemId
@@ -1534,7 +1639,7 @@
                             // Kreiraj funkciju za dinamičko generisanje HTML-a unutar onclick
                             // editSingleItem (singleItemName, singleItemQuantity, singleItemInitialPrice, singleItemDate, singleItemSupplier, singleItemInvoiceNumber)
                             var editSingleItemFunction = 'editSingleItem(\'' + row.series + '\', \'' + row.category_id + '\', \'' + row.depreciation_rate_id + '\', \'' + row.name + '\', \'' + row.quantity + '\', \'' + row.initial_price + '\', \'' + row.purchase_date + '\', \'' + row.supplier + '\', \'' + row.invoice_number + '\')';
-                            var expeditureSerialFunction = 'expeditureSerial(\'' + row.category_id + '\', \'' + row.category_name + '\', \'' + row.depreciation_rate_id + '\', \'' + row.depreciation_rate_name + '\', \'' + row.name + '\', \'' + row.series + '\')';
+                            var expeditureSerialFunction = 'expeditureSerial(\'' + row.category_id + '\', \'' + row.category_name + '\', \'' + row.depreciation_rate_id + '\', \'' + row.depreciation_rate_name + '\', \'' + row.name + '\', \'' + row.series + '\', \'' + row.quantity + '\')';
 
                             var html = '<td>' + 
                                             '<a class="btn-x btn-primary-x" href="' + url + '" title="Pregled predmeta po prostorijama"><i class="fa fa-door-closed awesomeedit" aria-hidden="true"></i></a>' + 
