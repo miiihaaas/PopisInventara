@@ -3,7 +3,7 @@ from flask import  render_template, flash, redirect, url_for, jsonify
 from flask_login import current_user
 from popisinventara import db
 from popisinventara.single_items.functions import distribute_prices
-from popisinventara.models import Inventory, SingleItem, Building, Room
+from popisinventara.models import Inventory, SingleItem, Building, Room, Category, DepreciationRate
 from datetime import datetime
 
 main = Blueprint('main', __name__)
