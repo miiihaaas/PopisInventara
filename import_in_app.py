@@ -1,348 +1,425 @@
 import requests
 import os
 import pandas as pd
+import sys
+import time
 
+
+# ════════════════════════════════════════════════════════════════════
+# KONFIGURACIJA
+# ════════════════════════════════════════════════════════════════════
 
 # Funkcija za bezbedno konvertovanje vrednosti
 def safe_value(value, default='', data_type=str):
     if pd.isna(value):
         return default
     if data_type == int:
-        # Ako je float, prvo zaokružimo pa konvertujemo u int
         return int(float(value)) if isinstance(value, (float, str)) else int(value)
     if data_type == float:
         return float(value)
     return str(value)
 
-print("\n" + "="*50)
-print("IMPORT PODATAKA U APLIKACIJU")
-print("="*50)
 
-# Dobijanje apsolutne putanje do trenutnog direktorijuma skripte
+def print_header(title, icon="📌"):
+    """Štampa stilizovani header za sekciju"""
+    width = 60
+    print()
+    print(f"  ╔{'═' * width}╗")
+    print(f"  ║  {icon} {title.upper():<{width - 5}}║")
+    print(f"  ╚{'═' * width}╝")
+
+
+def print_subheader(title, icon="▸"):
+    """Štampa manji podnaslov"""
+    print(f"\n  {icon} {title}")
+    print(f"  {'─' * 50}")
+
+
+def print_success(msg):
+    print(f"  ✅ {msg}")
+
+
+def print_error(msg):
+    print(f"  ❌ {msg}")
+
+
+def print_warning(msg):
+    print(f"  ⚠️  {msg}")
+
+
+def print_info(msg):
+    print(f"  ℹ️  {msg}")
+
+
+def print_item(msg):
+    print(f"     ├─ {msg}")
+
+
+def print_progress(current, total, name, status_icon="⏳"):
+    """Štampa progres bar sa informacijama"""
+    bar_width = 25
+    progress = current / total if total > 0 else 0
+    filled = int(bar_width * progress)
+    bar = "█" * filled + "░" * (bar_width - filled)
+    pct = progress * 100
+    print(f"\r  {status_icon} [{bar}] {pct:5.1f}% ({current}/{total}) {name[:30]:<30}", end="", flush=True)
+
+
+def print_results(success, failed, total, entity_name):
+    """Štampa rezultate importa"""
+    print(f"\n\n  ┌{'─' * 45}┐")
+    print(f"  │  📊 REZULTAT: {entity_name.upper():<28}│")
+    print(f"  ├{'─' * 45}┤")
+    print(f"  │  ✅ Uspešno:    {success:>6}                      │")
+    print(f"  │  ❌ Neuspešno:  {failed:>6}                      │")
+    print(f"  │  📑 Ukupno:     {total:>6}                      │")
+    print(f"  └{'─' * 45}┘")
+
+
+def check_count(base_url, endpoint, entity_name):
+    """Proverava broj entiteta u bazi"""
+    url = f'{base_url}/{endpoint}'
+    try:
+        response = requests.get(url)
+        if response.status_code != 200:
+            print_error(f"Neuspešna provera ({response.status_code})")
+            return -1
+        if response.text:
+            data = response.json()
+            count = int(data.get('count', 0))
+            print_info(f"Trenutno u bazi: {count} {entity_name}")
+            return count
+        return 0
+    except Exception as e:
+        print_error(f"Greška pri proveri: {str(e)}")
+        return -1
+
+
+def pause():
+    """Pauza za korisnika"""
+    print()
+    input("  📌 Pritisnite ENTER za nastavak...")
+    print()
+
+
+# ════════════════════════════════════════════════════════════════════
+# GLAVNI PROGRAM
+# ════════════════════════════════════════════════════════════════════
+
+print("\n")
+print("  ╔════════════════════════════════════════════════════════════╗")
+print("  ║                                                            ║")
+print("  ║        🔄  IMPORT PODATAKA U APLIKACIJU  🔄               ║")
+print("  ║                                                            ║")
+print("  ╚════════════════════════════════════════════════════════════╝")
+
+# Dobijanje putanja
 current_directory = os.path.dirname(os.path.abspath(__file__))
 parent_directory = os.path.dirname(current_directory)
 directory_name = os.path.basename(parent_directory)
 file_path = os.path.join(current_directory, f'{directory_name}_input_data.xlsx')
 
-print("\n📂 INFORMACIJE O RADNOM OKRUŽENJU:")
-print("-"*30)
-print(f"🏢 Naziv aplikacije: {directory_name}")
-print(f"📁 Radni direktorijum: {current_directory}")
-print(f"📊 Excel fajl: {file_path}")
+print_subheader("Radno okruženje", "📂")
+print_item(f"Aplikacija:  {directory_name}")
+print_item(f"Direktorijum: {current_directory}")
+print_item(f"Excel fajl:  {os.path.basename(file_path)}")
 
-# Provera da li Excel fajl postoji
+# Provera Excel fajla
 if not os.path.exists(file_path):
-    print("\n❌ GREŠKA: Excel fajl nije pronađen!")
-    print(f"   Fajl koji se traži: {file_path}")
-    print("   Molimo proverite da li je fajl na pravom mestu i da li ima ispravan naziv.")
-    exit()
+    print_error(f"Excel fajl nije pronađen: {file_path}")
+    print_info("Proverite da li je fajl na pravom mestu i da li ima ispravan naziv.")
+    sys.exit(1)
 else:
-    print("\n✅ Excel fajl je uspešno pronađen")
+    print_success("Excel fajl pronađen")
 
-print("\n" + "-"*50)
-print("❓ Da li želite da započnete import podataka?")
-print("   - Pritisnite 'Y' za početak")
-print("   - Pritisnite bilo koji drugi taster za izlaz")
-odgovor = input("   Vaš izbor (Y/N): ").lower()
+print(f"\n  ❓ Da li želite da započnete import? (Y/N)")
+odgovor = input("     Vaš izbor: ").strip().lower()
 
 if odgovor != 'y':
-    print("\n🛑 Import podataka je prekinut na zahtev korisnika.")
-    exit()
+    print_warning("Import prekinut na zahtev korisnika.")
+    sys.exit(0)
 
-print("\n✨ Započinjem proces importa podataka...")
-print("-"*50 + "\n")
-
-# Postavite URL na koji želite slati zahteve
 base_url = f'https://popis.online/{directory_name}'
-url = f'{base_url}/import_in_app'  # URL za unos podataka
 
-#! 1. Provera broja zgrada u bazi
-print("\n" + "="*50)
-print("PROVERA BROJA ZGRADA U BAZI")
-print("="*50)
 
-# Prvo proverite broj zgrada na serveru
-check_buildings_url = f'{base_url}/check_buildings_count'
-response = requests.get(check_buildings_url)
-print(f'Response status: {response.status_code}')
-print(f'Response text: {response.text}')
+# ─────────────────────────────────────────────────────────────────
+# 1. ZGRADE
+# ─────────────────────────────────────────────────────────────────
+print_header("1/5  Zgrade", "🏢")
 
-#? input('pritisni ENTER dugme da bi nastavio')
+buildings_count = check_count(base_url, 'check_buildings_count', 'zgrada')
+if buildings_count < 0:
+    sys.exit(1)
 
-try:
-    if response.status_code != 200:
-        print("\n❌ GREŠKA: Neuspešna provera broja zgrada")
-        print(f"Status kod: {response.status_code}")
-        print(f"Poruka: {response.text}")
-        exit()
-    if response.text:
-        response_json = response.json()
-        buildings_count = int(response_json.get('count', 0))
-        print(f"\n✅ Uspešna provera broja zgrada")
-        print(f"📊 Trenutni broj zgrada u bazi: {buildings_count}")
-    else:
-        print("\n⚠️ Upozorenje: Server je vratio prazan odgovor")
-        buildings_count = 0
-        response_json = {}
-except requests.exceptions.JSONDecodeError as e:
-    print("\n❌ GREŠKA: Problem sa parsiranjem odgovora servera")
-    print(f"Detalji greške: {str(e)}")
-    print(f"Sadržaj odgovora: {response.text}")
-    response_json = {}
-    exit()
-
-print("\n" + "-"*50)
-input('📌 Pritisnite ENTER za nastavak...')
-print("-"*50 + "\n")
-
-# Ako nema zgrada na serveru, prvo unesite zgrade
 if buildings_count == 0:
-    print("🏗️  ZAPOČINJEM UNOS ZGRADA")
-    print("-"*30)
-    
-    # Učitajte podatke iz Excel fajla (Zgrade) u DataFrame
     try:
         df_zgrade = pd.read_excel(file_path, sheet_name='Zgrade')
-        print(f"📑 Učitano {len(df_zgrade)} zgrada iz Excel fajla")
+        # Filtriraj prazne redove
+        df_zgrade = df_zgrade.dropna(subset=['Naziv zgrade'])
+        print_info(f"Učitano {len(df_zgrade)} zgrada iz Excel fajla")
     except Exception as e:
-        print("\n❌ GREŠKA: Problem pri učitavanju Excel fajla")
-        print(f"Detalji greške: {str(e)}")
-        exit()
-    
-    buildings_success = 0
-    print("\nPočinjem unos zgrada u bazu...")
-    
+        print_error(f"Problem pri učitavanju: {str(e)}")
+        sys.exit(1)
+
+    success = 0
+    errors = []
+
     for index, row in df_zgrade.iterrows():
-        current_building = str(row['Naziv zgrade'])
-        print(f"\nObrada zgrade ({index + 1}/{len(df_zgrade)}): {current_building}")
-        
-        building_payload = {
+        name = safe_value(row['Naziv zgrade'])
+        print_progress(index + 1, len(df_zgrade), name)
+
+        payload = {
             'school_id': '1',
-            'name': str(row['Naziv zgrade']),
-            'address': str(row['Adresa']),
-            'city': str(row['Mesto'])
+            'name': name,
+            'address': safe_value(row['Adresa']),
+            'city': safe_value(row['Mesto'])
         }
-        
-        # Slanje POST zahteva za kreiranje zgrade
-        building_url = f'{base_url}/import_building'
-        response = requests.post(building_url, data=building_payload)
-        
+
+        response = requests.post(f'{base_url}/import_building', data=payload)
         if response.status_code == 200:
-            buildings_success += 1
-            print(f"✅ Uspešno dodata zgrada: {current_building}")
+            success += 1
         else:
-            print(f"❌ Greška pri dodavanju zgrade {current_building}")
-            print(f"   Status kod: {response.status_code}")
-            print(f"   Poruka: {response.text}")
-    
-    print("\n" + "="*50)
-    print(f"📊 REZULTAT UNOSA ZGRADA:")
-    print(f"✅ Uspešno dodato: {buildings_success}")
-    print(f"❌ Neuspešno: {len(df_zgrade) - buildings_success}")
-    print(f"📑 Ukupno za obradu: {len(df_zgrade)}")
-    print("="*50 + "\n")
+            errors.append(f"{name}: {response.status_code} - {response.text[:80]}")
+
+    print_results(success, len(df_zgrade) - success, len(df_zgrade), "Zgrade")
+    for err in errors:
+        print_error(err)
 else:
-    print("\n📊 TRENUTNO STANJE ZGRADA")
-    print(f"🏢 U bazi postoji {buildings_count} zgrada")
-    print("ℹ️  Ako je potrebno, možete ručno dodati dodatne zgrade kroz aplikaciju\n")
+    print_success(f"Zgrade već postoje u bazi ({buildings_count}). Preskačem.")
+
+pause()
 
 
-#! 2. Provera broja prostorija u bazi
-print("\n" + "="*50)
-print("PROVERA BROJA PROSTORIJA U BAZI")
-print("="*50)
+# ─────────────────────────────────────────────────────────────────
+# 2. PROSTORIJE
+# ─────────────────────────────────────────────────────────────────
+print_header("2/5  Prostorije", "🚪")
 
-check_rooms_url = f'{base_url}/check_rooms_count'
-response = requests.get(check_rooms_url)
-try:
-    if response.status_code != 200:
-        print("\n❌ GREŠKA: Neuspešna provera broja prostorija")
-        print(f"Status kod: {response.status_code}")
-        print(f"Poruka: {response.text}")
-        exit()
-    
-    if response.text:
-        response_json = response.json()
-        rooms_count = int(response_json.get('count', 0))
-        print(f"\n✅ Uspešna provera broja prostorija")
-        print(f"📊 Trenutni broj prostorija u bazi: {rooms_count}")
-    else:
-        print("\n⚠️ Upozorenje: Server je vratio prazan odgovor")
-        rooms_count = 0
-        response_json = {}
-except requests.exceptions.JSONDecodeError as e:
-    print("\n❌ GREŠKA: Problem sa parsiranjem odgovora servera")
-    print(f"Detalji greške: {str(e)}")
-    print(f"Sadržaj odgovora: {response.text}")
-    response_json = {}
-    exit()
+rooms_count = check_count(base_url, 'check_rooms_count', 'prostorija')
+if rooms_count < 0:
+    sys.exit(1)
 
-print("\n" + "-"*50)
-input('📌 Pritisnite ENTER za nastavak...')
-print("-"*50 + "\n")
-
-# Ako nema prostorija na serveru, prvo unesite prostorije
 if rooms_count == 0:
-    print("🚪 ZAPOČINJEM UNOS PROSTORIJA")
-    print("-"*30)
-    
-    # Učitajte podatke iz Excel fajla (Prostorije) u DataFrame
     try:
         df_prostorije = pd.read_excel(file_path, sheet_name='Prostorije')
-        print(f"📑 Učitano {len(df_prostorije)} prostorija iz Excel fajla")
+        df_prostorije = df_prostorije.dropna(subset=['Naziv prostorije (dinamički)'])
+        print_info(f"Učitano {len(df_prostorije)} prostorija iz Excel fajla")
     except Exception as e:
-        print("\n❌ GREŠKA: Problem pri učitavanju Excel fajla")
-        print(f"Detalji greške: {str(e)}")
-        exit()
-    
-    rooms_success = 0
-    print("\nPočinjem unos prostorija u bazu...")
-    
+        print_error(f"Problem pri učitavanju: {str(e)}")
+        sys.exit(1)
+
+    success = 0
+    errors = []
+
     for index, row in df_prostorije.iterrows():
-        current_room = str(row['Naziv prostorije (dinamički)'])
-        print(f"\nObrada prostorije ({index + 1}/{len(df_prostorije)}): {current_room}")
-        
-        try:
-            room_payload = {
-                'id': str(row['id_prostorije']),
-                'building_id': str(row['id_zgrade']),
-                'name': str(row['Naziv prostorije (numerički)']),
-                'dynamic_name': str(row['Naziv prostorije (dinamički)'])
-            }
-            
-            # Slanje POST zahteva za kreiranje prostorije
-            room_url = f'{base_url}/import_room'
-            response = requests.post(room_url, data=room_payload)
-            
-            if response.status_code == 200:
-                rooms_success += 1
-                print(f"✅ Uspešno dodata prostorija: {current_room}")
-            else:
-                print(f"❌ Greška pri dodavanju prostorije {current_room}")
-                print(f"   Status kod: {response.status_code}")
-                print(f"   Poruka: {response.text}")
-        except Exception as e:
-            print(f"❌ Greška pri obradi prostorije {current_room}")
-            print(f"   Detalji greške: {str(e)}")
-    
-    print("\n" + "="*50)
-    print(f"📊 REZULTAT UNOSA PROSTORIJA:")
-    print(f"✅ Uspešno dodato: {rooms_success}")
-    print(f"❌ Neuspešno: {len(df_prostorije) - rooms_success}")
-    print(f"📑 Ukupno za obradu: {len(df_prostorije)}")
-    print("="*50 + "\n")
+        name = safe_value(row['Naziv prostorije (dinamički)'])
+        print_progress(index + 1, len(df_prostorije), name)
+
+        payload = {
+            'id': safe_value(row['id_prostorije'], data_type=int),
+            'building_id': safe_value(row['id_zgrade'], data_type=int),
+            'name': safe_value(row['Naziv prostorije (numerički)']),
+            'dynamic_name': name
+        }
+
+        response = requests.post(f'{base_url}/import_room', data=payload)
+        if response.status_code == 200:
+            success += 1
+        else:
+            errors.append(f"{name}: {response.status_code} - {response.text[:80]}")
+
+    print_results(success, len(df_prostorije) - success, len(df_prostorije), "Prostorije")
+    for err in errors:
+        print_error(err)
 else:
-    print("\n📊 TRENUTNO STANJE PROSTORIJA")
-    print(f"🚪 U bazi postoji {rooms_count} prostorija")
-    print("ℹ️  Ako je potrebno, možete ručno dodati dodatne prostorije kroz aplikaciju\n")
+    print_success(f"Prostorije već postoje u bazi ({rooms_count}). Preskačem.")
+
+pause()
 
 
-#! 3. Provera broja predmeta u bazi
-print("\n" + "="*50)
-print("PROVERA BROJA PREDMETA U BAZI")
-print("="*50)
+# ─────────────────────────────────────────────────────────────────
+# 3. STOPE AMORTIZACIJE (sheet: Amortizacija → tabela: depreciation_rate)
+# ─────────────────────────────────────────────────────────────────
+print_header("3/5  Stope amortizacije", "📉")
+
+dep_rate_count = check_count(base_url, 'check_depreciation_rates_count', 'stopa amortizacije')
+
+if dep_rate_count == 0 or dep_rate_count < 0:
+    try:
+        df_amortizacija = pd.read_excel(file_path, sheet_name='Amortizacija')
+        df_amortizacija = df_amortizacija.dropna(subset=['id'])
+        # Ukloni redove gde rate nije numerička vrednost
+        df_amortizacija = df_amortizacija[pd.to_numeric(df_amortizacija['rate'], errors='coerce').notna()]
+        print_info(f"Učitano {len(df_amortizacija)} stopa amortizacije iz Excel fajla")
+    except Exception as e:
+        print_error(f"Problem pri učitavanju: {str(e)}")
+        sys.exit(1)
+
+    success = 0
+    errors = []
+
+    for index, row in df_amortizacija.iterrows():
+        name = safe_value(row['name'])
+        print_progress(success + len(errors) + 1, len(df_amortizacija), name)
+
+        payload = {
+            'id': safe_value(row['id'], data_type=int),
+            'name': name,
+            'rate': safe_value(row['rate'], data_type=float)
+        }
+
+        response = requests.post(f'{base_url}/import_depreciation_rate', data=payload)
+        if response.status_code == 200:
+            success += 1
+        elif response.status_code == 202:
+            success += 1  # Već postoji, računamo kao uspeh
+        else:
+            errors.append(f"ID={payload['id']} {name[:40]}: {response.status_code} - {response.text[:80]}")
+
+    print_results(success, len(errors), len(df_amortizacija), "Stope amortizacije")
+    for err in errors:
+        print_error(err)
+else:
+    print_success(f"Stope amortizacije već postoje u bazi ({dep_rate_count}). Preskačem.")
+
+pause()
 
 
-check_items_url = f'{base_url}/check_items_count'
-response = requests.get(check_items_url)
+# ─────────────────────────────────────────────────────────────────
+# 4. KATEGORIJE / KONTA (sheet: Konta → tabela: category)
+# ─────────────────────────────────────────────────────────────────
+print_header("4/5  Kategorije (Konta)", "📂")
 
-try:
-    if response.status_code != 200:
-        print("\n❌ GREŠKA: Neuspešna provera broja predmeta")
-        print(f"Status kod: {response.status_code}")
-        print(f"Poruka: {response.text}")
-        exit()
-    
-    if response.text:
-        response_json = response.json()
-        items_count = int(response_json.get('count', 0))
-        print(f"\n✅ Uspešna provera broja predmeta")
-        print(f"📊 Trenutni broj predmeta u bazi: {items_count}")
-    else:
-        print("\n⚠️ Upozorenje: Server je vratio prazan odgovor")
-        items_count = 0
-        response_json = {}
-except requests.exceptions.JSONDecodeError as e:
-    print("\n❌ GREŠKA: Problem sa parsiranjem odgovora servera")
-    print(f"Detalji greške: {str(e)}")
-    print(f"Sadržaj odgovora: {response.text}")
-    response_json = {}
-    exit()
+cat_count = check_count(base_url, 'check_categories_count', 'kategorija')
 
-print("\n" + "-"*50)
-input('📌 Pritisnite ENTER za nastavak...')
-print("-"*50 + "\n")
+if cat_count == 0 or cat_count < 0:
+    try:
+        df_konta = pd.read_excel(file_path, sheet_name='Konta')
+        df_konta = df_konta.dropna(subset=['id'])
+        print_info(f"Učitano {len(df_konta)} kategorija iz Excel fajla")
+    except Exception as e:
+        print_error(f"Problem pri učitavanju: {str(e)}")
+        sys.exit(1)
 
-# Ako nema predmeta na serveru, prvo unesite predmete
+    success = 0
+    errors = []
+
+    for index, row in df_konta.iterrows():
+        name = safe_value(row['name'])
+        print_progress(success + len(errors) + 1, len(df_konta), name)
+
+        payload = {
+            'id': safe_value(row['id'], data_type=int),
+            'category_number': safe_value(row['category_number']),
+            'name': name
+        }
+
+        response = requests.post(f'{base_url}/import_category', data=payload)
+        if response.status_code == 200:
+            success += 1
+        elif response.status_code == 202:
+            success += 1
+        else:
+            errors.append(f"ID={payload['id']} {name[:40]}: {response.status_code} - {response.text[:80]}")
+
+    print_results(success, len(errors), len(df_konta), "Kategorije (Konta)")
+    for err in errors:
+        print_error(err)
+else:
+    print_success(f"Kategorije već postoje u bazi ({cat_count}). Preskačem.")
+
+pause()
+
+
+# ─────────────────────────────────────────────────────────────────
+# 5. PREDMETI (sheet: Pojedinačni predmeti po SERIJI → tabela: single_item)
+# ─────────────────────────────────────────────────────────────────
+print_header("5/5  Predmeti", "📦")
+
+items_count = check_count(base_url, 'check_items_count', 'predmeta')
+if items_count < 0:
+    sys.exit(1)
+
 if items_count == 0:
-    print("📦 ZAPOČINJEM UNOS PREDMETA")
-    print("-"*30)
-    
-    # Učitajte podatke iz Excel fajla (Pojedinačni predmeti) u DataFrame
     try:
         df_predmeti = pd.read_excel(file_path, sheet_name='Pojedinačni predmeti po SERIJI')
-        print(f"📑 Učitano {len(df_predmeti)} predmeta iz Excel fajla")
-        
-        # Pronađi kolonu koja počinje sa "Vrednost na kraju"
-        value_column = next(col for col in df_predmeti.columns if col.startswith('Vrednost na kraju'))
-        # Izvuci godinu iz naziva kolone
-        year = int(''.join(filter(str.isdigit, value_column)))
-        # Kreiraj datum za poslednji dan te godine
+        # Filtriraj prazne redove
+        df_predmeti = df_predmeti.dropna(subset=['Serija', 'Naziv'])
+
+        # Pronađi kolonu "Vrednost na kraju XXXX" i izvuci godinu
+        value_column = next(col for col in df_predmeti.columns if str(col).startswith('Vrednost na kraju'))
+        year = int(''.join(filter(str.isdigit, str(value_column))))
         last_day_of_year = f'{year}-12-31'
+
+        print_info(f"Učitano {len(df_predmeti)} predmeta iz Excel fajla")
+        print_info(f"Referentna godina: {year} (datum unosa: {last_day_of_year})")
     except Exception as e:
-        print("\n❌ GREŠKA: Problem pri učitavanju Excel fajla")
-        print(f"Detalji greške: {str(e)}")
-        exit()
-    
-    items_success = 0
-    print("\nPočinjem unos predmeta u bazu...")
-    
+        print_error(f"Problem pri učitavanju: {str(e)}")
+        sys.exit(1)
+
+    success = 0
+    skipped = 0
+    errors = []
+
     for index, row in df_predmeti.iterrows():
-        current_item = f"{safe_value(row['Naziv'])} (Serija: {safe_value(row['Serija'])})"
-        print(f"\nObrada predmeta ({index + 1}/{len(df_predmeti)}): {current_item}")
-        
+        name = safe_value(row['Naziv'])
+        serial = safe_value(row['Serija'], default='?', data_type=int)
+        label = f"{name} (S:{serial})"
+        print_progress(success + skipped + len(errors) + 1, len(df_predmeti), label)
+
         try:
-            item_payload = {
+            purchase_date_raw = safe_value(row['Datum nabavke'])
+            purchase_date = purchase_date_raw.split()[0] if purchase_date_raw else ''
+
+            payload = {
                 'serial': safe_value(row['Serija'], default=None, data_type=int),
                 'room_id': safe_value(row.get('room_id'), default=1, data_type=int),
-                'name': safe_value(row['Naziv']),
+                'name': name,
                 'quantity': safe_value(row['Količina'], default=None, data_type=int),
-                'purchase_date': safe_value(row['Datum nabavke']).split()[0],
+                'purchase_date': purchase_date,
                 'initial_price': safe_value(row['Nabavna vrednost'], default=None, data_type=float),
                 'input_in_app_date': last_day_of_year,
-                'deprecation_value': safe_value(row.get(value_column, 0), default=None, data_type=float), #! ovo je ukupna vrednost svih predmeta iz serije na kraju godine
+                'deprecation_value': safe_value(row.get(value_column, 0), default=None, data_type=float),
                 'supplier': safe_value(row.get('Dobavljač'), ''),
                 'invoice_number': safe_value(row.get('Faktura'), ''),
                 'category_id': safe_value(row['id konta'], default=None, data_type=int),
                 'depreciation_rate_id': safe_value(row['id amortizacije'], default=None, data_type=int)
             }
-            
-            # Slanje POST zahteva za kreiranje predmeta
-            item_url = f'{base_url}/import_item'
-            response = requests.post(item_url, data=item_payload)
-            
+
+            response = requests.post(f'{base_url}/import_item', data=payload)
+
             if response.status_code == 200:
-                items_success += 1
-                print(f"✅ Uspešno dodat predmet: {current_item}")
-                print(f"   Poruka: {response.json().get('message', '')}")
+                success += 1
             elif response.status_code == 202:
-                print(f"ℹ️  Predmet već postoji: {current_item}")
-                print(f"   Poruka: {response.json().get('message', '')}")
+                skipped += 1
             else:
-                print(f"❌ Greška pri dodavanju predmeta {current_item}")
-                print(f"   Status kod: {response.status_code}")
-                print(f"   Poruka: {response.text}")
+                errors.append(f"S:{serial} {name[:35]}: {response.status_code} - {response.text[:80]}")
         except Exception as e:
-            print(f"❌ Greška pri obradi predmeta {current_item}")
-            print(f"   Detalji greške: {str(e)}")
-    
-    print("\n" + "="*50)
-    print(f"📊 REZULTAT UNOSA PREDMETA:")
-    print(f"✅ Uspešno dodato: {items_success}")
-    print(f"❌ Neuspešno: {len(df_predmeti) - items_success}")
-    print(f"📑 Ukupno za obradu: {len(df_predmeti)}")
-    print("="*50 + "\n")
+            errors.append(f"S:{serial} {name[:35]}: {str(e)[:80]}")
+
+    failed = len(df_predmeti) - success - skipped
+    print(f"\n")
+    print(f"  ┌{'─' * 45}┐")
+    print(f"  │  📊 REZULTAT: PREDMETI                      │")
+    print(f"  ├{'─' * 45}┤")
+    print(f"  │  ✅ Uspešno:    {success:>6}                      │")
+    print(f"  │  ⏭️  Preskočeno: {skipped:>6}  (već postoji)        │")
+    print(f"  │  ❌ Neuspešno:  {len(errors):>6}                      │")
+    print(f"  │  📑 Ukupno:     {len(df_predmeti):>6}                      │")
+    print(f"  └{'─' * 45}┘")
+    for err in errors:
+        print_error(err)
 else:
-    print("\n📊 TRENUTNO STANJE PREDMETA")
-    print(f"📦 U bazi postoji {items_count} predmeta")
-    print("ℹ️  Ako je potrebno, možete ručno dodati dodatne predmete kroz aplikaciju\n")
+    print_success(f"Predmeti već postoje u bazi ({items_count}). Preskačem.")
+
+
+# ─────────────────────────────────────────────────────────────────
+# ZAVRŠETAK
+# ─────────────────────────────────────────────────────────────────
+print("\n")
+print("  ╔════════════════════════════════════════════════════════════╗")
+print("  ║                                                            ║")
+print("  ║        ✨  IMPORT PODATAKA JE ZAVRŠEN  ✨                 ║")
+print("  ║                                                            ║")
+print("  ╚════════════════════════════════════════════════════════════╝")
+print()

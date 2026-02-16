@@ -225,3 +225,76 @@ def import_item():
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
+
+# ─── STOPE AMORTIZACIJE (depreciation_rate) ───
+
+@main.route("/check_depreciation_rates_count", methods=['GET'])
+def check_depreciation_rates_count():
+    try:
+        count = DepreciationRate.query.count()
+        return jsonify({'count': count})
+    except Exception as e:
+        print(f"Greška pri brojanju stopa amortizacije: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+
+@main.route("/import_depreciation_rate", methods=['POST'])
+def import_depreciation_rate():
+    try:
+        id = int(request.form.get('id'))
+        name = request.form.get('name')
+        rate = float(request.form.get('rate'))
+
+        if not all([id, name, rate is not None]):
+            return jsonify({'error': 'Nedostaju obavezni podaci'}), 400
+
+        existing = DepreciationRate.query.get(id)
+        if existing:
+            return jsonify({'message': f'Stopa amortizacije sa ID {id} već postoji'}), 202
+
+        new_rate = DepreciationRate(id=id, name=name, rate=rate)
+        db.session.add(new_rate)
+        db.session.commit()
+
+        return jsonify({'message': f'Uspešno dodata stopa amortizacije: {name}'}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+
+# ─── KATEGORIJE / KONTA (category) ───
+
+@main.route("/check_categories_count", methods=['GET'])
+def check_categories_count():
+    try:
+        count = Category.query.count()
+        return jsonify({'count': count})
+    except Exception as e:
+        print(f"Greška pri brojanju kategorija: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+
+@main.route("/import_category", methods=['POST'])
+def import_category():
+    try:
+        id = int(request.form.get('id'))
+        category_number = request.form.get('category_number')
+        name = request.form.get('name')
+
+        if not all([id, category_number, name]):
+            return jsonify({'error': 'Nedostaju obavezni podaci'}), 400
+
+        existing = Category.query.get(id)
+        if existing:
+            return jsonify({'message': f'Kategorija sa ID {id} već postoji'}), 202
+
+        new_category = Category(id=id, category_number=category_number, name=name)
+        db.session.add(new_category)
+        db.session.commit()
+
+        return jsonify({'message': f'Uspešno dodata kategorija: {name}'}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
