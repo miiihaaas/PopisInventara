@@ -477,20 +477,18 @@ def category_reports_expediture(inventory_id):
 
     # Kreiramo mapu stvarnog stanja po serijskom broju
     # ALI samo za predmete koji NISU rashodovani u tekućoj godini
-    actual_quantities = {}
+    # Čuvamo LISTU svih predmeta za svaku seriju, ne samo prvi predmet
+    actual_items_by_serial = {}
     for single_item in single_items:
         serial = str(single_item.get('serial'))
         # Preskačemo predmete koji su već obrađeni kao rashodovani
         if serial in expedited_serials:
             continue
             
-        if serial not in actual_quantities:
-            actual_quantities[serial] = {
-                'quantity': 1,
-                'item_data': single_item
-            }
+        if serial not in actual_items_by_serial:
+            actual_items_by_serial[serial] = [single_item]
         else:
-            actual_quantities[serial]['quantity'] += 1
+            actual_items_by_serial[serial].append(single_item)
 
     # Kreiramo mapu popisanih količina po serijskom broju
     counted_quantities = {}
@@ -504,21 +502,20 @@ def category_reports_expediture(inventory_id):
                 counted_quantities[serial] += quantity_input
 
     # Zatim obrađujemo predmete koji imaju manjak
-    for serial, actual_data in actual_quantities.items():
-        actual_qty = actual_data['quantity']
+    for serial, items_list in actual_items_by_serial.items():
+        actual_qty = len(items_list)
         counted_qty = counted_quantities.get(serial, 0)
         
         if counted_qty < actual_qty:
             # Postoji manjak - razlika između stvarnog stanja i popisanog
             missing_qty = actual_qty - counted_qty
-            item_data = actual_data['item_data']
             
-            # # Preskačemo ako je predmet već rashodovan
-            # if item_data.get('expediture_date'):
-            #     continue
-                
-            # Dodajemo predmet u izveštaj onoliko puta koliki je manjak
-            for _ in range(missing_qty):
+            # Uzimamo poslednjih missing_qty predmeta iz liste
+            # (poslednji predmeti obično imaju korigovane cene zbog distribute_prices)
+            missing_items = items_list[-missing_qty:]
+            
+            # Obrađujemo svaki predmet sa manjkom pojedinačno sa njegovom stvarnom cenom
+            for item_data in missing_items:
                 process_item_for_report(item_data, category_list, data)
 
     # Debug ispis
@@ -661,20 +658,18 @@ def category_reports_expediture_item(inventory_id):
                 continue
     # Kreiramo mapu stvarnog stanja po serijskom broju
     # ALI samo za predmete koji NISU rashodovani u tekućoj godini
-    actual_quantities = {}
+    # Čuvamo LISTU svih predmeta za svaku seriju, ne samo prvi predmet
+    actual_items_by_serial = {}
     for single_item in single_items:
         serial = str(single_item.get('serial'))
         # Preskačemo predmete koji su već obrađeni kao rashodovani
         if serial in expedited_serials:
             continue
             
-        if serial not in actual_quantities:
-            actual_quantities[serial] = {
-                'quantity': 1,
-                'item_data': single_item
-            }
+        if serial not in actual_items_by_serial:
+            actual_items_by_serial[serial] = [single_item]
         else:
-            actual_quantities[serial]['quantity'] += 1
+            actual_items_by_serial[serial].append(single_item)
     
     # Kreiramo mapu popisanih količina po serijskom broju
     counted_quantities = {}
@@ -688,21 +683,20 @@ def category_reports_expediture_item(inventory_id):
                 counted_quantities[serial] += quantity_input
 
     # Zatim obrađujemo predmete koji imaju manjak
-    for serial, actual_data in actual_quantities.items():
-        actual_qty = actual_data['quantity']
+    for serial, items_list in actual_items_by_serial.items():
+        actual_qty = len(items_list)
         counted_qty = counted_quantities.get(serial, 0)
         
         if counted_qty < actual_qty:
             # Postoji manjak - razlika između stvarnog stanja i popisanog
             missing_qty = actual_qty - counted_qty
-            item_data = actual_data['item_data']
             
-            #! Preskačemo ako je predmet već rashodovan
-            # if item_data.get('expediture_date'):
-            #     continue
-                
-            # Dodajemo predmet u izveštaj onoliko puta koliki je manjak
-            for _ in range(missing_qty):
+            # Uzimamo poslednjih missing_qty predmeta iz liste
+            # (poslednji predmeti obično imaju korigovane cene zbog distribute_prices)
+            missing_items = items_list[-missing_qty:]
+            
+            # Obrađujemo svaki predmet sa manjkom pojedinačno sa njegovom stvarnom cenom
+            for item_data in missing_items:
                 process_item_for_report(item_data, category_serial_list, data)
     
     # Debug ispis
